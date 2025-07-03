@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text, TouchableWithoutFeedback } from "react-native";
 import { useState } from "react";
+import { COLORS } from "../../../utils/usePalete";
 
 const Caption = ({ post }) => {
   const [showLongCaption, setShowLongCaption] = useState(false);
@@ -42,19 +43,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   captionUser: {
-    color: "#fff",
+    color: COLORS.text,
     fontWeight: "600",
     fontSize: 14,
   },
   captionText: {
     flex: 1,
-    color: "#fff",
+    color: COLORS.textSecondary,
     fontWeight: "400",
     fontSize: 14,
     marginLeft: 4,
   },
   captionMore: {
-    color: "#aaa",
+    color: COLORS.textMuted,
     fontSize: 14,
   },
 });

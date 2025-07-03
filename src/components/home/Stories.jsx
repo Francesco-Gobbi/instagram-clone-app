@@ -6,6 +6,7 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
+import { COLORS } from "../../utils/usePalete";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState, useEffect } from "react";
 import { Image } from "expo-image";
@@ -199,13 +200,13 @@ const styles = StyleSheet.create({
   user: {
     marginTop: 3,
     fontSize: 12,
-    color: "#fff",
+    color:  COLORS.text,
     textAlign: "center",
   },
   seenUser: {
     marginTop: 4,
     fontSize: 12,
-    color: "#bbb",
+    color:  COLORS.textMuted,
     textAlign: "center",
   },
   imageWithStory: {
@@ -222,7 +223,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 100,
     borderWidth: 1.5,
-    borderColor: "#666",
+    borderColor: COLORS.border,
   },
   unseenRainbowBorder: {
     height: 91.5,
@@ -232,12 +233,12 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
   addBtn: {
-    backgroundColor: "#18d",
+    backgroundColor: COLORS.red,
     height: 30,
     width: 30,
     borderRadius: 100,
     borderWidth: 3.5,
-    borderColor: "#000",
+    borderColor: COLORS.black,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,

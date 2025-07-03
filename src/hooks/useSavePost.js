@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import firebase from 'firebase/compat';
+import firebase from '../services/firebase';
 
 const useSavePost = () => {
     const [isLoading, setIsLoading] = useState(false)

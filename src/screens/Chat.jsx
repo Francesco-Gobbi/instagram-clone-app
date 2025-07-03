@@ -19,7 +19,7 @@ import useFindUsers from "../hooks/useFindUsers";
 import { SIZES } from "../constants";
 import useSlideOnKeyboard from "../utils/useSlideOnKeyboard";
 import useFetchContactList from "../hooks/useFetchContactList";
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";

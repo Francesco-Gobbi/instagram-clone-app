@@ -12,6 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import BottomSheetOptions from "../bottomSheets/BottomSheetOptions";
 import useCheckStoriesSeen from "../../../hooks/useCheckStoriesSeen";
 import useHandleFollow from "../../../hooks/useHandleFollow";
+import { COLORS } from "../../../utils/usePalete";
 
 const Header = ({ navigation, post, currentUser }) => {
   const { checkStoriesSeen } = useCheckStoriesSeen();
@@ -137,7 +138,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   headerText: {
-    color: "#fff",
+    color:COLORS.text,
     fontWeight: "600",
     fontSize: 15,
     marginLeft: 9,
@@ -148,16 +149,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonContainer: {
-    backgroundColor: "#333",
+    backgroundColor: COLORS.cardBackground,
     borderRadius: 10,
+    borderWidth: 1,
     height: Platform.OS === "android" ? 35 : 30,
     paddingHorizontal: 12,
     marginRight: 15,
     justifyContent: "center",
     alignItems: "center",
+    borderColor: COLORS.border,
   },
   buttonText: {
-    color: "#fff",
+    color: COLORS.text,
     fontWeight: "600",
     fontSize: 13,
     marginBottom: Platform.OS === "android" ? 2 : 0,

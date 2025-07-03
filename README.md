@@ -1,11 +1,11 @@
-# instagram-clone-app
+# ShentaoHub-clone-app
 
-<img alt="Instagram Logo" src="./assets/images/header-logo.png" width="60%">
+<img alt="ShentaoHub Logo" src="./assets/images/header-logo.png" width="60%">
 
 <div>
 <h4>Language options</h4>
-  <a href="https://github.com/hernanhawryluk/instagram-clone-app/blob/main/README.es.md"><img alt="Cambiar idioma al español" src="https://img.shields.io/badge/idioma-español-yellow.svg"></a>
-  <a href="#"><img alt="Visitor Badge" src="https://visitor-badge.laobi.icu/badge?page_id=hernanhawryluk.instagram-clone-app"></a>
+  <a href="https://github.com/hernanhawryluk/ShentaoHub-clone-app/blob/main/README.es.md"><img alt="Cambiar idioma al español" src="https://img.shields.io/badge/idioma-español-yellow.svg"></a>
+  <a href="#"><img alt="Visitor Badge" src="https://visitor-badge.laobi.icu/badge?page_id=hernanhawryluk.ShentaoHub-clone-app"></a>
 </div>
 <div>
   <h3>Technologies used</h3>
@@ -16,7 +16,7 @@
 
 ## Description
 
-Fully functional Instagram replica built in React Native, showcasing my skills as a mobile app developer. Explore the features and functionality of Instagram in this project.
+Fully functional ShentaoHub replica built in React Native, showcasing my skills as a mobile app developer. Explore the features and functionality of ShentaoHub in this project.
 
 ## Features
 
@@ -36,11 +36,11 @@ Fully functional Instagram replica built in React Native, showcasing my skills a
 
 ## Download the App for Android devices
 
-- [![Download APK for Android](https://img.shields.io/badge/Google%20Drive-instagram--clone--app.apk-blue?logo=googledrive)](https://drive.google.com/file/d/15ahphglkz-yoSmbGTq201YoZ-xWay-pn/view?usp=drive_link)
+- [![Download APK for Android](https://img.shields.io/badge/Google%20Drive-ShentaoHub--clone--app.apk-blue?logo=googledrive)](https://drive.google.com/file/d/15ahphglkz-yoSmbGTq201YoZ-xWay-pn/view?usp=drive_link)
 
 ## Video of the App running on iOS:
 
-- [![YouTube Video](https://img.shields.io/badge/YouTube-instagram--clone--app-d22?logo=youtube&logoColor=d22)](https://youtu.be/llQH79EdmfU)
+- [![YouTube Video](https://img.shields.io/badge/YouTube-ShentaoHub--clone--app-d22?logo=youtube&logoColor=d22)](https://youtu.be/llQH79EdmfU)
 
 ## Screenshots
 
@@ -82,13 +82,13 @@ Fully functional Instagram replica built in React Native, showcasing my skills a
 2. **Download the repository**
 
 ```bash
-git clone https://github.com/hernanhawryluk/instagram-clone-app
+git clone https://github.com/hernanhawryluk/ShentaoHub-clone-app
 ```
 
 3. **Navigate to the project directory**
 
 ```bash
-cd instagram-clone-app
+cd ShentaoHub-clone-app
 ```
 
 4. **Install dependencies**

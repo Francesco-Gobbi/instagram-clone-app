@@ -11,7 +11,7 @@ import {
 import React, { useState, useEffect, useRef } from "react";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import StoryHightlights from "../components/user/StoryHighlights";
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 import { useUserContext } from "../contexts/UserContext";
 import BottomSheetOptions from "../components/user/bottomSheets/BottomSheetOptions";
 import CopyClipboardModal from "../components/shared/modals/CopyClipboardModal";

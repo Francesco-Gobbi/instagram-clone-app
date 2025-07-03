@@ -1,5 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
+import { COLORS } from "../../../utils/usePalete";
 
 const StoriesSkeleton = () => {
   return (
@@ -51,6 +52,7 @@ const styles = StyleSheet.create({
     marginTop: 11,
     marginHorizontal: 6,
     opacity: 0.3,
+    backgroundColor: COLORS.cardBackground,
   },
   rowContainer: {
     justifyContent: "center",

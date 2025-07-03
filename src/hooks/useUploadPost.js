@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import useUploadPicture from './useUploadPicture'
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 import "firebase/compat/storage";
 
 const useUploadPost = () => {
     const [loader, setLoader] = useState(false)
-    const {uploadPicture} = useUploadPicture()
+    const { uploadPicture } = useUploadPicture()
 
 
     const uploadPost = async (imageUrl, caption, currentUser) => {
-        if(!loader) {
+        if (!loader) {
             setLoader(true);
             try {
                 const timestamp = new Date().getTime();
@@ -29,12 +29,12 @@ const useUploadPost = () => {
                 }
 
                 await firebase
-                .firestore()
-                .collection("users")
-                .doc(currentUser.email)
-                .collection("posts")
-                .add(newPost);
-                
+                    .firestore()
+                    .collection("users")
+                    .doc(currentUser.email)
+                    .collection("posts")
+                    .add(newPost);
+
             } catch (error) {
                 console.error(error);
             } finally {

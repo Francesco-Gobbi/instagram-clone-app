@@ -7,7 +7,7 @@ const RenderProfile = ({ navigation, user }) => {
     <View style={styles.container}>
       <Image source={{ uri: user.profile_picture }} style={styles.image} />
       <Text style={styles.username}>{user.name}</Text>
-      <Text style={styles.name}>{user.username} - Instagram</Text>
+      <Text style={styles.name}>{user.username} - ShentaoHub</Text>
       <TouchableOpacity
         onPress={() => navigation.navigate("UserDetail", { email: user.email })}
         style={styles.buttonContainer}

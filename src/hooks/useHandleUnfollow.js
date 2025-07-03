@@ -1,7 +1,7 @@
 import { useState } from "react";
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 
-const useHandleUnfollow = ({currentUser, user}) => {
+const useHandleUnfollow = ({ currentUser, user }) => {
   const [loader, setLoader] = useState(false);
   const handleUnfollow = async () => {
     if (!loader) {
@@ -21,7 +21,7 @@ const useHandleUnfollow = ({currentUser, user}) => {
           .update({
             followers: firebase.firestore.FieldValue.arrayRemove(currentUser.email),
           });
-          
+
       } catch (error) {
         console.log(error);
       } finally {

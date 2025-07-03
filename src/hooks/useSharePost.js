@@ -1,20 +1,20 @@
 import { Share } from 'react-native'
 
 const useSharePost = () => {
-    
+
     const sharePost = async (post) => {
         try {
             const result = await Share.share({
-                message: "I would like to share this with you!\n\n" + post.caption + "\n\nCheck it out: instagram.com/" + post.username,
+                message: "I would like to share this with you!\n\n" + post.caption + "\n\nCheck it out: ShentaoHub.com/" + post.username,
             });
             if (result.action === Share.sharedAction) {
-            if (result.activityType) {
-                // shared with activity type of result.activityType
-            } else {
-                // shared
-            }
+                if (result.activityType) {
+                    // shared with activity type of result.activityType
+                } else {
+                    // shared
+                }
             } else if (result.action === Share.dismissedAction) {
-            // dismissed
+                // dismissed
             }
         } catch (error) {
             Alert.alert(error.message);
@@ -24,16 +24,16 @@ const useSharePost = () => {
     const shareStory = async (story) => {
         try {
             const result = await Share.share({
-                message: "I would like to share this with you! \n\nCheck it out: instagram.com/" + story.username,
+                message: "I would like to share this with you! \n\nCheck it out: ShentaoHub.com/" + story.username,
             });
             if (result.action === Share.sharedAction) {
-            if (result.activityType) {
-                // shared with activity type of result.activityType
-            } else {
-                // shared
-            }
+                if (result.activityType) {
+                    // shared with activity type of result.activityType
+                } else {
+                    // shared
+                }
             } else if (result.action === Share.dismissedAction) {
-            // dismissed
+                // dismissed
             }
         } catch (error) {
             Alert.alert(error.message);
@@ -43,16 +43,16 @@ const useSharePost = () => {
     const shareUser = async (currentUser) => {
         try {
             const result = await Share.share({
-                message: "I would like to share this with you!\n\nCheck it out: instagram.com/" + currentUser.username,
+                message: "I would like to share this with you!\n\nCheck it out: ShentaoHub.com/" + currentUser.username,
             });
             if (result.action === Share.sharedAction) {
-            if (result.activityType) {
-                // shared with activity type of result.activityType
-            } else {
-                // shared
-            }
+                if (result.activityType) {
+                    // shared with activity type of result.activityType
+                } else {
+                    // shared
+                }
             } else if (result.action === Share.dismissedAction) {
-            // dismissed
+                // dismissed
             }
         } catch (error) {
             Alert.alert(error.message);

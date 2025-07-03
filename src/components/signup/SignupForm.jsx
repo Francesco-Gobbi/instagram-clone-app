@@ -11,7 +11,7 @@ import { Ionicons, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import Validator from "email-validator";
-import firebase from "firebase/compat";
+import firebase from "../../services/firebase";
 import { getLocales } from "expo-localization";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 
@@ -233,20 +233,6 @@ const SignupForm = ({ navigation }) => {
                 <Text style={styles.btnText}>Sign up</Text>
               </View>
             </TouchableOpacity>
-            <View style={{ height: 56 }}>
-              {developerMessage && (
-                <Animated.View
-                  style={styles.modalContainer}
-                  entering={FadeInDown.duration(1000)}
-                  exiting={FadeOutDown.duration(1000)}
-                >
-                  <Ionicons name={"logo-react"} size={24} color="#fff" />
-                  <Text style={styles.modalText}>
-                    Developed by Hernan Hawryluk
-                  </Text>
-                </Animated.View>
-              )}
-            </View>
           </View>
         )}
       </Formik>

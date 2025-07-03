@@ -1,5 +1,5 @@
 import { useState } from "react";
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 
 const useUploadProfilePicture = () => {
     const [loader, setLoader] = useState(false);
@@ -7,7 +7,7 @@ const useUploadProfilePicture = () => {
     const uploadProfilePicture = async (uri, email) => {
         if (!loader) {
             setLoader(true);
-            try { 
+            try {
                 const batch = firebase.firestore().batch();
                 await firebase
                     .firestore()
@@ -44,7 +44,7 @@ const useUploadProfilePicture = () => {
                             });
                         });
                     });
-                
+
                 await firebase
                     .firestore()
                     .collection("users")
@@ -62,9 +62,9 @@ const useUploadProfilePicture = () => {
                 await batch.commit();
 
             } catch (error) {
-            console.error(error);
+                console.error(error);
             } finally {
-            setLoader(false);
+                setLoader(false);
             }
         }
     };
@@ -73,7 +73,7 @@ const useUploadProfilePicture = () => {
         uploadProfilePicture,
         loader
     }
-  
+
 }
 
 export default useUploadProfilePicture

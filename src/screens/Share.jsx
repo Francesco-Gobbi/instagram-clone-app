@@ -23,10 +23,10 @@ const Share = ({ navigation, route }) => {
           <View style={styles.qrContainer}>
             <QRCode
               size={180}
-              value={"http://instagram.com/" + user.username}
+              value={"http://ShentaoHub.com/" + user.username}
               backgroundColor={"transparent"}
               logoSize={55}
-              logo={require("../../assets/images/instagram_logo.png")}
+              logo={require("../../assets/images/ShentaoHub_logo.png")}
               logoMargin={3}
               logoBorderRadius={15}
               logoBackgroundColor={"#fff"}
@@ -50,7 +50,7 @@ const Share = ({ navigation, route }) => {
         <View style={styles.divider} />
         <TouchableOpacity
           onPress={() => {
-            Clipboard.setString("http://instagram.com/" + user.username);
+            Clipboard.setString("http://ShentaoHub.com/" + user.username);
             setCopyModalVisible(true);
             setTimeout(() => {
               setCopyModalVisible(false);

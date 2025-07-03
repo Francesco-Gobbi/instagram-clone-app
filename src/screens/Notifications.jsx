@@ -16,7 +16,7 @@ import useFetchRequests from "../hooks/useFetchRequests";
 import useFetchUserPosts from "../hooks/useFetchUserPosts";
 import { LinearGradient } from "expo-linear-gradient";
 import { SIZES } from "../constants";
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 
 const Notifications = ({ navigation, route }) => {
   const { currentUser } = route.params;

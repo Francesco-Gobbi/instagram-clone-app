@@ -9,6 +9,7 @@ import React, { useRef } from "react";
 import BottomSheetComments from "../bottomSheets/BottomSheetComments";
 import BottomSheetComment from "../bottomSheets/BottomSheetComment";
 import { Image } from "expo-image";
+import { COLORS } from "../../../utils/usePalete";
 
 const Comments = ({ post, currentUser, navigation }) => {
   const bottomSheetRefComments = useRef(null);
@@ -88,7 +89,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   text: {
-    color: "#aaa",
+    color: COLORS.textMuted,
     fontSize: 14,
     fontWeight: "400",
   },

@@ -56,7 +56,7 @@ const BottomSheetOptions = ({
         <View style={styles.divider} />
         <TouchableOpacity
           onPress={() => {
-            Clipboard.setString("http://instagram.com/" + user.username);
+            Clipboard.setString("http://ShentaoHub.com/" + user.username);
             bottomSheetRef.current.close();
             setCopyModalVisible(true);
             setTimeout(() => {

@@ -1,11 +1,11 @@
-# instagram-clone-app
+# ShentaoHub-clone-app
 
-<img alt="Instagram Logo" src="./assets/images/header-logo.png" width="60%">
+<img alt="ShentaoHub Logo" src="./assets/images/header-logo.png" width="60%">
 
 <div>
 <h4>Opciones de lenguaje</h4>
-  <a href="https://github.com/hernanhawryluk/instagram-clone-app/blob/main/README.md"><img alt="Change language to english" src="https://img.shields.io/badge/language-english-yellow.svg"></a>
-  <a href="#"><img alt="Cantidad de visitas" src="https://visitor-badge.laobi.icu/badge?page_id=hernanhawryluk.instagram-clone-app"></a>
+  <a href="https://github.com/hernanhawryluk/ShentaoHub-clone-app/blob/main/README.md"><img alt="Change language to english" src="https://img.shields.io/badge/language-english-yellow.svg"></a>
+  <a href="#"><img alt="Cantidad de visitas" src="https://visitor-badge.laobi.icu/badge?page_id=hernanhawryluk.ShentaoHub-clone-app"></a>
 </div>
 <div>
   <h3>Tecnologías utilizadas</h3>
@@ -16,7 +16,7 @@
 
 ## Descripción
 
-Una réplica funcional de Instagram desarrollada en React Native como parte de mi portafolio como desarrollador. Explora las características y funcionalidades de Instagram en este proyecto.
+Una réplica funcional de ShentaoHub desarrollada en React Native como parte de mi portafolio como desarrollador. Explora las características y funcionalidades de ShentaoHub en este proyecto.
 
 ## Características
 
@@ -36,11 +36,11 @@ Una réplica funcional de Instagram desarrollada en React Native como parte de m
 
 ## Descargar la aplicación para dispositivos Android
 
-- [![Descargar APK para Android](https://img.shields.io/badge/Google%20Drive-instagram--clone--app.apk-blue?logo=googledrive)](https://drive.google.com/file/d/15ahphglkz-yoSmbGTq201YoZ-xWay-pn/view?usp=drive_link)
+- [![Descargar APK para Android](https://img.shields.io/badge/Google%20Drive-ShentaoHub--clone--app.apk-blue?logo=googledrive)](https://drive.google.com/file/d/15ahphglkz-yoSmbGTq201YoZ-xWay-pn/view?usp=drive_link)
 
 ## Video de la aplicación corriendo en iOS:
 
-- [![Video en YouTube](https://img.shields.io/badge/YouTube-instagram--clone--app-d22?logo=youtube&logoColor=d22)](https://youtu.be/llQH79EdmfU)
+- [![Video en YouTube](https://img.shields.io/badge/YouTube-ShentaoHub--clone--app-d22?logo=youtube&logoColor=d22)](https://youtu.be/llQH79EdmfU)
 
 ## Capturas de Pantalla
 
@@ -82,13 +82,13 @@ Una réplica funcional de Instagram desarrollada en React Native como parte de m
 2. **Descargar el repositorio**
 
 ```bash
-git clone https://github.com/hernanhawryluk/instagram-clone-app
+git clone https://github.com/hernanhawryluk/ShentaoHub-clone-app
 ```
 
 3. **Accede al directorio del proyecto**
 
 ```bash
-cd instagram-clone-app
+cd ShentaoHub-clone-app
 ```
 
 4. **Instalar las dependencias**

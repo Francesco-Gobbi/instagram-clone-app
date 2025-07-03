@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import firebase from 'firebase/compat';
+import firebase from '../services/firebase';
 
 const useUploadComment = (post, currentUser) => {
     const [isLoading, setIsLoading] = useState(false);
@@ -9,38 +9,38 @@ const useUploadComment = (post, currentUser) => {
             setIsLoading(true);
             try {
                 const snapshot = await firebase
-                .firestore()
-                .collection("users")
-                .doc(post.owner_email)
-                .collection("posts")
-                .doc(post.id)
-                .get();
-        
-            const currentTimestamp = firebase.firestore.Timestamp.now();
-    
-            if (snapshot.exists) {
-                const postRef = snapshot.ref;
-                const newComment = {
-                    email: currentUser.email,
-                    profile_picture: currentUser.profile_picture,
-                    username: currentUser.username,
-                    comment: value,
-                    createdAt: currentTimestamp,
-                    likes_by_users: "",
-                };
-        
-                await postRef.update({
-                    comments: firebase.firestore.FieldValue.arrayUnion(newComment),
-                });
+                    .firestore()
+                    .collection("users")
+                    .doc(post.owner_email)
+                    .collection("posts")
+                    .doc(post.id)
+                    .get();
 
-                if (post.owner_email !== currentUser.email) {
-                    firebase.firestore().collection("users").doc(post.owner_email).update({
-                        event_notification: firebase.firestore.FieldValue.increment(1)
+                const currentTimestamp = firebase.firestore.Timestamp.now();
+
+                if (snapshot.exists) {
+                    const postRef = snapshot.ref;
+                    const newComment = {
+                        email: currentUser.email,
+                        profile_picture: currentUser.profile_picture,
+                        username: currentUser.username,
+                        comment: value,
+                        createdAt: currentTimestamp,
+                        likes_by_users: "",
+                    };
+
+                    await postRef.update({
+                        comments: firebase.firestore.FieldValue.arrayUnion(newComment),
                     });
+
+                    if (post.owner_email !== currentUser.email) {
+                        firebase.firestore().collection("users").doc(post.owner_email).update({
+                            event_notification: firebase.firestore.FieldValue.increment(1)
+                        });
+                    }
+                } else {
+                    console.log("No such document!");
                 }
-            } else {
-                console.log("No such document!");
-            }
             } catch (error) {
                 console.log(error);
             } finally {
@@ -49,9 +49,9 @@ const useUploadComment = (post, currentUser) => {
         }
     };
 
-    return { 
-        uploadComment, 
-        isLoading 
+    return {
+        uploadComment,
+        isLoading
     }
 }
 

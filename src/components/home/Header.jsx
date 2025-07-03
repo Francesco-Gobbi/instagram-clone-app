@@ -8,6 +8,7 @@ import {
   TouchableWithoutFeedback,
   Platform,
 } from "react-native";
+import { COLORS } from "../../utils/usePalete";
 import React, { useEffect, useState } from "react";
 import {
   MaterialCommunityIcons,
@@ -39,7 +40,7 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
     <Animated.View style={{ opacity: headerOpacity }}>
       <View style={styles.container}>
         <TouchableOpacity
-          style={styles.instagramContainer}
+          style={styles.ShentaoHubContainer}
           onPress={() => setFilterModalVisible(true)}
         >
           <Image
@@ -49,7 +50,7 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
           <MaterialIcons
             name={"keyboard-arrow-down"}
             size={20}
-            color={"#fff"}
+            color={COLORS.silver}
           />
         </TouchableOpacity>
 
@@ -68,7 +69,7 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
               <MaterialCommunityIcons
                 name="cards-heart-outline"
                 size={28}
-                color={"#fff"}
+                color={COLORS.silver}
               />
             </View>
           </TouchableOpacity>
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
     zIndex: 1,
   },
-  instagramContainer: {
+  ShentaoHubContainer: {
     flexDirection: "row",
     justifyContent: "flex-start",
     alignItems: "center",
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   unreadBadgeContainer: {
-    backgroundColor: "#FF3250",
+    backgroundColor: COLORS.red,
     position: "absolute",
     right: -5,
     top: -3,
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
   divider: {
     width: "100%",
     height: 0.5,
-    backgroundColor: "#111",
+    backgroundColor: COLORS.border,
   },
   modalBackdrop: {
     flex: 1,
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: Platform.OS === "ios" ? 100 : SIZES.Height * 0.07,
     left: 22,
-    backgroundColor: "rgba(35,35,35,0.6)",
+    backgroundColor: "rgba(26,26,26,0.9)",
     borderRadius: 15,
     overflow: "hidden",
   },
@@ -220,7 +221,7 @@ const styles = StyleSheet.create({
     height: 46,
   },
   modalText: {
-    color: "#fff",
+    color: COLORS.text,
     fontSize: 16,
     fontWeight: "500",
     marginHorizontal: 15,

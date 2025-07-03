@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import useUploadPicture from './useUploadPicture'
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 
 const useUploadStory = () => {
     const [isLoading, setIsLoading] = useState(false)
-    const {uploadPicture} = useUploadPicture()
+    const { uploadPicture } = useUploadPicture()
 
     const uploadStory = async (imageUrl, currentUser) => {
-        if(!isLoading) {
+        if (!isLoading) {
             setIsLoading(true);
             try {
                 const timestamp = new Date().getTime();
@@ -25,14 +25,14 @@ const useUploadStory = () => {
                     new_likes: [],
                     seen_by_users: [],
                 }
-    
+
                 await firebase
-                .firestore()
-                .collection("users")
-                .doc(currentUser.email)
-                .collection("stories")
-                .add(newStory);
-                
+                    .firestore()
+                    .collection("users")
+                    .doc(currentUser.email)
+                    .collection("stories")
+                    .add(newStory);
+
             } catch (error) {
                 console.error(error);
             } finally {

@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { COLORS } from "../../../utils/usePalete";
 
 const Likes = ({ post, navigation }) => (
   <View>
@@ -36,7 +37,7 @@ const styles = StyleSheet.create({
   likesText: {
     marginHorizontal: 12,
     marginTop: 5,
-    color: "#eee",
+    color: COLORS.text,
     fontWeight: "600",
     fontSize: 13,
   },

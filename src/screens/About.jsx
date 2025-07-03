@@ -34,7 +34,7 @@ const About = ({ navigation, route }) => {
         <Text style={styles.username}>{user.username}</Text>
         <Text style={styles.smallText}>
           To help keep our community authentic, we're showing information about
-          accounts on Instagram.
+          accounts on ShentaoHub.
         </Text>
         <TouchableOpacity>
           <Text style={styles.linkText}>

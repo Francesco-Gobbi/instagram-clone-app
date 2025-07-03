@@ -1,19 +1,16 @@
 import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
+import Constants from 'expo-constants';
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyC61M-mcCdlkudNOvqtpMNO6XU28Ds3Tng",
-  authDomain: "instagram-clone-app-3f538.firebaseapp.com",
-  projectId: "instagram-clone-app-3f538",
-  storageBucket: "instagram-clone-app-3f538.appspot.com",
-  messagingSenderId: "923663435657",
-  appId: "1:923663435657:web:55648541fad8fbcfd30358"
+    apiKey: Constants.expoConfig?.extra?.apiKey,
+    authDomain: "shentaohub.firebaseapp.com",
+    projectId: "shentaohub",
+    storageBucket: "shentaohub.firebasestorage.app",
+    messagingSenderId: Constants.expoConfig?.extra?.messagingSenderId,
+    appId: Constants.expoConfig?.extra?.appId
 };
 
-// !firebase.apps.length ? firebase.initializeApp(firebaseConfig) : firebase.app()
-firebase.initializeApp(firebaseConfig);
-
-
+!firebase.apps.length ? firebase.initializeApp(firebaseConfig) : firebase.app()
 
 export default firebase;

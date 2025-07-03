@@ -11,7 +11,7 @@ import React, { useEffect, useState } from "react";
 import { Ionicons, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import firebase from "firebase/compat";
+import firebase from "../../services/firebase";
 import MessageModal from "../shared/modals/MessageModal";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 
@@ -51,6 +51,7 @@ const LoginForm = ({ navigation }) => {
   });
 
   const onLogin = async (email, password) => {
+    console.log('on login')
     Keyboard.dismiss();
     try {
       const userCredentials = await firebase
@@ -67,6 +68,7 @@ const LoginForm = ({ navigation }) => {
       error.message ==
         "Firebase: There is no user record corresponding to this identifier. The user may have been deleted. (auth/user-not-found)." &&
         handleDataError("Invalid email. Please verify your input.");
+        console.log(error)
     }
   };
 
@@ -143,6 +145,7 @@ const LoginForm = ({ navigation }) => {
                 secureTextEntry={obsecureText}
                 textContentType="password"
                 onChangeText={handleChange("password")}
+                onChange={e => handleChange("password")(e.nativeEvent.text)}
                 onBlur={() => {
                   handleBlur("password");
                   values.password.length > 0
@@ -169,20 +172,6 @@ const LoginForm = ({ navigation }) => {
                 <Text style={styles.btnText}>Log in</Text>
               </View>
             </TouchableOpacity>
-            <View style={{ height: 56 }}>
-              {developerMessage && (
-                <Animated.View
-                  style={styles.modalContainer}
-                  entering={FadeInDown.duration(1000)}
-                  exiting={FadeOutDown.duration(1000)}
-                >
-                  <Ionicons name={"logo-react"} size={24} color="#fff" />
-                  <Text style={styles.modalText}>
-                    Developed by Hernan Hawryluk
-                  </Text>
-                </Animated.View>
-              )}
-            </View>
           </View>
         )}
       </Formik>

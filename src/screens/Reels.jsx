@@ -25,7 +25,7 @@ import { useIsFocused } from "@react-navigation/native";
 import * as Progress from "react-native-progress";
 import useFetchReels from "../hooks/useFetchReels";
 import usePlayReels from "../hooks/usePlayReels";
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 import Skeleton from "../components/reels/Skeleton";
 import MessageModal, {
   handleFeatureNotImplemented,

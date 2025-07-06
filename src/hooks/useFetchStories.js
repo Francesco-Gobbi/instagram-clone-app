@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 
 const useFetchStories = () => {
     const [stories, setStories] = useState([]);

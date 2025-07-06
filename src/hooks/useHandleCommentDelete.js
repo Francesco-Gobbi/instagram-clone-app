@@ -1,4 +1,4 @@
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 import { useState } from "react";
 
 const useHandleCommentDelete = () => {

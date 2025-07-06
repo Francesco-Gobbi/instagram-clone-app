@@ -38,7 +38,7 @@ const BottomTabs = ({ navigation }) => {
   return (
     <Tab.Navigator screenOptions={screenOptions}>
       <Tab.Screen
-        name="Home"
+        name="Feed"
         component={Home}
         options={{
           tabBarIcon: ({ focused }) => {
@@ -51,7 +51,7 @@ const BottomTabs = ({ navigation }) => {
         }}
       />
       <Tab.Screen
-        name="Search"
+        name="Discover"
         component={Search}
         options={{
           tabBarIcon: ({ focused }) => {
@@ -66,7 +66,7 @@ const BottomTabs = ({ navigation }) => {
         }}
       />
       <Tab.Screen
-        name="Blank"
+        name="Create"
         component={Blank}
         options={{
           tabBarIcon: ({ focused }) => {
@@ -77,7 +77,7 @@ const BottomTabs = ({ navigation }) => {
               {...props}
               onPress={() => {
                 navigation.navigate("MediaLibrary", {
-                  initialSelectedType: "New post",
+                  initialSelectedType: "New content",
                 });
               }}
             />
@@ -85,7 +85,7 @@ const BottomTabs = ({ navigation }) => {
         }}
       />
       <Tab.Screen
-        name="Reels"
+        name="Videos"
         component={Reels}
         options={{
           tabBarIcon: ({ focused }) => {
@@ -100,7 +100,7 @@ const BottomTabs = ({ navigation }) => {
         }}
       />
       <Tab.Screen
-        name="Profile"
+        name="Account"
         component={Profile}
         options={{
           tabBarIcon: ({ focused }) => {

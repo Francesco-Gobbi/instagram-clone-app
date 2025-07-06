@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useUserContext } from "../contexts/UserContext";
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 
 const useFetchContactList = () => {
     const { currentUser } = useUserContext();

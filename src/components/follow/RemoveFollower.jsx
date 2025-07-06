@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 import { useUserContext } from "../../contexts/UserContext";
-import firebase from "firebase/compat";
+import firebase from "../../services/firebase";
 import { Image } from "expo-image";
 
 const RemoveFollower = ({ handleModal, user }) => {

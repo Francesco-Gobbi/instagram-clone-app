@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 
 const useFindUsers = ({currentUser, searchKey}) => {
     const [users, setUsers] = useState([]);

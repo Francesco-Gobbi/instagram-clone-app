@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 
 const useFetchPosts = () => {
     const [posts, setPosts] = useState([]);
@@ -17,13 +17,21 @@ useEffect(() => {
               .orderBy("createdAt", "desc")
               .limit(loadLimit)
               .onSnapshot(snapshot => {
-                  const updatedPosts = snapshot.docs.map(post => ({ id: post.id, ...post.data() }));
-                  setPosts(updatedPosts);
+                  if (snapshot && snapshot.docs) {
+                      const updatedPosts = snapshot.docs.map(post => ({ id: post.id, ...post.data() }));
+                      setPosts(updatedPosts || []);
+                  } else {
+                      setPosts([]);
+                  }
+            }, error => {
+                console.error("Error in snapshot listener:", error);
+                setPosts([]);
             });
 
             return () => unsubscribe;
         } catch (error) {
             console.error("Error fetching posts:", error);
+            setPosts([]);
         } finally {
             setIsLoading(false);
         }

@@ -1,4 +1,4 @@
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 
 const useDeletePost = () => {
     const deletePost = (post) => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUserContext } from "../contexts/UserContext";
-import firebase from "firebase/compat";
+import firebase from "../services/firebase";
 
 const useFilterPosts = (filterKey) => {
     const { currentUser } = useUserContext();

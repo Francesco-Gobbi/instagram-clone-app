@@ -25,7 +25,7 @@ const Notifications = ({ navigation, route }) => {
   const [notificationCounter, setNotificationCounter] = useState(0);
 
   useEffect(() => {
-    if (currentUser.event_notification > 0) {
+    if ((currentUser?.event_notification ?? 0) > 0) {
       try {
         firebase.firestore().collection("users").doc(currentUser.email).update({
           event_notification: 0,

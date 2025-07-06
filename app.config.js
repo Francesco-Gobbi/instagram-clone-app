@@ -13,12 +13,12 @@ export default {
         slug: "ShentaoHub",
         version: "1.0.0",
         orientation: "portrait",
-        icon: "./assets/icon.png",
+        icon: "./assets/new-icon.png",
         userInterfaceStyle: "light",
         splash: {
-            image: "./assets/splash.png",
+            image: "./assets/new-splash.png",
             resizeMode: "contain",
-            backgroundColor: "#ffffff"
+            backgroundColor: "#1a1a2e"
         },
         assetBundlePatterns: [
             "**/*"
@@ -86,7 +86,7 @@ export default {
             }
         },
         web: {
-            favicon: "./assets/favicon.png"
+            favicon: "./assets/new-favicon.png"
         },
         plugins: [
             "expo-camera",

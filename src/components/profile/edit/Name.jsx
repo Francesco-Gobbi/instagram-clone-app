@@ -13,7 +13,7 @@ import React, { useState, useEffect } from "react";
 import { Divider } from "react-native-elements";
 import { MaterialIcons, Octicons } from "@expo/vector-icons";
 import { useUserContext } from "../../../contexts/UserContext";
-import firebase from "firebase/compat";
+import firebase from "../../../services/firebase";
 
 const Name = ({ navigation }) => {
   const { currentUser } = useUserContext();

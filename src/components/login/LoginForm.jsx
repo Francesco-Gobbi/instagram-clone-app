@@ -11,9 +11,11 @@ import React, { useEffect, useState } from "react";
 import { Ionicons, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
 import { Formik } from "formik";
 import * as Yup from "yup";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import firebase from "../../services/firebase";
 import MessageModal from "../shared/modals/MessageModal";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+import useAuthPersistence from '../../hooks/useAuthPersistence';
 
 const LoginForm = ({ navigation }) => {
   const [obsecureText, setObsecureText] = useState(true);
@@ -23,6 +25,7 @@ const LoginForm = ({ navigation }) => {
   const [messageModalVisible, setMessageModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [developerMessage, setDeveloperMessage] = useState(false);
+  const { isLoading, user } = useAuthPersistence();
 
   useEffect(() => {
     setTimeout(() => {
@@ -33,6 +36,16 @@ const LoginForm = ({ navigation }) => {
     }, 12000);
   }, []);
 
+
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigation.replace("Home");
+    }
+  }, [isLoading, user]);
+  
+  if (isLoading) return null;
+  
   const handleDataError = (message) => {
     setErrorMessage(message);
     setMessageModalVisible(true);
@@ -57,6 +70,13 @@ const LoginForm = ({ navigation }) => {
       const userCredentials = await firebase
         .auth()
         .signInWithEmailAndPassword(email, password);
+
+        const userData = {
+          uid: userCredentials.user.uid,
+          email: userCredentials.user.email,
+        };
+        
+        await AsyncStorage.setItem('user', JSON.stringify(userData));
       console.log(
         "🔥 Firebase Login Successful ✅",
         userCredentials.user.email
@@ -82,7 +102,15 @@ const LoginForm = ({ navigation }) => {
         validationSchema={LoginFormSchema}
         validateOnMount={true}
       >
-        {({ handleChange, handleBlur, handleSubmit, values, isValid }) => (
+       {({
+          handleChange,
+          handleBlur,
+          handleSubmit,
+          values,
+          isValid,
+          setFieldTouched,
+          validateForm,
+        }) => (
           <View>
             <View
               style={[
@@ -145,12 +173,16 @@ const LoginForm = ({ navigation }) => {
                 secureTextEntry={obsecureText}
                 textContentType="password"
                 onChangeText={handleChange("password")}
-                onChange={e => handleChange("password")(e.nativeEvent.text)}
                 onBlur={() => {
                   handleBlur("password");
                   values.password.length > 0
                     ? SetPasswordToValidate(true)
                     : SetPasswordToValidate(false);
+                }}
+                onFocus={ ()=>{
+                values.password.length > 0
+                  ? SetPasswordToValidate(true)
+                  : SetPasswordToValidate(false);
                 }}
                 value={values.password}
               />

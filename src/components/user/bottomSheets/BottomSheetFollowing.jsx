@@ -4,7 +4,7 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import CustomBackdrop from "../../shared/bottomSheets/CustomBackdrop";
 import { Divider } from "react-native-elements";
 import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
-import firebase from "firebase/compat";
+import firebase from "../../../services/firebase";
 import useHandleUnfollow from "../../../hooks/useHandleUnfollow";
 
 const BottomSheetFollowing = ({ bottomSheetRef, currentUser, user }) => {

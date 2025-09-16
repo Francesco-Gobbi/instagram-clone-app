@@ -1,72 +1,108 @@
-import { useEffect, useState } from "react";
-import { Alert } from "react-native";
-import * as MediaLibrary from "expo-media-library";
+import { useState, useEffect } from 'react';
+import * as MediaLibrary from 'expo-media-library';
 
 const useMediaLibrary = (selectedAlbum) => {
-  const [permissionGranted, setPermissionGranted] = useState(false);
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const requestPermission = async () => {
+    fetchMedia();
+  }, [selectedAlbum]);
+
+  const fetchMedia = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
       const { status } = await MediaLibrary.requestPermissionsAsync();
 
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission required",
-          "Please grant permission to access the camera roll to use this feature.",
-          [{ text: "OK" }]
-        );
-        setPermissionGranted(false);
-        return;
+      if (status !== 'granted') {
+        throw new Error('Permesso negato per accedere alla libreria media');
       }
-      setPermissionGranted(true);
-    };
-    requestPermission();
-  }, []);
 
-  useEffect(() => {
-    const getPhotos = async () => {
-      if (permissionGranted) {
-        const { assets } = await MediaLibrary.getAssetsAsync({
-          album: selectedAlbum,
-          mediaType: "photo",
-          first: 128,
-          sortBy: ["creationTime"],
-        });
-        const allImages = assets.map((asset) => {
-          return { id: asset.id, uri: asset.uri };
-        });
-        setImages(allImages);
+      const mediaOptions = {
+        first: 30,
+        sortBy: [MediaLibrary.SortBy.creationTime],
+        mediaType: [MediaLibrary.MediaType.photo, MediaLibrary.MediaType.video],
+        album: selectedAlbum,
+      };
+
+      const mediaAssets = await MediaLibrary.getAssetsAsync(mediaOptions);
+
+      const imageAssets = [];
+      const videoAssets = [];
+
+      for (const asset of mediaAssets.assets) {
+        try {
+          const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+
+          const processedAsset = {
+            id: asset.id,
+            uri: assetInfo.localUri || assetInfo.uri || asset.uri,
+            filename: asset.filename,
+            mediaType: asset.mediaType,
+            width: asset.width,
+            height: asset.height,
+            duration: asset.duration,
+            creationTime: asset.creationTime,
+            modificationTime: asset.modificationTime,
+          };
+
+          if (!processedAsset.uri) {
+            console.warn('Asset senza URI valido:', asset.id);
+            continue;
+          }
+
+          if (asset.mediaType === MediaLibrary.MediaType.photo) {
+            imageAssets.push(processedAsset);
+          } else if (asset.mediaType === MediaLibrary.MediaType.video) {
+            videoAssets.push(processedAsset);
+          }
+        } catch (assetError) {
+          console.warn('Errore nel processare asset:', asset.id, assetError);
+        }
       }
-    };
 
-    const getVideos = async () => {
-      if (permissionGranted) {
-        const { assets } = await MediaLibrary.getAssetsAsync({
-          album: selectedAlbum,
-          mediaType: "video",
-          first: 24,
-          sortBy: ["creationTime"],
-        });
-        const allVideos = await Promise.all(
-          assets.map(async (asset) => {
-            const { localUri } = await MediaLibrary.getAssetInfoAsync(asset.id);
-            return { id: asset.id, uri: asset.uri, localUri: localUri };
-          })
-        );
-        setVideos(allVideos);
+      console.log(`Recuperate ${imageAssets.length} immagini e ${videoAssets.length} video`);
+
+      setImages(imageAssets);
+      setVideos(videoAssets);
+
+      if (mediaAssets.hasNextPage) {
+        console.log('Ci sono più media disponibili - implementa pagination se necessario');
       }
-    };
 
-    getPhotos();
-    getVideos();
-  }, [permissionGranted, selectedAlbum]);
+    } catch (err) {
+      console.error('Errore nel recupero dei media:', err);
+      setError(err.message);
+      setImages([]);
+      setVideos([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refetchMedia = () => {
+    fetchMedia();
+  };
+
+  const loadMoreMedia = async () => {
+    try {
+      console.log('LoadMore non ancora implementato');
+    } catch (err) {
+      console.error('Errore nel caricamento di più media:', err);
+    }
+  };
 
   return {
     images,
     videos,
-    permissionGranted,
+    loading,
+    error,
+    refetchMedia,
+    loadMoreMedia,
   };
 };
 

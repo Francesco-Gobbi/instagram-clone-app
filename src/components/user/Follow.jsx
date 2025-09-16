@@ -26,7 +26,7 @@ const Follow = ({ user, currentUser, navigation }) => {
 
   const handleViewProfile = () => {
     if (currentUser.email === user.email) {
-      navigation.navigate("Profile");
+      navigation.navigate("Account");
     } else {
       navigation.replace("UserDetail", {
         email: user.email,

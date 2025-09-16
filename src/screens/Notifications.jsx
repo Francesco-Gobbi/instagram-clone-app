@@ -38,8 +38,11 @@ const Notifications = ({ navigation, route }) => {
 
   useEffect(() => {
     counter = 0;
-
-    for (let i = 0; i < posts.length; i++) {
+    if (posts) {
+      return;
+    }
+    
+    for (let i = 0; i < posts.length || 0; i++) {
       if (posts[i].comments && posts[i].comments.length > 0) {
         if (
           posts[i].comments[posts[i].comments.length - 1].email !==
@@ -55,7 +58,7 @@ const Notifications = ({ navigation, route }) => {
 
     if (
       currentUser.followers_request &&
-      currentUser.followers_request.length > 0
+      (currentUser.followers_request?.length || 0 ) > 0
     ) {
       counter = counter + currentUser.followers_request.length;
     }
@@ -75,7 +78,7 @@ const Notifications = ({ navigation, route }) => {
       {notificationCounter > 0 ? (
         <View>
           {currentUser.followers_request &&
-            currentUser.followers_request.length > 0 && (
+            (currentUser.followers_request?.length || 0) > 0 && (
               <View>
                 <Text style={styles.subtitle}>Followers Requests:</Text>
                 <FlatList
@@ -94,8 +97,8 @@ const Notifications = ({ navigation, route }) => {
               keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) =>
                 item.id !== "empty" &&
-                item.comments.length > 0 &&
-                item.comments[item.comments.length - 1].username !==
+                (item.comments?.length || 0) > 0 &&
+                item.comments[(item.comments?.length || 0) - 1].username !==
                   currentUser.username ? (
                   <Interaction
                     navigation={navigation}
@@ -105,7 +108,7 @@ const Notifications = ({ navigation, route }) => {
                   />
                 ) : (
                   item.id !== "empty" &&
-                  item.new_likes.length > 0 && (
+                  (item.new_likes?.length || 0) > 0 && (
                     <Interaction
                       navigation={navigation}
                       item={item}

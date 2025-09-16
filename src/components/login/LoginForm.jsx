@@ -6,16 +6,16 @@ import {
   TouchableOpacity,
   Keyboard,
   Platform,
+  ActivityIndicator,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Ionicons, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import firebase from "../../services/firebase";
 import MessageModal from "../shared/modals/MessageModal";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
-import useAuthPersistence from '../../hooks/useAuthPersistence';
+import useAuthPersistence from '../../utils/useAuthPersistence';
 
 const LoginForm = ({ navigation }) => {
   const [obsecureText, setObsecureText] = useState(true);
@@ -24,8 +24,12 @@ const LoginForm = ({ navigation }) => {
   const [passwordToValidate, SetPasswordToValidate] = useState(false);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [developerMessage, setDeveloperMessage] = useState(false);
-  const { isLoading, user } = useAuthPersistence();
+  const { isLoading, user, saveUserSecurely } = useAuthPersistence();
+  
+  // Ref per il TextInput della password
+  const passwordInputRef = useRef(null);
 
   useEffect(() => {
     setTimeout(() => {
@@ -36,15 +40,20 @@ const LoginForm = ({ navigation }) => {
     }, 12000);
   }, []);
 
-
-
   useEffect(() => {
     if (!isLoading && user) {
       navigation.replace("Home");
-    }
+      }
   }, [isLoading, user]);
   
-  if (isLoading) return null;
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#07f" />
+        <Text style={styles.loadingText}>Checking authentication...</Text>
+      </View>
+    );
+  }
   
   const handleDataError = (message) => {
     setErrorMessage(message);
@@ -56,39 +65,96 @@ const LoginForm = ({ navigation }) => {
 
   const LoginFormSchema = Yup.object().shape({
     email: Yup.string()
-      .required()
-      .min(6, "A valid phone number, username or email address is required"),
+      .required("Email is required")
+      .email("Please enter a valid email address")
+      .min(5, "Email must be at least 5 characters"),
     password: Yup.string()
-      .required()
-      .min(6, "Your password has to have at least 8 characters"),
+      .required("Password is required")
+      .min(6, "Password must be at least 6 characters"),
   });
 
+  const getFirebaseErrorMessage = (error) => {
+    switch (error.code) {
+      case 'auth/wrong-password':
+        return "The password is incorrect. Please try again.";
+      case 'auth/user-not-found':
+        return "No account found with this email address.";
+      case 'auth/invalid-email':
+        return "The email address is invalid.";
+      case 'auth/user-disabled':
+        return "Your account is pending approval. Please contact your administrator.";
+      case 'auth/too-many-requests':
+        return "Too many unsuccessful login attempts. Please try again later.";
+      case 'auth/network-request-failed':
+        return "Network error. Please check your internet connection.";
+      case 'auth/invalid-credential':
+        return "Invalid credentials. Please check your email and password.";
+      default:
+        return "An error occurred during login. Please try again.";
+    }
+  };
+
+  // Funzione per verificare lo status dell'utente
+  const checkUserApprovalStatus = async (uid) => {
+    try {
+      const userDoc = await firebase.firestore().collection('users').doc(uid).get();
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        return userData.status;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error checking user status:', error);
+      return null;
+    }
+  };
+
   const onLogin = async (email, password) => {
-    console.log('on login')
+    if (isLoggingIn) return; 
+    
+    setIsLoggingIn(true);
     Keyboard.dismiss();
+    
     try {
       const userCredentials = await firebase
         .auth()
         .signInWithEmailAndPassword(email, password);
 
-        const userData = {
-          uid: userCredentials.user.uid,
-          email: userCredentials.user.email,
-        };
-        
-        await AsyncStorage.setItem('user', JSON.stringify(userData));
-      console.log(
-        "🔥 Firebase Login Successful ✅",
-        userCredentials.user.email
-      );
+      // Verifica lo status di approvazione
+      const userStatus = await checkUserApprovalStatus(userCredentials.user.uid);
+      
+      if (userStatus === 'pending') {
+        // Logout immediato se l'utente non è approvato
+        await firebase.auth().signOut();
+        navigation.navigate('PendingApproval');
+        return;
+      } else if (userStatus === 'rejected') {
+        await firebase.auth().signOut();
+        handleDataError("Your account has been rejected. Please contact your administrator.");
+        return;
+      }
+
+      const userData = {
+        uid: userCredentials.user.uid,
+        email: userCredentials.user.email,
+      };
+      
+      await saveUserSecurely(userData, password);
+      
+      console.log("🔥 Firebase Login Successful ✅", userCredentials.user.email);
+      
     } catch (error) {
-      error.message ==
-        "Firebase: The password is invalid or the user does not have a password. (auth/wrong-password)." &&
-        handleDataError("The password is invalid, try again.");
-      error.message ==
-        "Firebase: There is no user record corresponding to this identifier. The user may have been deleted. (auth/user-not-found)." &&
-        handleDataError("Invalid email. Please verify your input.");
-        console.log(error)
+      console.error("Login error:", error);
+      const errorMessage = getFirebaseErrorMessage(error);
+      
+      // Se l'errore è user-disabled, mostra la pagina di attesa
+      if (error.code === 'auth/user-disabled') {
+        navigation.navigate('PendingApproval');
+      } else {
+        handleDataError(errorMessage);
+      }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -107,105 +173,166 @@ const LoginForm = ({ navigation }) => {
           handleBlur,
           handleSubmit,
           values,
+          errors,
+          touched,
           isValid,
           setFieldTouched,
+          setFieldValue,
           validateForm,
-        }) => (
-          <View>
-            <View
-              style={[
-                styles.inputField,
-                {
-                  paddingVertical: 16,
-                  borderColor:
-                    emailToValidate && values.email.length < 5
-                      ? "#f00"
-                      : "#444",
-                },
-              ]}
-            >
-              <TextInput
-                style={styles.inputText}
-                placeholderTextColor={"#bbb"}
-                placeholder="Email"
-                autoCapitalize="none"
-                autoCorrect={false}
-                inputMode="email"
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                onChangeText={handleChange("email")}
-                onBlur={() => {
-                  handleBlur("email");
-                  setEmailOnFocus(false);
-                  values.email.length > 0
-                    ? SetEmailToValidate(true)
-                    : SetEmailToValidate(false);
-                }}
-                onFocus={() => setEmailOnFocus(true)}
-                value={values.email}
-              />
-              <TouchableOpacity onPress={() => handleChange("email")("")}>
-                <Octicons
-                  name={emailOnFocus ? "x-circle-fill" : ""}
-                  size={15}
-                  color={"#555"}
-                />
-              </TouchableOpacity>
-            </View>
+        }) => {
+          
+          // Funzione per gestire il cambio della password con validazione forzata
+          const handlePasswordChange = (text) => {
+            setFieldValue("password", text);
+            setFieldTouched("password", true);
+            
+            // Forza la validazione dopo un breve delay
+            setTimeout(() => {
+              validateForm();
+            }, 50);
+            
+            // Aggiorna lo stato di validazione locale
+            if (text.length > 0) {
+              SetPasswordToValidate(true);
+            } else {
+              SetPasswordToValidate(false);
+            }
+          };
 
-            <View
-              style={[
-                styles.inputField,
-                {
-                  borderColor:
-                    passwordToValidate && values.password.length < 6
-                      ? "#f00"
-                      : "#444",
-                },
-              ]}
-            >
-              <TextInput
-                style={styles.inputText}
-                placeholderTextColor={"#bbb"}
-                placeholder="Password"
-                autoCapitalize="none"
-                autoCorrect={false}
-                secureTextEntry={obsecureText}
-                textContentType="password"
-                onChangeText={handleChange("password")}
-                onBlur={() => {
-                  handleBlur("password");
-                  values.password.length > 0
-                    ? SetPasswordToValidate(true)
-                    : SetPasswordToValidate(false);
-                }}
-                onFocus={ ()=>{
-                values.password.length > 0
-                  ? SetPasswordToValidate(true)
-                  : SetPasswordToValidate(false);
-                }}
-                value={values.password}
-              />
-              <TouchableOpacity onPress={() => setObsecureText(!obsecureText)}>
-                <MaterialCommunityIcons
-                  name={obsecureText ? "eye-off" : "eye"}
-                  size={24}
-                  color={obsecureText ? "#fff" : "#37e"}
+          // Gestione del focus sulla password
+          const handlePasswordFocus = () => {
+            if (values.password.length > 0) {
+              SetPasswordToValidate(true);
+              setFieldTouched("password", true);
+            }
+          };
+
+          return (
+            <View>
+              <View
+                style={[
+                  styles.inputField,
+                  {
+                    paddingVertical: 16,
+                    borderColor:
+                      (touched.email && errors.email) || (emailToValidate && values.email.length < 5)
+                        ? "#f00"
+                        : "#444",
+                  },
+                ]}
+              >
+                <TextInput
+                  style={styles.inputText}
+                  placeholderTextColor={"#bbb"}
+                  placeholder="Email"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  inputMode="email"
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  onChangeText={(text) => {
+                    handleChange("email")(text);
+                    setTimeout(() => setFieldTouched("email", true), 100);
+                  }}
+                  onBlur={() => {
+                    handleBlur("email");
+                    setEmailOnFocus(false);
+                    values.email.length > 0
+                      ? SetEmailToValidate(true)
+                      : SetEmailToValidate(false);
+                  }}
+                  onFocus={() => setEmailOnFocus(true)}
+                  value={values.email}
                 />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.forgotContainer}>
-              <TouchableOpacity onPress={() => navigation.navigate("Forgot")}>
-                <Text style={styles.forgotText}>Forgot Password?</Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity onPress={handleSubmit} disabled={!isValid}>
-              <View style={styles.btnContainer(isValid)}>
-                <Text style={styles.btnText}>Log in</Text>
+                <TouchableOpacity onPress={() => handleChange("email")("")}>
+                  <Octicons
+                    name={emailOnFocus ? "x-circle-fill" : ""}
+                    size={15}
+                    color={"#555"}
+                  />
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
-          </View>
-        )}
+
+              {touched.email && errors.email && (
+                <Text style={styles.errorText}>{errors.email}</Text>
+              )}
+
+              <View
+                style={[
+                  styles.inputField,
+                  {
+                    borderColor:
+                      (touched.password && errors.password) || (passwordToValidate && values.password.length < 6)
+                        ? "#f00"
+                        : "#444",
+                  },
+                ]}
+              >
+                <TextInput
+                  ref={passwordInputRef}
+                  style={styles.inputText}
+                  placeholderTextColor={"#bbb"}
+                  placeholder="Password"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  secureTextEntry={obsecureText}
+                  textContentType="password"
+                  onChangeText={handlePasswordChange}
+                  onBlur={() => {
+                    handleBlur("password");
+                    values.password.length > 0
+                      ? SetPasswordToValidate(true)
+                      : SetPasswordToValidate(false);
+                  }}
+                  onFocus={handlePasswordFocus}
+                  value={values.password}
+                  onSelectionChange={() => {
+                    setTimeout(() => {
+                      if (values.password.length > 0) {
+                        setFieldTouched("password", true);
+                        validateForm();
+                      }
+                    }, 100);
+                  }}
+                />
+                <TouchableOpacity onPress={() => setObsecureText(!obsecureText)}>
+                  <MaterialCommunityIcons
+                    name={obsecureText ? "eye-off" : "eye"}
+                    size={24}
+                    color={obsecureText ? "#fff" : "#37e"}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {touched.password && errors.password && (
+                <Text style={styles.errorText}>{errors.password}</Text>
+              )}
+
+              <View style={styles.forgotContainer}>
+                <TouchableOpacity onPress={() => navigation.navigate("Forgot")}>
+                  <Text style={styles.forgotText}>Forgot Password?</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity 
+                onPress={handleSubmit} 
+                disabled={!isValid || isLoggingIn}
+                style={styles.btnContainer(isValid && !isLoggingIn)}
+              >
+                <View style={styles.btnContent}>
+                  {isLoggingIn ? (
+                    <>
+                      <ActivityIndicator size="small" color="#fff" style={styles.loadingSpinner} />
+                      <Text style={styles.btnText}>Logging in...</Text>
+                    </>
+                  ) : (
+                    <Text style={styles.btnText}>Log in</Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            </View>
+          );
+        }}
       </Formik>
 
       <MessageModal
@@ -223,6 +350,17 @@ export default LoginForm;
 const styles = StyleSheet.create({
   container: {
     marginTop: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+  },
+  loadingText: {
+    color: '#fff',
+    marginTop: 10,
+    fontSize: 16,
   },
   inputField: {
     marginTop: 14,
@@ -244,6 +382,13 @@ const styles = StyleSheet.create({
     color: "#fff",
     width: "95%",
   },
+  errorText: {
+    color: "#f00",
+    fontSize: 12,
+    marginTop: 5,
+    marginLeft: 20,
+    marginBottom: 5,
+  },
   forgotContainer: {
     alignItems: "flex-end",
     marginTop: 20,
@@ -253,25 +398,29 @@ const styles = StyleSheet.create({
     color: "#1af",
     fontWeight: "700",
   },
-  loginBtn: {
-    backgroundColor: "#1af",
-    color: "#fff",
-  },
-  btnContainer: (isValid) => ({
+  btnContainer: (isEnabled) => ({
     marginTop: 35,
     alignItems: "center",
     backgroundColor: "#07f",
-    opacity: isValid ? 1 : 0.6,
+    opacity: isEnabled ? 1 : 0.6,
     marginHorizontal: 20,
     justifyContent: "center",
     alignContent: "center",
     height: Platform.OS === "android" ? 56 : 54,
     borderRadius: 10,
   }),
+  btnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   btnText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "800",
+  },
+  loadingSpinner: {
+    marginRight: 8,
   },
   modalContainer: {
     marginTop: 14,

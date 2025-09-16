@@ -8,7 +8,7 @@ import {
   TouchableWithoutFeedback,
   Platform,
 } from "react-native";
-import { COLORS } from "../../utils/usePalete";
+import { darkTheme } from "../../utils/theme";
 import React, { useEffect, useState } from "react";
 import {
   MaterialCommunityIcons,
@@ -19,6 +19,7 @@ import { Image } from "expo-image";
 import { BlurView } from "expo-blur";
 import ModalNotification from "../notifications/ModalNotification";
 import { SIZES } from "../../constants";
+import { Ionicons } from '@expo/vector-icons';
 
 const Header = ({ navigation, headerOpacity, currentUser }) => {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -45,12 +46,12 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
         >
           <Image
             style={styles.logo}
-            source={require("../../../assets/images/header-logo.png")}
+            source={require("../../../assets/images/header-logo.webp")}
           />
           <MaterialIcons
             name={"keyboard-arrow-down"}
             size={20}
-            color={COLORS.silver}
+            color={darkTheme.colors.onSurfaceVariant}
           />
         </TouchableOpacity>
 
@@ -66,10 +67,10 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
               <View style={styles.unreadBadgeSmallContainer} />
             )}
             <View style={styles.iconsContainer}>
-              <MaterialCommunityIcons
-                name="cards-heart-outline"
+              <Ionicons
+                name="heart-outline"
                 size={28}
-                color={COLORS.silver}
+                color={darkTheme.colors.onSurface}
               />
             </View>
           </TouchableOpacity>
@@ -82,9 +83,10 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
               </View>
             )}
             <View style={styles.iconsContainer}>
-              <Image
-                style={styles.messenger}
-                source={require("../../../assets/icons/chat-icon.png")}
+              <Ionicons
+                name="chatbubble-outline"
+                size={26}
+                color={darkTheme.colors.onSurface}
               />
             </View>
           </TouchableOpacity>
@@ -166,7 +168,7 @@ const styles = StyleSheet.create({
     height: 27,
   },
   unreadBadgeSmallContainer: {
-    backgroundColor: "#FF3250",
+    backgroundColor: darkTheme.colors.notification,
     position: "absolute",
     right: 0,
     top: 1,
@@ -178,7 +180,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   unreadBadgeContainer: {
-    backgroundColor: COLORS.red,
+    backgroundColor: darkTheme.colors.notification,
     position: "absolute",
     right: -5,
     top: -3,
@@ -198,7 +200,7 @@ const styles = StyleSheet.create({
   divider: {
     width: "100%",
     height: 0.5,
-    backgroundColor: COLORS.border,
+    backgroundColor: darkTheme.colors.outline,
   },
   modalBackdrop: {
     flex: 1,
@@ -221,7 +223,7 @@ const styles = StyleSheet.create({
     height: 46,
   },
   modalText: {
-    color: COLORS.text,
+    color: darkTheme.colors.onSurface,
     fontSize: 16,
     fontWeight: "500",
     marginHorizontal: 15,

@@ -1,27 +1,27 @@
 import { useState, useEffect } from 'react'
-import firebase from 'firebase/compat';
+import firebase from '../services/firebase';
 
-const useFetchFollowers = ({user}) => {
+const useFetchFollowers = ({ user }) => {
     const [loader, setLoader] = useState(false);
     const [followers, setFollowers] = useState([]);
 
     useEffect(() => {
         if (user.followers.length < 1) {
-            setFollowers([]); 
+            setFollowers([]);
             return;
         }
         else {
-            if(!loader) {
+            if (!loader) {
                 setLoader(true);
                 try {
                     const unsubscribe = firebase
-                    .firestore()
-                    .collection("users")
-                    .where(firebase.firestore.FieldPath.documentId(), "in", user.followers)
-                    .onSnapshot((snapshot) => {
-                        setFollowers(snapshot.docs.map((doc) => doc.data()));
-                    });
-            
+                        .firestore()
+                        .collection("users")
+                        .where(firebase.firestore.FieldPath.documentId(), "in", user.followers)
+                        .onSnapshot((snapshot) => {
+                            setFollowers(snapshot.docs.map((doc) => doc.data()));
+                        });
+
                     return unsubscribe;
                 } catch (error) {
                     console.log(error);
@@ -35,7 +35,7 @@ const useFetchFollowers = ({user}) => {
     return {
         followers
     }
-  
+
 }
 
 export default useFetchFollowers

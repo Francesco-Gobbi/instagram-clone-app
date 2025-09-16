@@ -19,6 +19,7 @@ import { Image } from "expo-image";
 import { BlurView } from "expo-blur";
 import ModalNotification from "../notifications/ModalNotification";
 import { SIZES } from "../../constants";
+import { Ionicons } from '@expo/vector-icons';
 
 const Header = ({ navigation, headerOpacity, currentUser }) => {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -45,7 +46,7 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
         >
           <Image
             style={styles.logo}
-            source={require("../../../assets/images/new-header-logo.png")}
+            source={require("../../../assets/images/new-header-logo.webp")}
           />
           <MaterialIcons
             name={"keyboard-arrow-down"}
@@ -82,9 +83,10 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
               </View>
             )}
             <View style={styles.iconsContainer}>
-              <Image
-                style={styles.messenger}
-                source={require("../../../assets/icons/chat-icon-white.png")}
+              <Ionicons
+                name="chatbubble-outline"
+                size={24}
+                color="white"
               />
             </View>
           </TouchableOpacity>

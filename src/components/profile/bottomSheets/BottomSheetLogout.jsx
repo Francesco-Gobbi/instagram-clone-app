@@ -1,12 +1,40 @@
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 import React, { useMemo } from "react";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import CustomBackdrop from "../../shared/bottomSheets/CustomBackdrop";
 import useHandleSingout from "../../../hooks/useHandleSingout";
+import useAuthPersistence from "../../../utils/useAuthPersistence";
 
 const BottomSheetLogout = ({ bottomSheetRef, navigation }) => {
   const { handleSingout } = useHandleSingout();
+  const { clearUserData } = useAuthPersistence();
+
   const snapPoints = useMemo(() => [157], []);
+
+  const confirmLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Logout",
+          onPress: async () => {
+            try {
+              await clearUserData();
+              handleSingout();
+              navigation.replace("Login");
+            } catch (error) {
+              console.error("Error during logout:", error);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <BottomSheetModal
@@ -29,7 +57,7 @@ const BottomSheetLogout = ({ bottomSheetRef, navigation }) => {
         <TouchableOpacity
           onPress={() => {
             bottomSheetRef.current.close();
-            handleSingout();
+            confirmLogout(); // mostriamo l'Alert
           }}
           style={styles.rowContainer}
         >
@@ -74,7 +102,6 @@ const styles = StyleSheet.create({
   },
   rowContainer: {
     marginHorizontal: 16,
-    // marginVertical: 16,
     height: 50,
     flexDirection: "row",
     alignItems: "center",

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import firebase from 'firebase/compat';
+import firebase from '../services/firebase';
 
 const useFetchPost = (item) => {
     const [isLoading, setIsLoading] = useState(false);
@@ -10,15 +10,15 @@ const useFetchPost = (item) => {
         setIsLoading(true);
         try {
             const unsubscribe = firebase
-            .firestore()
-            .collection("users")
-            .doc(item.owner_email)
-            .collection("posts")
-            .doc(item.id)
-            .onSnapshot(snapshot => {
-                setOnSnapshotData({...snapshot.data(), id: snapshot.id});
-                setTimeToReplaceData(true)
-            });
+                .firestore()
+                .collection("users")
+                .doc(item.owner_email)
+                .collection("posts")
+                .doc(item.id)
+                .onSnapshot(snapshot => {
+                    setOnSnapshotData({ ...snapshot.data(), id: snapshot.id });
+                    setTimeToReplaceData(true)
+                });
 
             return () => unsubscribe;
         } catch (error) {
@@ -27,7 +27,7 @@ const useFetchPost = (item) => {
             setIsLoading(false);
         }
     }, [])
-    
+
     return {
         onSnapshotData,
         timeToReplaceData

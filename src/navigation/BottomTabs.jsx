@@ -5,14 +5,10 @@ import Search from "../screens/Search";
 import Reels from "../screens/Reels";
 import Profile from "../screens/Profile";
 import Blank from "./Blank";
+import { darkTheme } from "../utils/theme";
 import {
-  MaterialIcons,
   Ionicons,
-  Feather,
-  FontAwesome5,
-  MaterialCommunityIcons,
-  Octicons,
-  FontAwesome,
+  AntDesign,
 } from "@expo/vector-icons";
 
 const Tab = createBottomTabNavigator();
@@ -27,10 +23,12 @@ const screenOptions = {
     right: 0,
     left: 0,
     elevation: 0,
-    borderTopWidth: 0.3,
-    borderTopColor: "#444",
-    height: Platform.OS === "Android" ? 54 : 80,
-    backgroundColor: "#000",
+    borderTopWidth: 0.5,
+    borderTopColor: darkTheme.colors.outline,
+    height: Platform.OS === "Android" ? 60 : 85,
+    backgroundColor: darkTheme.colors.surface,
+    paddingBottom: Platform.OS === "ios" ? 20 : 8,
+    paddingTop: 8,
   },
 };
 
@@ -43,9 +41,9 @@ const BottomTabs = ({ navigation }) => {
         options={{
           tabBarIcon: ({ focused }) => {
             return focused ? (
-              <MaterialIcons name="home-filled" size={30} color={"#fff"} />
+              <Ionicons name="home" size={28} color={darkTheme.colors.primary} />
             ) : (
-              <Octicons name="home" size={24} color={"#fff"} />
+              <Ionicons name="home-outline" size={28} color={darkTheme.colors.onSurfaceVariant} />
             );
           },
         }}
@@ -58,8 +56,8 @@ const BottomTabs = ({ navigation }) => {
             return (
               <Ionicons
                 name={focused ? "search" : "search-outline"}
-                size={27}
-                color={"#fff"}
+                size={28}
+                color={focused ? darkTheme.colors.primary : darkTheme.colors.onSurfaceVariant}
               />
             );
           },
@@ -70,7 +68,7 @@ const BottomTabs = ({ navigation }) => {
         component={Blank}
         options={{
           tabBarIcon: ({ focused }) => {
-            return <Feather name="plus-square" size={25} color={"#fff"} />;
+            return <AntDesign name="plussquareo" size={26} color={focused ? darkTheme.colors.primary : darkTheme.colors.onSurfaceVariant} />;
           },
           tabBarButton: (props) => (
             <TouchableOpacity
@@ -90,10 +88,10 @@ const BottomTabs = ({ navigation }) => {
         options={{
           tabBarIcon: ({ focused }) => {
             return (
-              <MaterialCommunityIcons
-                name={focused ? "play-box" : "play-box-outline"}
-                size={27}
-                color={"#fff"}
+              <Ionicons
+                name={focused ? "play" : "play-outline"}
+                size={26}
+                color={focused ? darkTheme.colors.primary : darkTheme.colors.onSurfaceVariant}
               />
             );
           },
@@ -105,9 +103,9 @@ const BottomTabs = ({ navigation }) => {
         options={{
           tabBarIcon: ({ focused }) => {
             return focused ? (
-              <FontAwesome name="user-circle" size={22} color={"#fff"} />
+              <Ionicons name="person" size={26} color={darkTheme.colors.primary} />
             ) : (
-              <FontAwesome5 name="user-circle" size={24} color={"#fff"} />
+              <Ionicons name="person-outline" size={26} color={darkTheme.colors.onSurfaceVariant} />
             );
           },
         }}

@@ -29,7 +29,7 @@ const Signup = ({ navigation }) => {
             <View>
               <Animated.View style={styles.logoContainer}>
                 <Image
-                  source={require("../../assets/images/header-logo.png")}
+                  source={require("../../assets/images/header-logo.webp")}
                   style={styles.logo}
                 />
               </Animated.View>

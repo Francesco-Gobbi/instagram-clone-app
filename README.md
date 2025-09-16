@@ -1,6 +1,6 @@
 # ShentaoHub-clone-app
 
-<img alt="ShentaoHub Logo" src="./assets/images/header-logo.png" width="60%">
+<img alt="ShentaoHub Logo" src="./assets/images/header-logo.webp" width="60%">
 
 <div>
 <h4>Language options</h4>
@@ -45,20 +45,20 @@ Fully functional ShentaoHub replica built in React Native, showcasing my skills 
 ## Screenshots
 
 <div align="center">
-  <img src="./assets/screenshots/LoginScreen.png" width="32%">
-  <img src="./assets/screenshots/HomeScreen.png" width="32%">
-  <img src="./assets/screenshots/PostsScreen.png" width="32%">
-  <img src="./assets/screenshots/SearchScreen.png" width="32%">
-  <img src="./assets/screenshots/NewPostScreen.png" width="32%">
-  <img src="./assets/screenshots/NewStoryScreen.png" width="32%">
-  <img src="./assets/screenshots/ReelsScreen.png" width="32%">
-  <img src="./assets/screenshots/ProfileScreen.png" width="32%">
-  <img src="./assets/screenshots/ShareQRModal.png" width="32%">
-  <img src="./assets/screenshots/DetailScreen.png" width="32%">
-  <img src="./assets/screenshots/CommentsModal.png" width="32%">
-  <img src="./assets/screenshots/FollowersScreen.png" width="32%">
-  <img src="./assets/screenshots/OptionsModal.png" width="32%">
-  <img src="./assets/screenshots/PictureModal.png" width="32%">
+  <img src="./assets/screenshots/LoginScreen.webp" width="32%">
+  <img src="./assets/screenshots/HomeScreen.webp" width="32%">
+  <img src="./assets/screenshots/PostsScreen.webp" width="32%">
+  <img src="./assets/screenshots/SearchScreen.webp" width="32%">
+  <img src="./assets/screenshots/NewPostScreen.webp" width="32%">
+  <img src="./assets/screenshots/NewStoryScreen.webp" width="32%">
+  <img src="./assets/screenshots/ReelsScreen.webp" width="32%">
+  <img src="./assets/screenshots/ProfileScreen.webp" width="32%">
+  <img src="./assets/screenshots/ShareQRModal.webp" width="32%">
+  <img src="./assets/screenshots/DetailScreen.webp" width="32%">
+  <img src="./assets/screenshots/CommentsModal.webp" width="32%">
+  <img src="./assets/screenshots/FollowersScreen.webp" width="32%">
+  <img src="./assets/screenshots/OptionsModal.webp" width="32%">
+  <img src="./assets/screenshots/PictureModal.webp" width="32%">
 </div>
 
 ## Instructions for Running on an Emulator:

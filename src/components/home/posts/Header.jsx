@@ -25,7 +25,7 @@ const Header = ({ navigation, post, currentUser }) => {
 
   const handlePostOwner = () => {
     if (currentUser.email === post.owner_email) {
-      navigation.navigate("Profile");
+      navigation.navigate("Account");
     } else {
       navigation.navigate("UserDetail", {
         email: post.owner_email,

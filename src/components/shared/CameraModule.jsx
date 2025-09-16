@@ -8,10 +8,23 @@ import {
   StatusBar,
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
-import { Camera } from "expo-camera";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { SIZES } from "../../constants";
 import CameraNoPermission from "./CameraNoPermission";
+import useImageGallery from "../../hooks/useImageGallery";
+
+// Costanti sicure per la camera
+const CAMERA_TYPE = {
+  BACK: 'back',
+  FRONT: 'front'
+};
+
+const FLASH_MODE = {
+  OFF: 'off',
+  ON: 'on',
+  AUTO: 'auto'
+};
 
 const CameraModule = ({
   setCameraModalVisible,
@@ -21,19 +34,30 @@ const CameraModule = ({
   options = false,
 }) => {
   const camRef = useRef(null);
-  const [type, setType] = useState(Camera.Constants.Type.back);
-  const [flashMode, setFlashMode] = useState(Camera.Constants.FlashMode.off);
-  const [hasPermission, setHasPermission] = useState(null);
+  const [facing, setFacing] = useState(CAMERA_TYPE.BACK);
+  const [flashMode, setFlashMode] = useState(FLASH_MODE.OFF);
+  const [permission, requestPermission] = useCameraPermissions();
+  
+  const { ChooseImageFromGallery } = useImageGallery({ 
+    setSelectedImage: setCapturedPhoto 
+  });
 
   useEffect(() => {
-    const askPermission = async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === "granted");
-    };
-    askPermission();
-  }, []);
+    if (!permission) {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
 
-  if (!hasPermission) {
+  if (!permission) {
+    return (
+      <CameraNoPermission
+        setCameraModalVisible={setCameraModalVisible}
+        selectedType={selectedType}
+      />
+    );
+  }
+
+  if (!permission.granted) {
     return (
       <CameraNoPermission
         setCameraModalVisible={setCameraModalVisible}
@@ -43,17 +67,35 @@ const CameraModule = ({
   }
 
   const handleTakePicture = async () => {
-    if (camRef) {
-      const data = await camRef.current.takePictureAsync();
-      const imageUri = data.uri;
-
-      setCapturedPhoto(imageUri);
+    if (camRef.current) {
+      try {
+        const data = await camRef.current.takePictureAsync({
+          quality: 0.8,
+          base64: false,
+        });
+        const imageUri = data.uri;
+        setCapturedPhoto(imageUri);
+      } catch (error) {
+        console.error("Error taking picture:", error);
+      }
     }
     setCameraModalVisible(false);
   };
 
   const handleCloseModal = () => {
     setCameraModalVisible(false);
+  };
+
+  const toggleCameraFacing = () => {
+    setFacing(current => 
+      current === CAMERA_TYPE.BACK ? CAMERA_TYPE.FRONT : CAMERA_TYPE.BACK
+    );
+  };
+
+  const toggleFlash = () => {
+    setFlashMode(current => 
+      current === FLASH_MODE.OFF ? FLASH_MODE.ON : FLASH_MODE.OFF
+    );
   };
 
   return (
@@ -68,10 +110,10 @@ const CameraModule = ({
             : styles.cameraFullStyle
         }
       >
-        <Camera
+        <CameraView
           style={styles.camera}
-          type={type}
-          flashMode={flashMode}
+          facing={facing}
+          flash={flashMode}
           ref={camRef}
         />
       </View>
@@ -79,7 +121,7 @@ const CameraModule = ({
       {selectedType === "New post" && <View style={styles.shadowBowBottom} />}
       <View style={styles.shotButtonContainer}>
         <View style={styles.shotButtonOutside}>
-          <TouchableOpacity onPress={() => handleTakePicture()}>
+          <TouchableOpacity onPress={handleTakePicture}>
             <View style={styles.shotButtonInside} />
           </TouchableOpacity>
         </View>
@@ -91,24 +133,12 @@ const CameraModule = ({
             { height: selectedType === "New post" ? 50 : 72 },
           ]}
         >
-          <TouchableOpacity onPress={() => handleCloseModal()}>
+          <TouchableOpacity onPress={handleCloseModal}>
             <Ionicons name="close" size={34} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setFlashMode(
-                flashMode === Camera.Constants.FlashMode.off
-                  ? Camera.Constants.FlashMode.on
-                  : Camera.Constants.FlashMode.off
-              );
-            }}
-          >
+          <TouchableOpacity onPress={toggleFlash}>
             <Ionicons
-              name={
-                flashMode === Camera.Constants.FlashMode.on
-                  ? "flash"
-                  : "flash-off-sharp"
-              }
+              name={flashMode === FLASH_MODE.ON ? "flash" : "flash-off-sharp"}
               size={34}
               color="#fff"
             />
@@ -119,7 +149,7 @@ const CameraModule = ({
         </View>
 
         <View style={styles.iconContainer}>
-          <TouchableOpacity onPress={() => handleCloseModal()}>
+          <TouchableOpacity onPress={ChooseImageFromGallery}>
             <MaterialIcons name="photo-library" size={29} color="#fff" />
           </TouchableOpacity>
 
@@ -161,15 +191,7 @@ const CameraModule = ({
             </View>
           )}
 
-          <TouchableOpacity
-            onPress={() =>
-              setType(
-                type === Camera.Constants.Type.back
-                  ? Camera.Constants.Type.front
-                  : Camera.Constants.Type.back
-              )
-            }
-          >
+          <TouchableOpacity onPress={toggleCameraFacing}>
             <Ionicons name="reload-circle-outline" size={34} color="#fff" />
           </TouchableOpacity>
         </View>

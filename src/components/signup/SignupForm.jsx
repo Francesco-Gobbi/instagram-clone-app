@@ -1,238 +1,233 @@
+import React from 'react';
 import {
   StyleSheet,
   Text,
   View,
   TextInput,
   TouchableOpacity,
-  Platform,
-} from "react-native";
-import React, { useState, useEffect } from "react";
-import { Ionicons, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
-import { Formik } from "formik";
-import * as Yup from "yup";
-import Validator from "email-validator";
-import firebase from "../../services/firebase";
-import { getLocales } from "expo-localization";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+import useRegistrationWithApproval from '../../hooks/useRegistrationWityhApproval.js';
+import { Ionicons } from '@expo/vector-icons';
 
-const SignupForm = ({ navigation }) => {
-  const [userOnFocus, setUserOnFocus] = useState(false);
-  const [emailOnFocus, setEmailOnFocus] = useState(false);
-  const [emailToValidate, SetEmailToValidate] = useState(false);
-  const [userToValidate, setUserToValidate] = useState(false);
-  const [obsecureText, setObsecureText] = useState(true);
-  const [passwordToValidate, SetPasswordToValidate] = useState(false);
-  const [country, setCountry] = useState(null);
-  const [developerMessage, setDeveloperMessage] = useState(false);
+const SignUpForm = ({ navigation }) => {
+  const { 
+    registerUser, 
+    registerWithGoogle, 
+    isRegistering, 
+    registrationError,
+    clearError 
+  } = useRegistrationWithApproval();
 
-  useEffect(() => {
-    const locales = getLocales();
-    setCountry(locales[0].regionCode);
-
-    setTimeout(() => {
-      setDeveloperMessage(true);
-    }, 2000);
-    setTimeout(() => {
-      setDeveloperMessage(false);
-    }, 12000);
-  }, []);
-
-  const LoginFormSchema = Yup.object().shape({
-    username: Yup.string()
-      .required()
-      .min(6, "Username has to have al least 8 characters"),
+  const SignUpSchema = Yup.object().shape({
     email: Yup.string()
-      .required()
-      .min(6, "A valid phone number, username or email address is required"),
+      .required('Email è richiesta')
+      .email('Inserisci un indirizzo email valido'),
     password: Yup.string()
-      .required()
-      .min(6, "Your password has to have at least 6 characters"),
+      .required('Password è richiesta')
+      .min(6, 'La password deve contenere almeno 6 caratteri'),
+    confirmPassword: Yup.string()
+      .required('Conferma password è richiesta')
+      .oneOf([Yup.ref('password')], 'Le password non corrispondono'),
+    displayName: Yup.string()
+      .required('Nome è richiesto')
+      .min(2, 'Il nome deve contenere almeno 2 caratteri'),
   });
 
-  const getRandomProfilePicture = async () => {
-    const response = await fetch("https://randomuser.me/api");
-    const data = await response.json();
-    return data.results[0].picture.large;
+  const handleEmailRegistration = async (values) => {
+    clearError();
+    
+    const result = await registerUser(
+      values.email, 
+      values.password, 
+      {
+        displayName: values.displayName
+      }
+    );
+
+    if (result.success) {
+      Alert.alert(
+        'Registrazione Completata! 🎉',
+        result.message,
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('PendingApproval')
+          }
+        ]
+      );
+    } else {
+      Alert.alert('Errore Registrazione', result.error);
+    }
   };
 
-  const onSignup = async (email, username, password) => {
-    try {
-      const userCredentials = await firebase
-        .auth()
-        .createUserWithEmailAndPassword(email, password);
-      await firebase
-        .firestore()
-        .collection("users")
-        .doc(userCredentials.user.email)
-        .set({
-          owner_uid: userCredentials.user.uid,
-          username: username,
-          email: userCredentials.user.email,
-          profile_picture: await getRandomProfilePicture(),
-          name: username,
-          bio: "",
-          link: "",
-          gender: ["Prefer not to say", ""],
-          followers: [],
-          following: [],
-          followers_request: [],
-          following_request: [],
-          event_notification: 0,
-          chat_notification: 0,
-          saved_posts: [],
-          close_friends: [],
-          favorite_users: [],
-          muted_users: [],
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          country: country,
-        });
+  const handleGoogleRegistration = async () => {
+    clearError();
+    
+    const result = await registerWithGoogle();
 
-      console.log(
-        "🔥 Firebase User Created Successful ✅",
-        userCredentials.user.email
+    if (result.success) {
+      Alert.alert(
+        'Registrazione Google Completata! 🎉',
+        result.message,
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('PendingApproval')
+          }
+        ]
       );
-    } catch (error) {
-      console.log(error.message);
+    } else {
+      Alert.alert('Errore Registrazione Google', result.error);
     }
   };
 
   return (
     <View style={styles.container}>
       <Formik
-        initialValues={{ email: "", username: "", password: "" }}
-        onSubmit={(values) => {
-          onSignup(values.email, values.username, values.password);
+        initialValues={{
+          email: '',
+          password: '',
+          confirmPassword: '',
+          displayName: ''
         }}
-        validationSchema={LoginFormSchema}
-        validateOnMount={true}
+        validationSchema={SignUpSchema}
+        onSubmit={handleEmailRegistration}
       >
-        {({ handleChange, handleBlur, handleSubmit, values, isValid }) => (
+        {({
+          handleChange,
+          handleBlur,
+          handleSubmit,
+          values,
+          errors,
+          touched,
+          isValid
+        }) => (
           <View>
-            <View
-              style={[
-                styles.inputField,
-                {
-                  paddingVertical: 16,
-                  borderColor:
-                    emailToValidate && !Validator.validate(values.email)
-                      ? "#f00"
-                      : "#444",
-                },
-              ]}
-            >
+            {/* Campo Nome */}
+            <View style={styles.inputField}>
               <TextInput
                 style={styles.inputText}
-                placeholderTextColor={"#bbb"}
+                placeholder="Nome completo"
+                placeholderTextColor="#bbb"
+                onChangeText={handleChange('displayName')}
+                onBlur={handleBlur('displayName')}
+                value={values.displayName}
+                autoCapitalize="words"
+              />
+            </View>
+            {touched.displayName && errors.displayName && (
+              <Text style={styles.errorText}>{errors.displayName}</Text>
+            )}
+
+            {/* Campo Email */}
+            <View style={styles.inputField}>
+              <TextInput
+                style={styles.inputText}
                 placeholder="Email"
+                placeholderTextColor="#bbb"
+                onChangeText={handleChange('email')}
+                onBlur={handleBlur('email')}
+                value={values.email}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
-                textContentType="emailAddress"
-                onChangeText={handleChange("email")}
-                onBlur={() => {
-                  handleBlur("email");
-                  setEmailOnFocus(false);
-                  values.email.length > 0
-                    ? SetEmailToValidate(true)
-                    : SetEmailToValidate(false);
-                }}
-                onFocus={() => setEmailOnFocus(true)}
-                value={values.email}
               />
-              <TouchableOpacity onPress={() => handleChange("email")("")}>
-                <Octicons
-                  name={emailOnFocus ? "x-circle-fill" : ""}
-                  size={15}
-                  color={"#555"}
-                />
-              </TouchableOpacity>
             </View>
+            {touched.email && errors.email && (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            )}
 
-            <View
-              style={[
-                styles.inputField,
-                {
-                  paddingVertical: 16,
-                  borderColor:
-                    userToValidate && values.username.length < 6
-                      ? "#f00"
-                      : "#444",
-                },
-              ]}
-            >
+            {/* Campo Password */}
+            <View style={styles.inputField}>
               <TextInput
                 style={styles.inputText}
-                placeholderTextColor={"#bbb"}
-                placeholder="Username"
-                autoCapitalize="none"
-                autoCorrect={false}
-                textContentType="emailAddress"
-                onChangeText={handleChange("username")}
-                onBlur={() => {
-                  handleBlur("username");
-                  setUserOnFocus(false);
-                  values.username.length > 0
-                    ? setUserToValidate(true)
-                    : setUserToValidate(false);
-                }}
-                onFocus={() => setUserOnFocus(true)}
-                value={values.username}
-              />
-              <TouchableOpacity onPress={() => handleChange("username")("")}>
-                <Octicons
-                  name={userOnFocus ? "x-circle-fill" : ""}
-                  size={15}
-                  color={"#555"}
-                />
-              </TouchableOpacity>
-            </View>
-
-            <View
-              style={[
-                styles.inputField,
-                {
-                  borderColor:
-                    passwordToValidate && values.password.length < 5
-                      ? "#f00"
-                      : "#444",
-                },
-              ]}
-            >
-              <TextInput
-                style={styles.inputText}
-                placeholderTextColor={"#bbb"}
                 placeholder="Password"
-                autoCapitalize="none"
-                autoCorrect={false}
-                secureTextEntry={obsecureText}
-                textContentType="password"
-                onChangeText={handleChange("password")}
-                onBlur={() => {
-                  handleBlur("password");
-                  values.password.length > 0
-                    ? SetPasswordToValidate(true)
-                    : SetPasswordToValidate(false);
-                }}
+                placeholderTextColor="#bbb"
+                onChangeText={handleChange('password')}
+                onBlur={handleBlur('password')}
                 value={values.password}
+                secureTextEntry
+                autoCapitalize="none"
               />
-              <TouchableOpacity onPress={() => setObsecureText(!obsecureText)}>
-                <MaterialCommunityIcons
-                  name={obsecureText ? "eye-off" : "eye"}
-                  size={24}
-                  color={obsecureText ? "#fff" : "#37e"}
-                />
-              </TouchableOpacity>
             </View>
-            <View style={styles.forgotContainer}>
-              <TouchableOpacity onPress={() => navigation.navigate("Forgot")}>
-                <Text style={styles.forgotText}>Forgot Password?</Text>
-              </TouchableOpacity>
+            {touched.password && errors.password && (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            )}
+
+            {/* Campo Conferma Password */}
+            <View style={styles.inputField}>
+              <TextInput
+                style={styles.inputText}
+                placeholder="Conferma Password"
+                placeholderTextColor="#bbb"
+                onChangeText={handleChange('confirmPassword')}
+                onBlur={handleBlur('confirmPassword')}
+                value={values.confirmPassword}
+                secureTextEntry
+                autoCapitalize="none"
+              />
             </View>
-            <TouchableOpacity onPress={handleSubmit} disabled={!isValid}>
-              <View style={styles.btnContainer(isValid)}>
-                <Text style={styles.btnText}>Sign up</Text>
+            {touched.confirmPassword && errors.confirmPassword && (
+              <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+            )}
+
+            {/* Bottone Registrazione Email */}
+            <TouchableOpacity
+              style={[
+                styles.btnContainer,
+                { opacity: !isValid || isRegistering ? 0.6 : 1 }
+              ]}
+              onPress={handleSubmit}
+              disabled={!isValid || isRegistering}
+            >
+              <View style={styles.btnContent}>
+                {isRegistering ? (
+                  <>
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text style={styles.btnText}>Registrando...</Text>
+                  </>
+                ) : (
+                  <Text style={styles.btnText}>Registrati</Text>
+                )}
               </View>
             </TouchableOpacity>
+
+            {/* Separatore */}
+            <View style={styles.separator}>
+              <View style={styles.separatorLine} />
+              <Text style={styles.separatorText}>oppure</Text>
+              <View style={styles.separatorLine} />
+            </View>
+
+            {/* Bottone Google */}
+            <TouchableOpacity
+              style={styles.googleBtn}
+              onPress={handleGoogleRegistration}
+              disabled={isRegistering}
+            >
+              <View style={styles.btnContent}>
+                {isRegistering ? (
+                  <ActivityIndicator size="small" color="#333" />
+                ) : (
+                  <>
+                    <Ionicons name="logo-google" size={20} color="#333" />
+                    <Text style={styles.googleBtnText}>Registrati con Google</Text>
+                  </>
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* Link al Login */}
+            <View style={styles.loginLinkContainer}>
+              <Text style={styles.loginLinkText}>Hai già un account? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                <Text style={styles.loginLink}>Accedi</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       </Formik>
@@ -240,82 +235,98 @@ const SignupForm = ({ navigation }) => {
   );
 };
 
-export default SignupForm;
-
 const styles = StyleSheet.create({
   container: {
     marginTop: 20,
   },
   inputField: {
     marginTop: 14,
-    backgroundColor: "#111",
+    backgroundColor: '#111',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#444",
-    paddingLeft: 15,
-    paddingRight: 25,
+    borderColor: '#444',
+    paddingHorizontal: 15,
     marginHorizontal: 20,
     height: 56,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    justifyContent: 'center',
   },
   inputText: {
     fontSize: 16,
-    fontWeight: "500",
-    color: "#fff",
-    width: "95%",
+    fontWeight: '500',
+    color: '#fff',
   },
-  forgotContainer: {
-    alignItems: "flex-end",
-    marginTop: 20,
-    marginRight: 20,
+  errorText: {
+    color: '#f00',
+    fontSize: 12,
+    marginTop: 5,
+    marginLeft: 20,
+    marginBottom: 5,
   },
-  forgotText: {
-    color: "#1af",
-    fontWeight: "700",
-  },
-  loginBtn: {
-    backgroundColor: "#1af",
-    color: "#fff",
-  },
-  btnContainer: (isValid) => ({
+  btnContainer: {
     marginTop: 35,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#07f",
-    opacity: isValid ? 1 : 0.6,
+    alignItems: 'center',
+    backgroundColor: '#07f',
     marginHorizontal: 20,
-    height: Platform.OS === "android" ? 56 : 54,
+    justifyContent: 'center',
+    height: 54,
     borderRadius: 10,
-  }),
+  },
+  btnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
   btnText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "800",
+    fontWeight: '800',
   },
-  modalContainer: {
-    marginTop: 14,
+  separator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 25,
     marginHorizontal: 20,
-    backgroundColor: "#333",
-    flexDirection: "row",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 7,
-      height: 7,
-    },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    borderRadius: 10,
-    height: Platform.OS === "android" ? 56 : 54,
-    paddingHorizontal: 20,
-    gap: 12,
   },
-  modalText: {
+  separatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#444',
+  },
+  separatorText: {
+    color: '#666',
+    paddingHorizontal: 15,
     fontSize: 14,
-    fontWeight: "500",
-    color: "#fff",
-    marginBottom: Platform.OS === "android" ? 4 : 0,
+  },
+  googleBtn: {
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    justifyContent: 'center',
+    height: 54,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  googleBtnText: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loginLinkContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 30,
+  },
+  loginLinkText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  loginLink: {
+    color: '#1af',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
+
+export default SignUpForm;

@@ -3,6 +3,7 @@ import Forgot from "../screens/Forgot";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Signup from "../screens/Signup";
+import PendingApprovalScreen from "../components/login/PendingApproval";
 
 const Stack = createNativeStackNavigator();
 
@@ -20,6 +21,13 @@ const SignedOutStack = () => (
       <Stack.Screen
         name="Forgot"
         component={Forgot}
+        options={{
+          animation: "slide_from_right",
+        }}
+      />
+      <Stack.Screen
+        name="PendingApproval"
+        component={PendingApprovalScreen}
         options={{
           animation: "slide_from_right",
         }}

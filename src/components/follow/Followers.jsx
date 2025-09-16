@@ -12,6 +12,7 @@ import useHandleFollow from "../../hooks/useHandleFollow";
 import RemoveFollower from "./RemoveFollower";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { STORY_GRADIENT_COLORS } from "../../utils/theme";
 import useCheckStoriesSeen from "../../hooks/useCheckStoriesSeen";
 import { SIZES } from "../../constants";
 
@@ -38,7 +39,7 @@ const Followers = ({ user, currentUser, navigation }) => {
             <LinearGradient
               start={[0.9, 0.45]}
               end={[0.07, 1.03]}
-              colors={["#ff00ff", "#ff4400", "#ffff00"]}
+              colors={STORY_GRADIENT_COLORS}
               style={styles.rainbowBorder}
             >
               <Image

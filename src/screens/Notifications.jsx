@@ -15,6 +15,7 @@ import Interaction from "../components/notifications/Interaction";
 import useFetchRequests from "../hooks/useFetchRequests";
 import useFetchUserPosts from "../hooks/useFetchUserPosts";
 import { LinearGradient } from "expo-linear-gradient";
+import { STORY_GRADIENT_COLORS } from "../utils/theme";
 import { SIZES } from "../constants";
 import firebase from "../services/firebase";
 
@@ -126,7 +127,7 @@ const Notifications = ({ navigation, route }) => {
           <LinearGradient
             start={[0.9, 0.45]}
             end={[0.07, 1.03]}
-            colors={["#ff00ff", "#ff4400", "#ffff00"]}
+            colors={STORY_GRADIENT_COLORS}
             style={styles.rainbowBorder}
           >
             <AntDesign name="checkcircle" size={58} color={"#000"} />

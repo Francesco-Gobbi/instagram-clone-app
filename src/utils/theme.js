@@ -1,3 +1,5 @@
+// Centralized Instagram Story Gradient Colors
+export const STORY_GRADIENT_COLORS = ["#ffffff", "#ff6666", "#ff0000"];
 // Mobile App Color Palettes following Material Design 3 and iOS HIG best practices
 
 // Light Theme - Following Material Design 3 and iOS HIG guidelines
@@ -119,7 +121,7 @@ export const DARK_COLORS = {
 // Semantic color mappings for easy theming
 export const createTheme = (isDark = false) => {
   const colors = isDark ? DARK_COLORS : LIGHT_COLORS;
-  
+
   return {
     colors,
     spacing: {

@@ -12,7 +12,7 @@ const StoryHightlights = ({ navigation, user }) => {
     user.email
   );
 
-  ListHeaderComponent = () => (
+  const ListHeaderComponent = () => (
     <View>
       <SubHeader
         user={user}

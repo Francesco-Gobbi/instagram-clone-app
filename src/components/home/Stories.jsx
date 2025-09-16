@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { COLORS } from "../../utils/usePalete";
 import { LinearGradient } from "expo-linear-gradient";
+import { STORY_GRADIENT_COLORS } from "../../utils/theme";
 import React, { useState, useEffect } from "react";
 import { Image } from "expo-image";
 import StoriesSkeleton from "./skeletons/StoriesSkeleton";
@@ -103,7 +104,7 @@ const Stories = ({ navigation, currentUser }) => {
                   <LinearGradient
                     start={[0.9, 0.45]}
                     end={[0.07, 1.03]}
-                    colors={["#ff00ff", "#ff4400", "#ffff00"]}
+                    colors={STORY_GRADIENT_COLORS}
                     style={styles.unseenRainbowBorder}
                   >
                     <Image
@@ -150,7 +151,7 @@ const Stories = ({ navigation, currentUser }) => {
                       <LinearGradient
                         start={[0.9, 0.45]}
                         end={[0.07, 1.03]}
-                        colors={["#ff00ff", "#ff4400", "#ffff00"]}
+                        colors={STORY_GRADIENT_COLORS}
                         style={styles.unseenRainbowBorder}
                       >
                         <Image

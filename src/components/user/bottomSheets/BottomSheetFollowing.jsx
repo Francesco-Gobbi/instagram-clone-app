@@ -23,7 +23,7 @@ const BottomSheetFollowing = ({ bottomSheetRef, currentUser, user }) => {
     setMute(currentUser.muted_users.includes(user.email));
   }, []);
 
-  handleCloseFriend = () => {
+  const handleCloseFriend = () => {
     try {
       firebase
         .firestore()
@@ -41,7 +41,7 @@ const BottomSheetFollowing = ({ bottomSheetRef, currentUser, user }) => {
     }
   };
 
-  handleFavorites = () => {
+  const handleFavorites = () => {
     try {
       firebase
         .firestore()
@@ -59,7 +59,7 @@ const BottomSheetFollowing = ({ bottomSheetRef, currentUser, user }) => {
     }
   };
 
-  handleMute = () => {
+  const handleMute = () => {
     try {
       firebase
         .firestore()

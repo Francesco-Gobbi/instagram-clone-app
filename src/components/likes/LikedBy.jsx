@@ -10,6 +10,7 @@ import React, { useState } from "react";
 import { Image } from "expo-image";
 import useHandleFollow from "../../hooks/useHandleFollow";
 import { LinearGradient } from "expo-linear-gradient";
+import { STORY_GRADIENT_COLORS } from "../../utils/theme";
 import useCheckStoriesSeen from "../../hooks/useCheckStoriesSeen";
 import Unfollow from "../follow/Unfollow";
 import { SIZES } from "../../constants";
@@ -44,7 +45,7 @@ const LikedBy = ({ navigation, user, currentUser }) => {
           <LinearGradient
             start={[0.9, 0.45]}
             end={[0.07, 1.03]}
-            colors={["#ff00ff", "#ff4400", "#ffff00"]}
+            colors={STORY_GRADIENT_COLORS}
             style={styles.rainbowBorder}
           >
             <Image

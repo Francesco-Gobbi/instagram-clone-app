@@ -9,6 +9,7 @@ import React from "react";
 import { Image } from "expo-image";
 import useCheckStoriesSeen from "../../hooks/useCheckStoriesSeen";
 import { LinearGradient } from "expo-linear-gradient";
+import { STORY_GRADIENT_COLORS } from "../../utils/theme";
 
 const Interaction = ({ navigation, item, currentUser, text }) => {
   const { checkStoriesSeen } = useCheckStoriesSeen();
@@ -32,7 +33,7 @@ const Interaction = ({ navigation, item, currentUser, text }) => {
             <LinearGradient
               start={[0.9, 0.45]}
               end={[0.07, 1.03]}
-              colors={["#ff00ff", "#ff4400", "#ffff00"]}
+              colors={STORY_GRADIENT_COLORS}
               style={styles.rainbowBorder}
             >
               <Image

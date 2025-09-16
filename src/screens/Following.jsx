@@ -15,6 +15,7 @@ import useFilterPosts from "../hooks/useFilterPosts";
 import Posts from "../components/home/Posts";
 import PostsSkeleton from "../components/home/skeletons/PostsSkeleton";
 import { LinearGradient } from "expo-linear-gradient";
+import { STORY_GRADIENT_COLORS } from "../utils/theme";
 
 const Following = ({ navigation }) => {
   const { currentUser } = useUserContext();
@@ -31,7 +32,7 @@ const Following = ({ navigation }) => {
         <LinearGradient
           start={[0.9, 0.45]}
           end={[0.07, 1.03]}
-          colors={["#ff00ff", "#ff4400", "#ffff00"]}
+          colors={STORY_GRADIENT_COLORS}
           style={styles.rainbowBorder}
         >
           <AntDesign name="checkcircle" size={58} color={"#000"} />

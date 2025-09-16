@@ -80,7 +80,7 @@ const MediaLibrary = ({ navigation, route }) => {
     }
   };
 
-  renderItem = ({ item }) => {
+  const renderItem = ({ item }) => {
     return (
       <View style={{ flex: 1 }}>
         {selectedType === "New post" ? (

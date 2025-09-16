@@ -20,6 +20,7 @@ import {
 } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { STORY_GRADIENT_COLORS } from "../utils/theme";
 import { useUserContext } from "../contexts/UserContext";
 import { useIsFocused } from "@react-navigation/native";
 import * as Progress from "react-native-progress";
@@ -164,7 +165,7 @@ const Reels = ({ navigation }) => {
               <LinearGradient
                 start={[0.9, 0.45]}
                 end={[0.07, 1.03]}
-                colors={["#ff00ff", "#ff4400", "#ffff00"]}
+                colors={STORY_GRADIENT_COLORS}
                 style={styles.rainbowBorder}
               >
                 <Image

@@ -15,6 +15,7 @@ import useChatAddUser from "../../hooks/useChatAddUser";
 import { useStoriesContext } from "../../contexts/StoriesContext";
 import useCheckStoriesSeen from "../../hooks/useCheckStoriesSeen";
 import { LinearGradient } from "expo-linear-gradient";
+import { STORY_GRADIENT_COLORS } from "../../utils/theme";
 
 const SubHeader = ({ user, navigation, numberOfPosts }) => {
   const { currentUser } = useUserContext();
@@ -54,7 +55,7 @@ const SubHeader = ({ user, navigation, numberOfPosts }) => {
               <LinearGradient
                 start={[0.9, 0.45]}
                 end={[0.07, 1.03]}
-                colors={["#ff00ff", "#ff4400", "#ffff00"]}
+                colors={STORY_GRADIENT_COLORS}
                 style={styles.unseenRainbowBorder}
               >
                 <Image
@@ -137,12 +138,6 @@ const SubHeader = ({ user, navigation, numberOfPosts }) => {
           style={styles.btnWrapper}
         >
           <Text style={styles.btnText}>Message</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => chatAddUser(user)}
-          style={styles.btnAddUser}
-        >
-          <AntDesign name="adduser" size={14} color="#fff" />
         </TouchableOpacity>
       </View>
       <BottomSheetFollowing

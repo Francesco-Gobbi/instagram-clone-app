@@ -1,8 +1,11 @@
-import { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 
-const CustomBackdrop = (props) => {
+import { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
+import React from "react";
+
+const CustomBackdrop = React.forwardRef((props, ref) => {
   return (
     <BottomSheetBackdrop
+      ref={ref}
       {...props}
       appearsOnIndex={(0, 1)}
       disappearsOnIndex={-1}
@@ -10,6 +13,6 @@ const CustomBackdrop = (props) => {
       opacity={0.7}
     />
   );
-};
+});
 
 export default CustomBackdrop;

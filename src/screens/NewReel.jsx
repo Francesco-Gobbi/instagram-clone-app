@@ -24,6 +24,7 @@ import { Video, ResizeMode } from "expo-av";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
+import { LIST } from "../utils/text";
 
 const NewReel = ({ navigation, route }) => {
   const { selectedImage } = route.params || {};
@@ -170,7 +171,7 @@ const NewReel = ({ navigation, route }) => {
             source={{ uri: currentUser.profile_picture }}
             style={styles.userImage}
           />
-          <Text style={styles.userText}>Your story</Text>
+          <Text style={styles.userText}>{LIST.stories.video}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}

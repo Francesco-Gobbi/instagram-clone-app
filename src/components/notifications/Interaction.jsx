@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   Platform,
 } from "react-native";
-import React from "react";
 import { Image } from "expo-image";
 import useCheckStoriesSeen from "../../hooks/useCheckStoriesSeen";
 import { LinearGradient } from "expo-linear-gradient";

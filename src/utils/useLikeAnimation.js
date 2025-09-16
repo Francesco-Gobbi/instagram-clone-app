@@ -7,7 +7,7 @@ import {
     withDelay,
     Easing,
     runOnJS,
-  } from "react-native-reanimated";
+} from "react-native-reanimated";
 import { Gesture } from "react-native-gesture-handler";
 import useHandleLike from '../hooks/useHandleLike';
 
@@ -24,7 +24,7 @@ const useLikeAnimation = (post, currentUser) => {
         let randomNumber = Math.random();
         randomNumber = randomNumber < 0.5 ? 1 : -1;
         setRandomNumber(randomNumber);
-        };
+    };
 
     const doubleTapHandleLike = () => {
         if (!post.likes_by_users.includes(currentUser.email)) {
@@ -39,40 +39,40 @@ const useLikeAnimation = (post, currentUser) => {
             runOnJS(getRamdomNumber)();
 
             opacityAnimation.value = withSequence(
-            withTiming(1, { duration: 300 }),
-            withDelay(800, withTiming(0, { duration: 0 }))
+                withTiming(1, { duration: 300 }),
+                withDelay(800, withTiming(0, { duration: 0 }))
             );
             scaleAnimation.value = withSequence(
-            withTiming(1.3, { duration: 300 }),
-            withTiming(1, { duration: 300 })
+                withTiming(1.3, { duration: 300 }),
+                withTiming(1, { duration: 300 })
             );
             rotationAnimation.value = withSequence(
-            withTiming(15 * randomNumber, {
-                duration: 300,
-                easing: Easing.elastic(1.5),
-            }),
-            withTiming(5 * randomNumber, {
-                duration: 300,
-                easing: Easing.elastic(1.5),
-            }),
-            withDelay(800, withTiming(0, { duration: 0 }))
+                withTiming(15 * randomNumber, {
+                    duration: 300,
+                    easing: Easing.elastic(1.5),
+                }),
+                withTiming(5 * randomNumber, {
+                    duration: 300,
+                    easing: Easing.elastic(1.5),
+                }),
+                withDelay(800, withTiming(0, { duration: 0 }))
             );
             translateXAnimation.value = withSequence(
-            withTiming(event.y - 200, { duration: 0 }),
-            withDelay(550, withTiming(event.y - 800, { duration: 550 }))
+                withTiming(event.y - 200, { duration: 0 }),
+                withDelay(550, withTiming(event.y - 800, { duration: 550 }))
             );
             translateYAnimation.value = withSequence(
-            withTiming(event.x - 200, { duration: 0 })
+                withTiming(event.x - 200, { duration: 0 })
             );
         });
-    
+
     const animatedStyles = useAnimatedStyle(() => ({
         opacity: opacityAnimation.value,
         transform: [
-          { scale: scaleAnimation.value },
-          { rotateZ: `${rotationAnimation.value}deg` },
-          { translateY: translateXAnimation.value },
-          { translateX: translateYAnimation.value },
+            { scale: scaleAnimation.value },
+            { rotateZ: `${rotationAnimation.value}deg` },
+            { translateY: translateXAnimation.value },
+            { translateX: translateYAnimation.value },
         ],
     }));
 

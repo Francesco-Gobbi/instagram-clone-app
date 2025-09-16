@@ -6,9 +6,9 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-  runOnJS,
   interpolateColor,
   FadeIn,
+  runOnJS
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import { useUserContext } from "../contexts/UserContext";

@@ -1,6 +1,5 @@
 import {
   StyleSheet,
-  SafeAreaView,
   Animated,
   FlatList,
   View,
@@ -8,6 +7,7 @@ import {
   StatusBar,
 } from "react-native";
 import React from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserContext } from "../contexts/UserContext";
 import useHeaderScrollAnim from "../utils/useHeaderScrollAnim";
 import useFetchPosts from "../hooks/useFetchPosts";

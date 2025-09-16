@@ -55,7 +55,7 @@ const SubHeader = ({ navigation, currentUser, numberOfPosts }) => {
                   style={styles.userImageWithoutStory}
                 />
                 <View style={styles.plusBadgeContainer}>
-                  <Entypo name="plus" size={18} color="#fff" />
+                  <Entypo name="plus" size={18} color="#ffffffff" />
                 </View>
               </View>
             ) : seenOwnStory ? (
@@ -163,13 +163,13 @@ const styles = StyleSheet.create({
   },
   plusBadgeContainer: {
     position: "absolute",
-    backgroundColor: "#19d",
+    backgroundColor: "rgba(221, 17, 17, 1)",
     borderRadius: 100,
     justifyContent: "center",
     alignItems: "center",
-    borderColor: "#000",
+    borderColor: "#000000ff",
     borderWidth: 3.5,
-    right: -3,
+    right: 60,
     bottom: -3,
     height: 29,
     width: 29,

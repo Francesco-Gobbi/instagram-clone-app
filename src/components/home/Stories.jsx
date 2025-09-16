@@ -15,6 +15,7 @@ import StoriesSkeleton from "./skeletons/StoriesSkeleton";
 import { useStoriesContext } from "../../contexts/StoriesContext";
 import useCheckStoriesSeen from "../../hooks/useCheckStoriesSeen";
 import { Entypo } from "@expo/vector-icons";
+import { LIST } from "../../utils/text";
 
 const Stories = ({ navigation, currentUser }) => {
   const { stories, updatedStories } = useStoriesContext();
@@ -84,7 +85,7 @@ const Stories = ({ navigation, currentUser }) => {
                     <Entypo name="plus" size={18} color="#eee" />
                   </View>
 
-                  <Text style={styles.seenUser}>Your story</Text>
+                  <Text style={styles.seenUser}>{LIST.stories.video}</Text>
                 </View>
               ) : seenOwnStory ? (
                 <View>
@@ -97,7 +98,7 @@ const Stories = ({ navigation, currentUser }) => {
                     />
                   </View>
 
-                  <Text style={styles.seenUser}>Your story</Text>
+                  <Text style={styles.seenUser}>{LIST.stories.video}</Text>
                 </View>
               ) : (
                 <View>
@@ -115,7 +116,7 @@ const Stories = ({ navigation, currentUser }) => {
                     />
                   </LinearGradient>
 
-                  <Text style={styles.seenUser}>Your story</Text>
+                  <Text style={styles.seenUser}>{LIST.stories.video}</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -143,7 +144,7 @@ const Stories = ({ navigation, currentUser }) => {
                         />
                       </View>
                       <Text numberOfLines={1} style={styles.seenUser}>
-                        {story.username}
+                        {LIST.stories.video}
                       </Text>
                     </View>
                   ) : (
@@ -160,7 +161,7 @@ const Stories = ({ navigation, currentUser }) => {
                         />
                       </LinearGradient>
                       <Text numberOfLines={1} style={styles.user}>
-                        {story.username}
+                        {LIST.stories.video}
                       </Text>
                     </View>
                   )}

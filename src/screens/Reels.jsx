@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import React, { useState, useRef } from "react";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { Video } from "expo-av";
+import { VideoView, useVideoPlayer } from "expo-video";
 import { SIZES } from "../constants";
 import {
   Ionicons,
@@ -33,7 +33,7 @@ import MessageModal, {
 } from "../components/shared/modals/MessageModal";
 
 const Reels = ({ navigation }) => {
-  const videoRefs = useRef([]);
+  const videoPlayersRef = useRef([]);
   const flatListRef = useRef(null);
   const focusedScreen = useIsFocused();
   const [messageModalVisible, setMessageModalVisible] = useState(false);
@@ -49,7 +49,7 @@ const Reels = ({ navigation }) => {
     handleLongPress,
     handlePressOut,
     handlePress,
-  } = usePlayReels({ videoRefs, focusedScreen });
+  } = usePlayReels({ videoRefs: videoPlayersRef, focusedScreen });
 
   const handleLike = (item) => {
     firebase
@@ -76,6 +76,15 @@ const Reels = ({ navigation }) => {
       }
     };
 
+    // Create video player for this item
+    const player = useVideoPlayer(item.videoUrl, player => {
+      player.loop = true;
+      player.muted = isMuted;
+    });
+
+    // Store player reference
+    videoPlayersRef.current[index] = player;
+
     return (
       <View>
         <TouchableWithoutFeedback
@@ -85,20 +94,16 @@ const Reels = ({ navigation }) => {
           onPress={handlePress}
         >
           <View>
-            <Video
-              ref={(ref) => (videoRefs.current[index] = ref)}
+            <VideoView
               style={styles.video}
-              source={{
-                uri: item.videoUrl,
-              }}
-              resizeMode="cover"
+              player={player}
+              contentFit="cover"
               onLoad={() => {
                 if (index === 0) {
                   setCurrentIndex(0);
-                  videoRefs.current[index].playAsync();
+                  player.play();
                 }
               }}
-              isLooping
             />
           </View>
         </TouchableWithoutFeedback>
@@ -265,15 +270,18 @@ const Reels = ({ navigation }) => {
                 event.nativeEvent.layoutMeasurement.height
             );
 
-            if (videoRefs.current[newIndex - 1]) {
-              videoRefs.current[newIndex - 1].pauseAsync();
+            // Pause previous and next videos
+            if (videoPlayersRef.current[newIndex - 1]) {
+              videoPlayersRef.current[newIndex - 1].pause();
             }
-            if (videoRefs.current[newIndex + 1]) {
-              videoRefs.current[newIndex + 1].pauseAsync();
+            if (videoPlayersRef.current[newIndex + 1]) {
+              videoPlayersRef.current[newIndex + 1].pause();
             }
+            
+            // Play current video if playing is enabled
             if (playingVideo) {
-              if (videoRefs.current[newIndex]) {
-                videoRefs.current[newIndex].playAsync();
+              if (videoPlayersRef.current[newIndex]) {
+                videoPlayersRef.current[newIndex].play();
                 setCurrentIndex(newIndex);
               }
             }

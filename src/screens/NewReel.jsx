@@ -20,7 +20,7 @@ import { useUserContext } from "../contexts/UserContext";
 import useUploadStory from "../hooks/useUploadStory";
 import useResizePictures from "../hooks/useResizePictures";
 import { Image } from "expo-image";
-import { Video, ResizeMode } from "expo-av";
+import { VideoView, useVideoPlayer } from "expo-video";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
@@ -33,10 +33,14 @@ const NewReel = ({ navigation, route }) => {
   const { currentUser } = useUserContext();
 
   const [opacity, setOpacity] = useState(0);
-  const video = useRef(null);
-  const [status, setStatus] = useState({});
   const [messageModalVisible, setMessageModalVisible] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  // Create video player
+  const player = useVideoPlayer(selectedImage.uri, player => {
+    player.loop = true;
+    player.muted = false;
+  });
 
   useEffect(() => {
     setTimeout(() => {
@@ -53,12 +57,23 @@ const NewReel = ({ navigation, route }) => {
 
   const handlePlayPause = () => {
     if (isPlaying) {
-      video.current.pauseAsync();
+      player.pause();
+      setIsPlaying(false);
     } else {
-      video.current.playAsync();
+      player.play();
+      setIsPlaying(true);
     }
-    setIsPlaying(!isPlaying);
   };
+
+  useEffect(() => {
+    // Auto-play when component mounts
+    const timer = setTimeout(() => {
+      player.play();
+      setIsPlaying(true);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <View style={[styles.container, { opacity: opacity }]}>
@@ -134,17 +149,13 @@ const NewReel = ({ navigation, route }) => {
             style={styles.image}
           />
         )}
-        <Video
-          ref={video}
+        
+        <VideoView
           style={styles.video}
-          source={{
-            uri: selectedImage.uri,
-          }}
-          resizeMode={ResizeMode.COVER}
-          isLooping
-          isMuted={false}
-          onPlaybackStatusUpdate={(status) => setStatus(() => status)}
+          player={player}
+          contentFit="cover"
         />
+        
         <TouchableOpacity
           onPress={handlePlayPause}
           style={styles.playButtonContainer}

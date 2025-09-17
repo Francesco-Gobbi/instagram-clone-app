@@ -36,7 +36,9 @@ const screenOptions = {
 
 const BottomTabs = ({ navigation }) => {
   return (
-    <Tab.Navigator screenOptions={screenOptions}>
+    <Tab.Navigator 
+      initialRouteName="Feed"
+      screenOptions={screenOptions}>
       {/* SEARCH - Prima posizione */}
       <Tab.Screen
         name="Discover"

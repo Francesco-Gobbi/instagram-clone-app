@@ -1,18 +1,20 @@
+import 'react-native-gesture-handler';
 import React from "react";
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet } from 'react-native';
-import { NavigationContainer } from "@react-navigation/native";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context'; // AGGIUNGI
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import RootNavigator from "./src/navigation/BottomTabs";
+import AuthNavigation from "./src/navigation/AuthNavigation";
 
 export default function App() {
   return (
     <GestureHandlerRootView style={styles.container}>
-      <BottomSheetModalProvider>
-        <NavigationContainer>
-          <RootNavigator />
-        </NavigationContainer>
-      </BottomSheetModalProvider>
+      <SafeAreaProvider>
+        <BottomSheetModalProvider>
+          <AuthNavigation />
+        </BottomSheetModalProvider>
+      </SafeAreaProvider>
       <StatusBar style="light" />
     </GestureHandlerRootView>
   );

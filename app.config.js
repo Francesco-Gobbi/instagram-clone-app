@@ -18,10 +18,10 @@ export default {
         slug: "ShentaoHub",
         version: "1.0.0",
         orientation: "portrait",
-        icon: "./assets/new-icon.webp",
+        icon: "./assets/new-icon.png",
         userInterfaceStyle: "light",
         splash: {
-            image: "./assets/new-splash.webp",
+            image: "./assets/new-splash.png",
             resizeMode: "contain",
             backgroundColor: "#1a1a2e"
         },
@@ -51,7 +51,7 @@ export default {
                 ? "com.ShentHub.dev"
                 : "com.ShentHub.shentao",
             adaptiveIcon: {
-                foregroundImage: "./assets/shentao-logo.webp",
+                foregroundImage: "./assets/shentao-logo.png",
                 backgroundColor: "#ffffff"
             },
             permissions: [
@@ -122,7 +122,7 @@ export default {
         },
         owner: "francesco04g",
         web: {
-            favicon: "./assets/favicon.webp"
+            favicon: "./assets/favicon.png"
         }
     }
 };

@@ -9,6 +9,8 @@ import { darkTheme } from "../utils/theme";
 import {
   Ionicons,
   AntDesign,
+  MaterialIcons,
+  MaterialCommunityIcons 
 } from "@expo/vector-icons";
 
 const Tab = createBottomTabNavigator();
@@ -35,19 +37,7 @@ const screenOptions = {
 const BottomTabs = ({ navigation }) => {
   return (
     <Tab.Navigator screenOptions={screenOptions}>
-      <Tab.Screen
-        name="Feed"
-        component={Home}
-        options={{
-          tabBarIcon: ({ focused }) => {
-            return focused ? (
-              <Ionicons name="home" size={28} color={darkTheme.colors.primary} />
-            ) : (
-              <Ionicons name="home-outline" size={28} color={darkTheme.colors.onSurfaceVariant} />
-            );
-          },
-        }}
-      />
+      {/* SEARCH - Prima posizione */}
       <Tab.Screen
         name="Discover"
         component={Search}
@@ -63,12 +53,15 @@ const BottomTabs = ({ navigation }) => {
           },
         }}
       />
+      
+      {/* CREATE - Seconda posizione */}
       <Tab.Screen
         name="Create"
         component={Blank}
         options={{
           tabBarIcon: ({ focused }) => {
-            return <AntDesign name="plussquareo" size={26} color={focused ? darkTheme.colors.primary : darkTheme.colors.onSurfaceVariant} />;
+            return <Ionicons name="add" size={32} color="white" />
+
           },
           tabBarButton: (props) => (
             <TouchableOpacity
@@ -82,21 +75,38 @@ const BottomTabs = ({ navigation }) => {
           ),
         }}
       />
+      
+      {/* HOME (DOJO) - Centro */}
+      <Tab.Screen
+        name="Feed"
+        component={Home}
+        options={{
+          tabBarIcon: ({ focused }) => {
+            return (
+             <MaterialCommunityIcons name="temple-buddhist" size={30} 
+             color={focused ? darkTheme.colors.primary : darkTheme.colors.onSurfaceVariant}/>
+            );
+          },
+        }}
+      />
+      
+      {/* VIDEOS (MOVIE) - Quarta posizione */}
       <Tab.Screen
         name="Videos"
         component={Reels}
         options={{
           tabBarIcon: ({ focused }) => {
             return (
-              <Ionicons
-                name={focused ? "play" : "play-outline"}
-                size={26}
-                color={focused ? darkTheme.colors.primary : darkTheme.colors.onSurfaceVariant}
-              />
+              <MaterialCommunityIcons 
+              name="movie-outline" 
+              size={32} 
+              color={focused ? darkTheme.colors.primary : darkTheme.colors.onSurfaceVariant}/>
             );
           },
         }}
       />
+      
+      {/* PROFILE - Ultima posizione */}
       <Tab.Screen
         name="Account"
         component={Profile}

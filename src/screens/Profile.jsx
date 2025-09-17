@@ -1,4 +1,5 @@
-import { StyleSheet, SafeAreaView, Platform, StatusBar } from "react-native";
+import { StyleSheet, Platform, StatusBar } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React from "react";
 import { useUserContext } from "../contexts/UserContext";
 import StoryHighlights from "../components/profile/StoryHighlights";

@@ -2,12 +2,12 @@ import {
   StyleSheet,
   Text,
   View,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   Platform,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Divider } from "react-native-elements";
 import { useUserContext } from "../contexts/UserContext";
 import React, { useState, useRef } from "react";

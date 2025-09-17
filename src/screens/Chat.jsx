@@ -5,12 +5,12 @@ import {
   TouchableOpacity,
   StatusBar,
   Platform,
-  SafeAreaView,
   FlatList,
   TextInput,
   Keyboard,
   Animated,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from "react";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useUserContext } from "../contexts/UserContext";

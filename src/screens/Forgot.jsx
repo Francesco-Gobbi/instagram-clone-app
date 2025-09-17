@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Keyboard,
-  SafeAreaView,
   Platform,
   StatusBar,
   TextInput,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import useIsEmail from "../utils/useIsEmail";

@@ -20,7 +20,7 @@ import useAlbumSelector from "../utils/useAlbumSelector";
 import useOpacityAnimation from "../utils/useOpacityAnimation";
 import CameraModule from "../components/shared/CameraModule";
 import { BlurView } from "expo-blur";
-import blankPhoto from "../../assets/images/blank-image.webp";
+import blankPhoto from "../../assets/images/blank-image.png";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";

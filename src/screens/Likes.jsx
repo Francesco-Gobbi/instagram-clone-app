@@ -1,11 +1,11 @@
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   Platform,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from "react";
 import TitleBar from "../components/shared/TitleBar";
 import SearchBar from "../components/shared/SearchBar";

@@ -2,11 +2,11 @@ import {
   StyleSheet,
   Text,
   View,
-  SafeAreaView,
   TouchableOpacity,
   Platform,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useEffect } from "react";
 import TitleBar from "../components/shared/TitleBar";
 import { Image } from "expo-image";

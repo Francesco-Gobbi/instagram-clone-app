@@ -17,7 +17,7 @@ import MessageModal from "../shared/modals/MessageModal";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import useAuthPersistence from '../../utils/useAuthPersistence';
 
-const LoginForm = ({ navigation }) => {
+const LoginForm = React.forwardRef(({ navigation }, ref) => {
   const [obsecureText, setObsecureText] = useState(true);
   const [emailOnFocus, setEmailOnFocus] = useState(false);
   const [emailToValidate, SetEmailToValidate] = useState(false);
@@ -159,7 +159,7 @@ const LoginForm = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View ref={ref} style={styles.container}>
       <Formik
         initialValues={{ email: "", password: "" }}
         onSubmit={(values) => {
@@ -341,9 +341,9 @@ const LoginForm = ({ navigation }) => {
         height={70}
         icon="wrong"
       />
-    </View>
+    </Animated.View>
   );
-};
+});
 
 export default LoginForm;
 

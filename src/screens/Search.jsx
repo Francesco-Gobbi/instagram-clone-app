@@ -5,11 +5,11 @@ import {
   TouchableOpacity,
   Animated,
   View,
-  SafeAreaView,
   Keyboard,
   Platform,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { SIZES } from "../constants";

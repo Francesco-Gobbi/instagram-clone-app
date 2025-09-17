@@ -4,7 +4,6 @@ import {
   View,
   StatusBar,
   Platform,
-  SafeAreaView,
   TouchableOpacity,
   TouchableWithoutFeedback,
   TextInput,
@@ -12,6 +11,7 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useRef } from "react";
 import { SIZES } from "../constants";
 import { MaterialIcons, Ionicons, Feather } from "@expo/vector-icons";

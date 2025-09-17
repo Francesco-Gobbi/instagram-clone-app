@@ -2,11 +2,11 @@ import {
   StyleSheet,
   Text,
   View,
-  SafeAreaView,
   TouchableOpacity,
   Platform,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState, useRef } from "react";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";

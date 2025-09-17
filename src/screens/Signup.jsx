@@ -1,7 +1,6 @@
 import {
   StyleSheet,
   View,
-  SafeAreaView,
   Keyboard,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -10,6 +9,7 @@ import {
   StatusBar,
   KeyboardAvoidingView,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import SignupForm from "../components/signup/SignupForm";
 import Footer from "../components/signup/Footer";
 import { MaterialIcons } from "@expo/vector-icons";

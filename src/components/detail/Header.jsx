@@ -46,7 +46,7 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
         >
           <Image
             style={styles.logo}
-            source={require("../../../assets/images/new-header-logo.webp")}
+            source={require("../../../assets/images/new-header-logo.png")}
           />
           <MaterialIcons
             name={"keyboard-arrow-down"}

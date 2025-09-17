@@ -1,7 +1,6 @@
 import {
   StyleSheet,
   View,
-  SafeAreaView,
   Keyboard,
   TouchableWithoutFeedback,
   Animated,
@@ -9,6 +8,7 @@ import {
   StatusBar,
   KeyboardAvoidingView,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from "react";
 import LoginForm from "../components/login/LoginForm";
 import Footer from "../components/login/Footer";

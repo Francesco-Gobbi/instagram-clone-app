@@ -2,12 +2,12 @@ import {
   StyleSheet,
   Text,
   View,
-  SafeAreaView,
   TouchableOpacity,
   FlatList,
   Platform,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from "react";
 import { MaterialIcons, AntDesign } from "@expo/vector-icons";
 import Requests from "../components/follow/Requests";

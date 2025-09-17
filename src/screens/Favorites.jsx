@@ -3,12 +3,12 @@ import {
   Text,
   View,
   TouchableOpacity,
-  SafeAreaView,
   FlatList,
   Platform,
   StatusBar,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from "react";
 import { MaterialIcons, AntDesign, FontAwesome } from "@expo/vector-icons";
 import { useUserContext } from "../contexts/UserContext";

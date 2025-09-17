@@ -2,7 +2,6 @@ import {
   StyleSheet,
   View,
   Text,
-  SafeAreaView,
   Keyboard,
   TouchableWithoutFeedback,
   TouchableOpacity,
@@ -12,6 +11,7 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from "react";
 import { useUserContext } from "../contexts/UserContext";
 import useResizePictures from "../hooks/useResizePictures";

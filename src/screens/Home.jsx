@@ -7,7 +7,7 @@ import {
   StatusBar,
 } from "react-native";
 import React from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { createAnimatedComponent } from "react-native-reanimated";
 import { useUserContext } from "../contexts/UserContext";
 import useHeaderScrollAnim from "../utils/useHeaderScrollAnim";
 import useFetchPosts from "../hooks/useFetchPosts";
@@ -15,8 +15,11 @@ import Header from "../components/home/Header";
 import Stories from "../components/home/Stories";
 import Posts from "../components/home/Posts";
 import PostsSkeleton from "../components/home/skeletons/PostsSkeleton";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const Home = ({ navigation }) => {
+const AnimatedSafeAreaView = createAnimatedComponent(SafeAreaView);
+
+const Home = React.forwardRef(({ navigation }, ref) => {
   const { currentUser } = useUserContext();
   const { headerTranslate, headerOpacity, scrollY } = useHeaderScrollAnim(42);
   const { posts, isLoading, fetchOlderPosts } = useFetchPosts();
@@ -35,7 +38,7 @@ const Home = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <AnimatedSafeAreaView ref={ref} style={styles.container}>
       <Animated.View
         style={[
           styles.header(65),
@@ -75,9 +78,9 @@ const Home = ({ navigation }) => {
           />
         </View>
       )}
-    </SafeAreaView>
+    </AnimatedSafeAreaView>
   );
-};
+});
 
 export default Home;
 

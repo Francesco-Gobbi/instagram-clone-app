@@ -19,13 +19,7 @@ const useUploadProfilePicture = () => {
                     console.log('Upload nuova immagine profilo:', uri);
                     const uploadResult = await appwriteService.uploadImage(uri, email, fileName);
 
-                    if (typeof uploadResult === 'object' && uploadResult.href) {
-                        profilePictureUrl = uploadResult.href;
-                    } else if (typeof uploadResult === 'object' && uploadResult.toString) {
-                        profilePictureUrl = uploadResult.toString();
-                    } else {
-                        profilePictureUrl = uploadResult;
-                    }
+                    profilePictureUrl = typeof uploadResult === 'string' ? uploadResult : uploadResult.fileUrl;
                 }
 
                 if (typeof profilePictureUrl !== 'string') {

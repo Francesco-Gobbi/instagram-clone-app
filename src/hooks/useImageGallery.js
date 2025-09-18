@@ -16,10 +16,10 @@ const useImageGallery = ({ setSelectedImage }) => {
       }
 
       const options = {
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        mediaTypes: ['images'],
         allowsEditing: false,
-        aspect: [1, 1],
-        quality: 0.6,
+        aspect: [4, 3],
+        quality: 0.8,
         allowsMultipleSelection: false,
       };
 
@@ -37,7 +37,7 @@ const useImageGallery = ({ setSelectedImage }) => {
 
         console.log('Asset selezionato');
 
-        setSelectedImage(selectedAsset.uri);
+        setSelectedImage(selectedAsset);
 
         return selectedAsset;
       } else {
@@ -66,9 +66,9 @@ const useImageGallery = ({ setSelectedImage }) => {
       }
 
       const options = {
-        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        mediaTypes: ['videos'],
         allowsEditing: false,
-        quality: 0.6,
+        quality: 0.8,
         allowsMultipleSelection: false,
         videoMaxDuration: 60,
       };
@@ -84,7 +84,7 @@ const useImageGallery = ({ setSelectedImage }) => {
 
         console.log('Video selezionato');
 
-        setSelectedImage(selectedAsset.uri);
+        setSelectedImage(selectedAsset);
         return selectedAsset;
       }
 
@@ -111,9 +111,9 @@ const useImageGallery = ({ setSelectedImage }) => {
       }
 
       const options = {
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: false,
-        aspect: [1, 1],
+        aspect: [4, 3],
         quality: 0.8,
       };
 
@@ -128,7 +128,7 @@ const useImageGallery = ({ setSelectedImage }) => {
 
         console.log('Foto scattata');
 
-        setSelectedImage(capturedAsset.uri);
+        setSelectedImage(capturedAsset);
         return capturedAsset;
       }
 

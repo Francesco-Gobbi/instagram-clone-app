@@ -41,7 +41,8 @@ export default {
             appwriteEndpoint: APPWRITE_ENDPOINT,
             appwriteProjectId: APPWRITE_PROJECT_ID,
             appwriteBucketId: APPWRITE_BUCKET_ID,
-            proxyServerUrl: PROXY_SERVER_URL
+            proxyServerUrl: PROXY_SERVER_URL,
+            signedImageUri: process.env.SIGNEDIMAGE_URI
         },
 
         jsEngine: "hermes",

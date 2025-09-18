@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { auth } from '../services/firebase';
 import Constants from 'expo-constants';
 
@@ -26,7 +26,6 @@ class ProxyUploadService {
         }
     }
 
-    // Prepara il file per l'upload
     async prepareFileForUpload(uri, fileName) {
         try {
             console.log('Preparazione file per upload:', { uri, fileName });
@@ -39,7 +38,26 @@ class ProxyUploadService {
             console.log('File info:', fileInfo);
 
             let fileData;
-            let mimeType = 'image/jpeg'; // Default
+            let mimeType = 'image/jpeg';
+
+            if (fileName) {
+                const lowerFileName = fileName.toLowerCase();
+                if (lowerFileName.includes('.png')) {
+                    mimeType = 'image/png';
+                } else if (lowerFileName.includes('.jpg') || lowerFileName.includes('.jpeg')) {
+                    mimeType = 'image/jpeg';
+                } else if (lowerFileName.includes('.gif')) {
+                    mimeType = 'image/gif';
+                } else if (lowerFileName.includes('.png')) {
+                    mimeType = 'image/webp';
+                } else if (lowerFileName.includes('.mp4')) {
+                    mimeType = 'video/mp4';
+                } else if (lowerFileName.includes('.mov')) {
+                    mimeType = 'video/quicktime';
+                } else if (lowerFileName.includes('.avi')) {
+                    mimeType = 'video/x-msvideo';
+                }
+            }
 
             if (uri.startsWith('file://')) {
                 // File locale - leggi come base64 e converti in blob
@@ -49,17 +67,6 @@ class ProxyUploadService {
 
                 if (!base64 || base64.length === 0) {
                     throw new Error('File vuoto o non leggibile');
-                }
-
-                // Determina il tipo MIME dal nome file
-                if (fileName.toLowerCase().includes('.png')) {
-                    mimeType = 'image/png';
-                } else if (fileName.toLowerCase().includes('.jpg') || fileName.toLowerCase().includes('.jpeg')) {
-                    mimeType = 'image/jpeg';
-                } else if (fileName.toLowerCase().includes('.gif')) {
-                    mimeType = 'image/gif';
-                } else if (fileName.toLowerCase().includes('.webp')) {
-                    mimeType = 'image/webp';
                 }
 
                 // Converti base64 in blob
@@ -72,11 +79,21 @@ class ProxyUploadService {
                 fileData = await response.blob();
                 mimeType = fileData.type || mimeType;
 
-            } else {
+            } else if (uri.startsWith('http://') || uri.startsWith('https://')) {
                 // URL remoto
                 const response = await fetch(uri);
                 fileData = await response.blob();
                 mimeType = fileData.type || mimeType;
+            } else {
+                // Altri tipi di URI
+                try {
+                    const response = await fetch(uri);
+                    fileData = await response.blob();
+                    mimeType = fileData.type || mimeType;
+                } catch (fetchError) {
+                    console.error('Errore fetch URI:', fetchError);
+                    throw new Error(`Impossibile caricare il file dall'URI: ${uri}`);
+                }
             }
 
             if (!fileData || fileData.size === 0) {
@@ -104,108 +121,106 @@ class ProxyUploadService {
     // Upload file tramite server proxy
     async uploadImage(uri, email, fileName, onProgress = null) {
         try {
-            console.log('Inizio upload tramite proxy:', { uri, email, fileName });
+            console.log('Inizio upload diretto su Appwrite:', { uri, email, fileName });
 
-            if (!this.baseUrl) {
-                throw new Error('URL del server proxy non configurato');
+            if (!this.isConfigured()) {
+                throw new Error('Appwrite non è configurato correttamente');
             }
 
-            // Simula progresso iniziale
-            if (onProgress) {
-                onProgress(5);
+            if (onProgress) onProgress(5);
+
+            // Verifica file
+            const fileInfo = await FileSystem.getInfoAsync(uri);
+            if (!fileInfo.exists) {
+                throw new Error(`File non trovato: ${uri}`);
             }
 
-            // Ottieni token Firebase
-            const firebaseToken = await this.getFirebaseToken();
-
-            if (onProgress) {
-                onProgress(15);
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (fileInfo.size > maxSize) {
+                throw new Error(`Il file è troppo grande (${(fileInfo.size / 1024 / 1024).toFixed(2)}MB). Il limite è 10MB.`);
             }
 
-            // Prepara il file
-            const fileData = await this.prepareFileForUpload(uri, fileName);
+            if (onProgress) onProgress(30);
 
-            if (onProgress) {
-                onProgress(30);
+            // Leggi il file come base64
+            const base64Data = await FileSystem.readAsStringAsync(uri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+
+            if (!base64Data || base64Data.length === 0) {
+                throw new Error('File vuoto o non leggibile');
             }
 
-            // Crea FormData per l'upload
-            const formData = new FormData();
-            formData.append('image', fileData.blob, fileName);
-            formData.append('email', email);
-            formData.append('mimeType', fileData.type);
+            if (onProgress) onProgress(50);
 
-            if (onProgress) {
-                onProgress(40);
-            }
+            const mimeType = this.getMimeType(fileName);
 
-            // Configura la richiesta
-            const requestOptions = {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${firebaseToken}`,
-                    // Non impostare Content-Type per FormData - viene gestito automaticamente
-                },
-                body: formData,
+            // Converti base64 in Blob usando fetch
+            const response = await fetch(`data:${mimeType};base64,${base64Data}`);
+            const blob = await response.blob();
+
+            // Crea File object corretto per Appwrite
+            const file = new File([blob], fileName || `upload_${Date.now()}`, {
+                type: mimeType,
+                lastModified: Date.now()
+            });
+
+            if (onProgress) onProgress(70);
+
+            const fileId = ID.unique();
+
+            // Upload con File object
+            const uploadedFile = await this.storage.createFile(
+                this.bucketId,
+                fileId,
+                file,
+                [
+                    Permission.read(Role.any()),
+                    Permission.write(Role.any())
+                ]
+            );
+
+            if (onProgress) onProgress(90);
+
+            const fileUrl = this.storage.getFileView(this.bucketId, uploadedFile.$id);
+
+            if (onProgress) onProgress(100);
+
+            return {
+                fileId: uploadedFile.$id,
+                fileUrl: fileUrl.toString(),
+                fileName: uploadedFile.name,
+                size: uploadedFile.sizeOriginal,
+                mimeType: uploadedFile.mimeType,
+                success: true
             };
 
-            console.log('Invio richiesta al server proxy...');
+        } catch (error) {
+            console.error('Errore upload Appwrite:', error);
 
-            if (onProgress) {
-                onProgress(60);
+            if (error.code === 400) {
+                throw new Error('Dati file non validi o formato non supportato.');
+            } else if (error.code === 401) {
+                throw new Error('Errore di autenticazione. Verifica le credenziali.');
+            } else if (error.code === 413) {
+                throw new Error('File troppo grande per l\'upload.');
             }
 
-            // Esegui l'upload
-            const response = await fetch(`${this.baseUrl}/upload`, requestOptions);
+            throw error;
+        }
+    }
 
-            if (onProgress) {
-                onProgress(80);
-            }
+    // Upload video tramite server proxy (con controlli aggiuntivi)
+    async uploadVideo(uri, email, fileName, onProgress = null) {
+        try {
+            console.log('Inizio upload video tramite proxy:', { uri, email, fileName });
 
-            if (!response.ok) {
-                let errorMessage = `Server error: ${response.status}`;
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.error || errorMessage;
-                } catch (parseError) {
-                    // Se non riesce a parsare la risposta, usa il messaggio di default
-                    console.warn('Impossibile parsare la risposta di errore:', parseError);
-                }
-                throw new Error(errorMessage);
-            }
-
-            const result = await response.json();
-
-            console.log('Upload completato tramite proxy:', result);
-
-            // Progresso completato
-            if (onProgress) {
-                onProgress(100);
-            }
-
-            // Verifica che la risposta contenga l'URL del file
-            if (!result.fileUrl && !result.url) {
-                throw new Error('Risposta del server non valida: URL file mancante');
-            }
-
-            return result.fileUrl || result.url;
+            // I video potrebbero richiedere più tempo, aumentiamo il timeout
+            // Usa lo stesso metodo uploadImage che già gestisce diversi tipi di file
+            return await this.uploadImage(uri, email, fileName, onProgress);
 
         } catch (error) {
-            console.error('Errore upload tramite proxy:', error);
-
-            // Gestisci errori specifici
-            if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-                throw new Error('Errore di autenticazione. Riprova ad accedere.');
-            } else if (error.message.includes('413') || error.message.includes('File size')) {
-                throw new Error('Il file è troppo grande per essere caricato.');
-            } else if (error.message.includes('400') || error.message.includes('Bad Request')) {
-                throw new Error('Dati file non validi.');
-            } else if (error.message.includes('500') || error.message.includes('Internal Server')) {
-                throw new Error('Errore del server. Riprova più tardi.');
-            } else if (error.message.includes('Network')) {
-                throw new Error('Errore di connessione. Verifica la tua connessione internet.');
-            }
-
+            console.error('Errore upload video:', error);
             throw error;
         }
     }

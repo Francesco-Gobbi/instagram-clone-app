@@ -9,12 +9,13 @@ import {
   ActivityIndicator,
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
-import { Ionicons, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import firebase from "../../services/firebase";
+import { appwriteClient, account } from "../../services/appwrite";
 import MessageModal from "../shared/modals/MessageModal";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import useAuthPersistence from '../../utils/useAuthPersistence';
 
 const LoginForm = React.forwardRef(({ navigation }, ref) => {
@@ -42,6 +43,7 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
 
   useEffect(() => {
     if (!isLoading && user) {
+      console.log("isLoggin")
       navigation.replace("Home");
       }
   }, [isLoading, user]);
@@ -109,6 +111,72 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
     }
   };
 
+   // Funzione per creare utente di sessione in Appwrite
+  const createAppwriteSession = async (email, password) => {
+    try {
+      console.log("Creating Appwrite session for:", email);
+      
+      // Verifica se esiste già una sessione attiva
+      try {
+        const currentUser = await account.get();
+        console.log("Existing Appwrite session found, deleting it");
+        await account.deleteSession('current');
+      } catch (sessionError) {
+        // Nessuna sessione esistente, procediamo
+        console.log("No existing Appwrite session");
+      }
+
+      // Crea una nuova sessione
+      const session = await account.createEmailSession(email, password);
+      console.log("Appwrite session created successfully");
+      
+      // Ottieni le informazioni dell'utente
+      const appwriteUser = await account.get();
+      console.log("Appwrite user data retrieved:", appwriteUser.$id);
+      
+      return {
+        sessionId: session.$id,
+        userId: appwriteUser.$id,
+        token: session.secret || session.providerAccessToken || session.$id, // Il token può variare in base alla configurazione
+        appwriteUser: appwriteUser
+      };
+      
+    } catch (appwriteError) {
+      console.error("Appwrite session creation failed:", appwriteError);
+      
+      // Se l'utente non esiste in Appwrite, potremmo crearlo
+      if (appwriteError.code === 401 || appwriteError.message?.includes('Invalid credentials')) {
+        try {
+          console.log("User not found in Appwrite, attempting to create...");
+          
+          // Genera un ID unico per Appwrite (puoi usare l'UID di Firebase)
+          const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          
+          // Crea l'utente in Appwrite
+          const newUser = await account.create(userId, email, password);
+          console.log("New Appwrite user created:", newUser.$id);
+          
+          // Crea la sessione per il nuovo utente
+          const session = await account.createEmailSession(email, password);
+          const appwriteUser = await account.get();
+          
+          return {
+            sessionId: session.$id,
+            userId: appwriteUser.$id,
+            token: session.secret || session.providerAccessToken || session.$id,
+            appwriteUser: appwriteUser
+          };
+          
+        } catch (createError) {
+          console.error("Failed to create Appwrite user:", createError);
+          throw createError;
+        }
+      } else {
+        throw appwriteError;
+      }
+    }
+  };
+
   const onLogin = async (email, password) => {
     if (isLoggingIn) return; 
     
@@ -134,9 +202,23 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
         return;
       }
 
+      const appwriteSessionData = await createAppwriteSession(email, password);
+
       const userData = {
         uid: userCredentials.user.uid,
         email: userCredentials.user.email,
+        
+        appwriteUserId: appwriteSessionData.userId,
+        appwriteSessionId: appwriteSessionData.sessionId,
+        appwriteToken: appwriteSessionData.token,
+        
+        loginTimestamp: new Date().toISOString(),
+        
+        appwriteUserData: {
+          name: appwriteSessionData.appwriteUser.name || '',
+          emailVerification: appwriteSessionData.appwriteUser.emailVerification || false,
+          status: appwriteSessionData.appwriteUser.status || false,
+        }
       };
       
       await saveUserSecurely(userData, password);
@@ -145,7 +227,20 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
       
     } catch (error) {
       console.error("Login error:", error);
-      const errorMessage = getFirebaseErrorMessage(error);
+      try {
+        await firebase.auth().signOut();
+        await account.deleteSession('current').catch(() => {});
+      } catch (cleanupError) {
+        console.error("Cleanup error:", cleanupError);
+      }
+      let errorMessage;
+      
+      // Gestisci errori specifici di Appwrite
+      if (error.code && error.code >= 400 && error.code < 500) {
+        errorMessage = "Error creating storage session. Please try again.";
+      } else {
+        errorMessage = getFirebaseErrorMessage(error);
+      }
       
       // Se l'errore è user-disabled, mostra la pagina di attesa
       if (error.code === 'auth/user-disabled') {
@@ -157,8 +252,7 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
       setIsLoggingIn(false);
     }
   };
-
-  return (
+   return (
     <Animated.View ref={ref} style={styles.container}>
       <Formik
         initialValues={{ email: "", password: "" }}

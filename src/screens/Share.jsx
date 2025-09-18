@@ -26,7 +26,7 @@ const Share = ({ navigation, route }) => {
               value={"http://ShentaoHub.com/" + user.username}
               backgroundColor={"transparent"}
               logoSize={55}
-              logo={require("../../assets/images/ShentaoHub_logo.webp")}
+              logo={require("../../assets/images/ShentaoHub_logo.png")}
               logoMargin={3}
               logoBorderRadius={15}
               logoBackgroundColor={"#fff"}

@@ -3,67 +3,65 @@ import appwriteService from "../services/appwrite";
 
 const useUploadPicture = () => {
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const uploadPicture = async (uri, email, name) => {
-    if (!uploading) {
-      setUploading(true);
-      try {
-        // Verifica che l'URI sia valido
-        if (!uri || typeof uri !== 'string') {
-          throw new Error('URI immagine non valido');
-        }
-
-        console.log('URI da caricare:', uri);
-        console.log('Nome file:', name);
-
-        const timestamp = typeof name === 'string' ? name : new Date().getTime().toString();
-        const fileName = `${timestamp}.jpg`;
-
-        const onProgress = (progress) => {
-          console.log("Upload is " + progress + "% done");
-        };
-
-        // Assicurati che appwriteService.uploadImage gestisca correttamente l'URI
-        const downloadUrl = await appwriteService.uploadImage(uri, email, fileName, onProgress);
-
-        let urlString = downloadUrl;
-
-        // Gestisci diversi tipi di risposta da appwriteService
-        if (typeof downloadUrl === 'object') {
-          if (downloadUrl.href) {
-            urlString = downloadUrl.href;
-          } else if (downloadUrl.url) {
-            urlString = downloadUrl.url;
-          } else if (downloadUrl.toString && typeof downloadUrl.toString === 'function') {
-            urlString = downloadUrl.toString();
-          } else {
-            urlString = downloadUrl.$id || downloadUrl.fileId || JSON.stringify(downloadUrl);
-          }
-        }
-
-        console.log('Upload completato, URL finale:', urlString);
-
-        // Verifica che l'URL sia una stringa valida
-        if (typeof urlString !== 'string' || urlString.length === 0) {
-          throw new Error('URL di download non valido ricevuto da Appwrite');
-        }
-
-        return urlString;
-
-      } catch (error) {
-        console.error("Appwrite upload error:", error);
-        console.error("URI che ha causato l'errore:", uri);
-        console.error("Email utente:", email);
-        throw error;
-      } finally {
-        setUploading(false);
-      }
+    if (uploading) {
+      console.warn('Upload già in corso, attendere...');
+      return;
     }
+
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      if (!uri || typeof uri !== 'string') {
+        throw new Error('URI immagine non valido');
+      }
+
+      const timestamp = typeof name === 'string' ? name : new Date().getTime().toString();
+      const fileName = timestamp.includes('.') ? timestamp : `${timestamp}.jpg`;
+
+      const onProgress = (progress) => {
+        setUploadProgress(progress);
+      };
+
+      // Upload diretto con Appwrite SDK
+      const result = await appwriteService.uploadImage(uri, email, fileName, onProgress);
+
+      if (!result) {
+        throw new Error('URL di download non ricevuto');
+      }
+
+      setUploadProgress(100);
+      setTimeout(() => setUploadProgress(0), 500);
+
+      return result;
+
+    } catch (error) {
+      console.error("Errore upload:", error);
+      setUploadProgress(0);
+      throw error;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const uploadVideo = async (uri, email, name) => {
+    if (uploading) return;
+
+    const fileName = name.includes('.') ? name : `${name}.mp4`;
+    const onProgress = (progress) => setUploadProgress(progress);
+
+    const result = await appwriteService.uploadVideo(uri, email, fileName, onProgress);
+    return typeof result === 'string' ? result : result.fileUrl;
   };
 
   return {
     uploadPicture,
-    uploading
+    uploadVideo,
+    uploading,
+    uploadProgress
   }
 }
 

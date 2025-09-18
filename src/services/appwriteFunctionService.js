@@ -1,5 +1,6 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { auth } from '../services/firebase';
+import Constants from 'expo-constants';
 
 class AppwriteFunctionService {
     constructor() {
@@ -26,13 +27,19 @@ class AppwriteFunctionService {
     // Converti file in base64
     async fileToBase64(uri) {
         try {
-            // Verifica che il file esista
+            // Usa l'API legacy di FileSystem
             const fileInfo = await FileSystem.getInfoAsync(uri);
             if (!fileInfo.exists) {
                 throw new Error(`File non trovato: ${uri}`);
             }
 
             console.log('File info:', fileInfo);
+
+            // Controlla la dimensione del file prima di convertirlo
+            const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+            if (fileInfo.size > maxSize) {
+                throw new Error(`Il file è troppo grande (${(fileInfo.size / 1024 / 1024).toFixed(2)}MB). Il limite è 10MB.`);
+            }
 
             let base64Data;
 
@@ -58,7 +65,7 @@ class AppwriteFunctionService {
                     reader.onerror = reject;
                     reader.readAsDataURL(blob);
                 });
-            } else {
+            } else if (uri.startsWith('http://') || uri.startsWith('https://')) {
                 // URL remoto
                 const response = await fetch(uri);
                 const blob = await response.blob();
@@ -73,6 +80,26 @@ class AppwriteFunctionService {
                     reader.onerror = reject;
                     reader.readAsDataURL(blob);
                 });
+            } else {
+                // Altri tipi di URI
+                try {
+                    const response = await fetch(uri);
+                    const blob = await response.blob();
+
+                    const reader = new FileReader();
+                    base64Data = await new Promise((resolve, reject) => {
+                        reader.onload = () => {
+                            const result = reader.result;
+                            const base64 = result.includes(',') ? result.split(',')[1] : result;
+                            resolve(base64);
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                } catch (fetchError) {
+                    console.error('Errore fetch URI:', fetchError);
+                    throw new Error(`Impossibile caricare il file dall'URI: ${uri}`);
+                }
             }
 
             if (!base64Data || base64Data.length === 0) {
@@ -86,6 +113,29 @@ class AppwriteFunctionService {
             console.error('Errore conversione base64:', error);
             throw error;
         }
+    }
+
+    // Determina il tipo MIME dal nome file
+    getMimeType(fileName) {
+        const lowerFileName = (fileName || '').toLowerCase();
+
+        if (lowerFileName.includes('.png')) {
+            return 'image/png';
+        } else if (lowerFileName.includes('.jpg') || lowerFileName.includes('.jpeg')) {
+            return 'image/jpeg';
+        } else if (lowerFileName.includes('.gif')) {
+            return 'image/gif';
+        } else if (lowerFileName.includes('.png')) {
+            return 'image/webp';
+        } else if (lowerFileName.includes('.mp4')) {
+            return 'video/mp4';
+        } else if (lowerFileName.includes('.mov')) {
+            return 'video/quicktime';
+        } else if (lowerFileName.includes('.avi')) {
+            return 'video/x-msvideo';
+        }
+
+        return 'application/octet-stream'; // Default generico
     }
 
     // Esegui chiamata alla Appwrite Function
@@ -105,14 +155,21 @@ class AppwriteFunctionService {
 
             console.log('Esecuzione Appwrite Function:', { method, path });
 
+            // Timeout appropriato per file grandi
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 secondi
+
             const response = await fetch(this.functionUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Appwrite-Project': this.projectId,
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -127,9 +184,18 @@ class AppwriteFunctionService {
                 throw new Error(`Function execution error: ${result.errors}`);
             }
 
-            return JSON.parse(result.response);
+            // Prova a parsare la risposta se è una stringa JSON
+            try {
+                return typeof result.response === 'string' ? JSON.parse(result.response) : result.response;
+            } catch (parseError) {
+                // Se non è JSON valido, ritorna come stringa
+                return result.response;
+            }
 
         } catch (error) {
+            if (error.name === 'AbortError') {
+                throw new Error('Richiesta annullata: timeout raggiunto');
+            }
             console.error('Errore esecuzione Function:', error);
             throw error;
         }
@@ -140,20 +206,32 @@ class AppwriteFunctionService {
         try {
             console.log('Upload via Appwrite Function:', { uri, email, fileName });
 
+            // Simula progresso all'inizio
+            if (onProgress) {
+                onProgress(10);
+            }
+
             // Converti file in base64
             const imageData = await this.fileToBase64(uri);
+
+            if (onProgress) {
+                onProgress(30);
+            }
+
+            // Determina il tipo MIME
+            const mimeType = this.getMimeType(fileName);
 
             // Prepara i dati per la function
             const uploadData = {
                 imageData: imageData,
                 fileName: fileName,
                 email: email,
+                mimeType: mimeType,
                 timestamp: Date.now()
             };
 
-            // Simula progresso all'inizio
             if (onProgress) {
-                onProgress(10);
+                onProgress(50);
             }
 
             // Esegui upload tramite function
@@ -166,11 +244,11 @@ class AppwriteFunctionService {
 
             console.log('Upload completato via Function:', result);
 
-            if (!result.success) {
+            if (!result.success && !result.fileUrl && !result.url) {
                 throw new Error(result.error || 'Upload fallito');
             }
 
-            return result.fileUrl;
+            return result.fileUrl || result.url || result;
 
         } catch (error) {
             console.error('Errore upload Function:', error);
@@ -178,14 +256,41 @@ class AppwriteFunctionService {
             // Gestisci errori specifici
             if (error.message?.includes('Token')) {
                 throw new Error('Errore di autenticazione. Riprova ad accedere.');
-            } else if (error.message?.includes('File size') || error.message?.includes('413')) {
+            } else if (error.message?.includes('File size') || error.message?.includes('413') || error.message?.includes('troppo grande')) {
                 throw new Error('Il file è troppo grande per essere caricato.');
             } else if (error.message?.includes('400')) {
                 throw new Error('Dati file non validi.');
             } else if (error.message?.includes('500')) {
                 throw new Error('Errore del server. Riprova più tardi.');
+            } else if (error.message?.includes('timeout')) {
+                throw new Error('Upload annullato: tempo scaduto. Il file potrebbe essere troppo grande.');
             }
 
+            throw error;
+        }
+    }
+
+    // Upload video tramite Appwrite Function (con controlli aggiuntivi per file grandi)
+    async uploadVideo(uri, email, fileName, onProgress = null) {
+        try {
+            console.log('Upload video via Appwrite Function:', { uri, email, fileName });
+
+            // Per i video, controlla prima la dimensione
+            const fileInfo = await FileSystem.getInfoAsync(uri);
+            if (!fileInfo.exists) {
+                throw new Error(`Video non trovato: ${uri}`);
+            }
+
+            const maxVideoSize = 50 * 1024 * 1024; // 50MB per i video
+            if (fileInfo.size > maxVideoSize) {
+                throw new Error(`Il video è troppo grande (${(fileInfo.size / 1024 / 1024).toFixed(2)}MB). Il limite è 50MB.`);
+            }
+
+            // Usa lo stesso metodo uploadImage che gestisce tutti i tipi di file
+            return await this.uploadImage(uri, email, fileName, onProgress);
+
+        } catch (error) {
+            console.error('Errore upload video Function:', error);
             throw error;
         }
     }
@@ -197,7 +302,7 @@ class AppwriteFunctionService {
 
             const result = await this.executeFunction('DELETE', `/files/${fileId}`);
 
-            if (!result.success) {
+            if (!result.success && result.error) {
                 throw new Error(result.error || 'Eliminazione fallita');
             }
 
@@ -222,6 +327,11 @@ class AppwriteFunctionService {
             console.error('Errore recupero info Function:', error);
             throw error;
         }
+    }
+
+    // Verifica se il servizio è configurato
+    isConfigured() {
+        return !!(this.functionUrl && this.projectId);
     }
 }
 

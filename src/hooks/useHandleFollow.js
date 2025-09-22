@@ -26,7 +26,6 @@ const useHandleFollow = () => {
                         : firebase.firestore.FieldValue.arrayRemove(userEmail),
                 });
             await batch.commit();
-            console.log("yay");
         } catch (error) {
             console.log(error);
         }

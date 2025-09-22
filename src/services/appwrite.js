@@ -9,19 +9,26 @@ class AppwriteService {
 
         const appwriteEndpoint = Constants.expoConfig?.extra?.appwriteEndpoint;
         const appwriteProjectId = Constants.expoConfig?.extra?.appwriteProjectId;
+        const appwriteKey = Constants.expoConfig?.extra?.appwriteKey;
 
         this.client
             .setEndpoint(appwriteEndpoint)
             .setProject(appwriteProjectId);
 
+        if (appwriteKey) {
+            this.client.setDevKey(appwriteKey);
+        }
+
         this.storage = new Storage(this.client);
         this.account = new Account(this.client);
+        this.appwriteKey = appwriteKey || null;
 
-        this.signedImageUri = Constants.expoConfig?.extra?.signedImageUri;
         this.bucketId = Constants.expoConfig?.extra?.appwriteBucketId;
 
-        if (!appwriteEndpoint || !appwriteProjectId || !this.bucketId || !this.signedImageUri) {
-            console.warn('AppwriteService: Configurazione mancantea. Verifica le variabili d\'ambiente.');
+        if (!appwriteEndpoint || !appwriteProjectId || !this.bucketId) {
+            console.warn(
+                "AppwriteService: Configurazione mancante. Verifica le variabili d'ambiente."
+            );
         }
     }
 
@@ -146,15 +153,16 @@ class AppwriteService {
             if (onProgress) onProgress(90);
 
             // Genera URL pubblico del file
-            const fileUrl = this.storage.getFileView(this.bucketId, uploadedFile.$id);
+            const fileUrl = this.storage.getFileViewURL(this.bucketId, uploadedFile.$id);
+            const fileUrlString = fileUrl.href ?? fileUrl.toString();
 
             if (onProgress) onProgress(100);
 
-            console.log('URL file generato:', fileUrl.toString());
+            console.log('URL file generato:', fileUrlString);
 
             return {
                 fileId: uploadedFile.$id,
-                fileUrl: fileUrl.toString(),
+                fileUrl: fileUrlString,
                 fileName: uploadedFile.name,
                 size: uploadedFile.sizeOriginal,
                 mimeType: uploadedFile.mimeType,
@@ -191,10 +199,8 @@ class AppwriteService {
             if (isUpload && isUpload.success) {
                 const url = await this.getSignedImageUrl(isUpload.fileId, this.bucketId);
                 console.log('URL firmato ricevuto:', url);
-
                 return url;
             }
-
             throw new Error('Upload immagine fallito');
         } catch (error) {
             throw error;
@@ -278,24 +284,111 @@ class AppwriteService {
         }
     }
 
-    // Ottieni URL pubblico di un file
-    async getSignedImageUrl(fileId, bucketId) {
-        const response = await this.storage.createFileSignedUrl(bucketId, fileId);
-        return response.url;
-    }
-
-    // Ottieni URL di download diretto
-    async getFileDownloadUrl(fileId) {
+    async getSignedImageUrl(fileId, bucketId = this.bucketId) {
         try {
             if (!this.isConfigured()) {
                 throw new Error('Appwrite non è configurato correttamente');
             }
+            if (!bucketId) {
+                throw new Error('Bucket ID non valido.');
+            }
 
-            const file = await storage.getFileDownload(bucketId, fileId);
-            return file
+            if (!this.appwriteKey) {
+                const fallbackUrl = this.storage.getFileViewURL(bucketId, fileId);
+                return fallbackUrl.href ?? fallbackUrl.toString();
+            }
 
+            try {
+                const tokenResponse = await this.createFileToken(bucketId, fileId);
+                const token = tokenResponse?.$id || tokenResponse?.token;
+
+                const previewUrl = this.storage.getFileViewURL(bucketId, fileId, token);
+                return previewUrl.href ?? previewUrl.toString();
+            } catch (error) {
+                if (this.isTokenRouteUnavailable(error)) {
+                    const fallbackUrl = this.storage.getFileViewURL(bucketId, fileId);
+                    return fallbackUrl.href ?? fallbackUrl.toString();
+                }
+                throw error;
+            }
+        } catch (error) {
+            console.error('Errore generazione URL firmato:', error);
+            throw error;
+        }
+    }
+
+    // Crea un token di accesso firmato usando l'API REST di Appwrite
+    async createFileToken(bucketId, fileId) {
+        if (!bucketId || !fileId) {
+            throw new Error('Parametri bucketId e fileId sono obbligatori per generare un token.');
+        }
+        const apiPath = '/storage/buckets/' + bucketId + '/files/' + fileId + '/tokens';
+        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.call('post', uri, { 'content-type': 'application/json' }, {});
+    }
+
+    // Ottieni URL di download diretto
+    async getFileDownloadUrl(fileId, bucketId = this.bucketId) {
+        try {
+            if (!this.isConfigured()) {
+                throw new Error('Appwrite non è configurato correttamente');
+            }
+            if (!bucketId) {
+                throw new Error('Bucket ID non valido.');
+            }
+
+            if (!this.appwriteKey) {
+                const fallbackUrl = this.storage.getFileDownloadURL(bucketId, fileId);
+                return fallbackUrl.href ?? fallbackUrl.toString();
+            }
+
+            try {
+                const tokenResponse = await this.createFileToken(bucketId, fileId);
+                const token = tokenResponse?.$id || tokenResponse?.token;
+
+                const downloadUrl = this.storage.getFileDownloadURL(bucketId, fileId, token);
+                return downloadUrl.href ?? downloadUrl.toString();
+            } catch (error) {
+                if (this.isTokenRouteUnavailable(error)) {
+                    const fallbackUrl = this.storage.getFileDownloadURL(bucketId, fileId);
+                    return fallbackUrl.href ?? fallbackUrl.toString();
+                }
+                throw error;
+            }
         } catch (error) {
             console.error('Errore generazione URL download:', error);
+            throw error;
+        }
+    }
+
+    async getFileDownload(fileId, bucketId = this.bucketId) {
+        try {
+            if (!this.isConfigured()) {
+                throw new Error('Appwrite non è configurato correttamente');
+            }
+            if (!bucketId) {
+                throw new Error('Bucket ID non valido.');
+            }
+
+            const needsToken = !!this.appwriteKey;
+
+            if (!needsToken) {
+                return await this.storage.getFileDownload(bucketId, fileId);
+            }
+
+            try {
+                const tokenResponse = await this.createFileToken(bucketId, fileId);
+                const token = tokenResponse?.$id || tokenResponse?.token;
+
+                return await this.storage.getFileDownload(bucketId, fileId, token);
+            } catch (error) {
+                if (this.isTokenRouteUnavailable(error)) {
+                    return await this.storage.getFileDownload(bucketId, fileId);
+                }
+                throw error;
+            }
+        } catch (error) {
+            console.error('Errore download file:', error);
             throw error;
         }
     }
@@ -332,16 +425,6 @@ class AppwriteService {
         }
     }
 
-    async getFileDownload(fileId) {
-        try {
-            const result = await storage.getFileDownload(this.bucketId, fileId);
-            return result;
-        } catch (error) {
-            console.error('Error downloading file:', error);
-            throw error;
-        }
-    }
-
     // Verifica se il servizio è configurato correttamente
     isConfigured() {
         return !!(this.bucketId && this.client);
@@ -355,6 +438,11 @@ class AppwriteService {
             bucketId: this.bucketId,
             configured: this.isConfigured()
         };
+    }
+
+    isTokenRouteUnavailable(error) {
+        const message = error?.message || '';
+        return message.includes('Route not found') || error?.code === 404;
     }
 }
 

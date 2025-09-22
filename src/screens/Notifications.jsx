@@ -38,7 +38,7 @@ const Notifications = ({ navigation, route }) => {
   }, []);
 
   useEffect(() => {
-    counter = 0;
+    let counter = 0;
     if (posts) {
       return;
     }

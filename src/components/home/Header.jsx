@@ -8,7 +8,6 @@ import {
   TouchableWithoutFeedback,
   Platform,
 } from "react-native";
-import { darkTheme } from "../../utils/theme";
 import React, { useEffect, useState } from "react";
 import {
   MaterialCommunityIcons,
@@ -19,14 +18,13 @@ import { Image } from "expo-image";
 import { BlurView } from "expo-blur";
 import ModalNotification from "../notifications/ModalNotification";
 import { SIZES } from "../../constants";
-import { Ionicons } from '@expo/vector-icons';
 
 const Header = ({ navigation, headerOpacity, currentUser }) => {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [notificationModal, setNotificationModal] = useState(false);
 
   useEffect(() => {
-    if ((currentUser?.event_notification ?? 0) > 0) {
+    if (currentUser.event_notification > 0) {
       setNotificationModal(true);
 
       setTimeout(() => {
@@ -41,7 +39,7 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
     <Animated.View style={{ opacity: headerOpacity }}>
       <View style={styles.container}>
         <TouchableOpacity
-          style={styles.ShentaoHubContainer}
+          style={styles.instagramContainer}
           onPress={() => setFilterModalVisible(true)}
         >
           <Image
@@ -51,7 +49,7 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
           <MaterialIcons
             name={"keyboard-arrow-down"}
             size={20}
-            color={darkTheme.colors.onSurfaceVariant}
+            color={"#fff"}
           />
         </TouchableOpacity>
 
@@ -63,33 +61,33 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
               });
             }}
           >
-            {(currentUser?.event_notification ?? 0) > 0 && (
+            {currentUser && currentUser.event_notification > 0 && (
               <View style={styles.unreadBadgeSmallContainer} />
             )}
             <View style={styles.iconsContainer}>
-              <Ionicons
-                name="heart-outline"
+              <MaterialCommunityIcons
+                name="cards-heart-outline"
                 size={28}
-                color={darkTheme.colors.onSurface}
+                color={"#fff"}
               />
             </View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("Chat")}>
-            {(currentUser?.chat_notification ?? 0) > 0 && (
-              <View style={styles.unreadBadgeContainer}>
-                <Text style={styles.unreadBadgeText}>
-                  {currentUser.chat_notification}
-                </Text>
-              </View>
-            )}
-            <View style={styles.iconsContainer}>
-              <Ionicons
-                name="chatbubble-outline"
-                size={26}
-                color={darkTheme.colors.onSurface}
-              />
-            </View>
-          </TouchableOpacity>
+    <TouchableOpacity onPress={() => navigation.navigate("Chat")}>
+      {currentUser && currentUser.chat_notification > 0 && (
+        <View style={styles.unreadBadgeContainer}>
+          <Text style={styles.unreadBadgeText}>
+            {currentUser.chat_notification}
+          </Text>
+        </View>
+      )}
+      <View style={styles.iconsContainer}>
+        <MaterialCommunityIcons
+          name="chat-processing-outline"
+          size={32}
+          color="#ffffffff" // blu stile iOS
+        />
+      </View>
+    </TouchableOpacity>
         </View>
       </View>
       <View style={styles.divider} />
@@ -147,7 +145,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
     zIndex: 1,
   },
-  ShentaoHubContainer: {
+  instagramContainer: {
     flexDirection: "row",
     justifyContent: "flex-start",
     alignItems: "center",
@@ -168,7 +166,7 @@ const styles = StyleSheet.create({
     height: 27,
   },
   unreadBadgeSmallContainer: {
-    backgroundColor: darkTheme.colors.notification,
+    backgroundColor: "#FF3250",
     position: "absolute",
     right: 0,
     top: 1,
@@ -180,7 +178,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   unreadBadgeContainer: {
-    backgroundColor: darkTheme.colors.notification,
+    backgroundColor: "#FF3250",
     position: "absolute",
     right: -5,
     top: -3,
@@ -200,7 +198,7 @@ const styles = StyleSheet.create({
   divider: {
     width: "100%",
     height: 0.5,
-    backgroundColor: darkTheme.colors.outline,
+    backgroundColor: "#111",
   },
   modalBackdrop: {
     flex: 1,
@@ -210,7 +208,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: Platform.OS === "ios" ? 100 : SIZES.Height * 0.07,
     left: 22,
-    backgroundColor: "rgba(26,26,26,0.9)",
+    backgroundColor: "rgba(35,35,35,0.6)",
     borderRadius: 15,
     overflow: "hidden",
   },
@@ -223,7 +221,7 @@ const styles = StyleSheet.create({
     height: 46,
   },
   modalText: {
-    color: darkTheme.colors.onSurface,
+    color: "#fff",
     fontSize: 16,
     fontWeight: "500",
     marginHorizontal: 15,

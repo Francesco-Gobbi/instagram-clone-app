@@ -1,3 +1,4 @@
+
 import {
   StyleSheet,
   Text,
@@ -6,7 +7,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   BottomSheetModal,
   BottomSheetFlatList,
@@ -24,6 +25,15 @@ const BottomSheetComments = ({
   navigation,
 }) => {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  // Memoizzare i snapPoints
+  const snapPoints = useMemo(() => {
+    if (Platform.OS === "ios") {
+      return ["68%", "94%"];
+    } else {
+      return ["99%"];
+    }
+  }, []);
 
   useEffect(() => {
     if (Platform.OS === "android") {
@@ -60,9 +70,9 @@ const BottomSheetComments = ({
     <BottomSheetModal
       ref={bottomSheetRef}
       index={0}
-      snapPoints={Platform.OS == "ios" ? ["68", "94%"] : ["99%"]}
-      topInset={Platform.OS == "android" ? SIZES.Height * 0.06 : 0}
-      footerComponent={Platform.OS == "ios" && RenderFooter}
+      snapPoints={snapPoints}
+      topInset={Platform.OS === "android" ? SIZES.Height * 0.06 : 0}
+      footerComponent={Platform.OS === "ios" ? RenderFooter : undefined}
       backgroundStyle={{ borderRadius: 25, backgroundColor: "#232325" }}
       keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
@@ -114,7 +124,7 @@ const BottomSheetComments = ({
                   justifyContent: "flex-end",
                 }}
               />
-              {Platform.OS == "android" && (
+              {Platform.OS === "android" && (
                 <FooterTextInput post={post} currentUser={currentUser} />
               )}
             </View>
@@ -133,7 +143,7 @@ const BottomSheetComments = ({
                 <Text style={styles.subTitle}>No comments yet</Text>
                 <Text style={styles.comments}>Start the conversation.</Text>
               </View>
-              {Platform.OS == "android" && (
+              {Platform.OS === "android" && (
                 <FooterTextInput post={post} currentUser={currentUser} />
               )}
             </View>

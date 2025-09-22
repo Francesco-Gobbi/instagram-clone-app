@@ -10,7 +10,9 @@ const ASYNC_STORAGE_KEY = process.env.ASYNC_STORAGE_KEY;
 const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT;
 const APPWRITE_PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
 const APPWRITE_BUCKET_ID = process.env.APPWRITE_BUCKET_ID;
+const APPWRITE_KEY = process.env.APPWRITE_KEY;
 const PROXY_SERVER_URL = process.env.PROXY_SERVER_URL;
+const SIGNEDIMAGE_URI = process.env.SIGNEDIMAGE_URI;
 
 export default {
     expo: {
@@ -41,8 +43,10 @@ export default {
             appwriteEndpoint: APPWRITE_ENDPOINT,
             appwriteProjectId: APPWRITE_PROJECT_ID,
             appwriteBucketId: APPWRITE_BUCKET_ID,
+            appwriteKey: APPWRITE_KEY,
             proxyServerUrl: PROXY_SERVER_URL,
-            signedImageUri: process.env.SIGNEDIMAGE_URI
+            signedImageUri: SIGNEDIMAGE_URI
+
         },
 
         jsEngine: "hermes",
@@ -92,7 +96,8 @@ export default {
                         cameraPermission: "L'app accede alla fotocamera per permetterti di scattare foto."
                     }
                 ]
-            ]
+            ],
+            "expo-localization"
         ],
 
         assetBundlePatterns: [

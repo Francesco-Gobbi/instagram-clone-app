@@ -16,21 +16,31 @@ const Comments = ({ post, currentUser, navigation }) => {
   const bottomSheetRefComment = useRef(null);
 
   const handleViewComments = () => {
-    bottomSheetRefComments.current.present();
+    console.log('tached')
+    if (bottomSheetRefComments.current) {
+      bottomSheetRefComments.current.present();
+    }
   };
 
   const handleViewComment = () => {
     if (Platform.OS === "ios") {
-      bottomSheetRefComment.current.present();
+      if (bottomSheetRefComment.current) {
+        bottomSheetRefComment.current.present();
+      }
     } else {
-      bottomSheetRefComments.current.present();
+      if (bottomSheetRefComments.current) {
+        bottomSheetRefComments.current.present();
+      }
     }
   };
 
   return (
     <View>
       {post.comments.length <= 0 ? (
-        <TouchableOpacity onPress={() => handleViewComment()}>
+        <TouchableOpacity 
+          onPress={handleViewComment}
+          activeOpacity={0.7}
+        >
           <View style={styles.container}>
             <Image
               source={{ uri: currentUser.profile_picture }}
@@ -41,9 +51,8 @@ const Comments = ({ post, currentUser, navigation }) => {
         </TouchableOpacity>
       ) : post.comments.length > 1 ? (
         <TouchableOpacity
-          onPress={() => {
-            handleViewComments();
-          }}
+          onPress={handleViewComments}
+          activeOpacity={0.7}
         >
           <View style={styles.container}>
             <Text style={styles.text}>
@@ -53,15 +62,15 @@ const Comments = ({ post, currentUser, navigation }) => {
         </TouchableOpacity>
       ) : (
         <TouchableOpacity
-          onPress={() => {
-            handleViewComments();
-          }}
+          onPress={handleViewComments}
+          activeOpacity={0.7}
         >
           <View style={styles.container}>
             <Text style={styles.text}>View 1 comment</Text>
           </View>
         </TouchableOpacity>
       )}
+      
       <BottomSheetComments
         bottomSheetRef={bottomSheetRefComments}
         currentUser={currentUser}

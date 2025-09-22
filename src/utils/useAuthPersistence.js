@@ -66,7 +66,7 @@ const useAuthPersistence = () => {
       }
 
       if (userData) {
-        const maxAge = 30 * 24 * 60 * 60 * 1000;
+        const maxAge = 1000;
         if (userData.savedAt && Date.now() - userData.savedAt > maxAge) {
           console.log('Stored user data is too old, clearing...');
           await clearSecureStorage();

@@ -1,3 +1,4 @@
+
 import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { MaterialCommunityIcons, Feather, Ionicons } from "@expo/vector-icons";
 import React, { useRef } from "react";
@@ -13,64 +14,75 @@ const Footer = ({ post, currentUser, navigation }) => {
   const bottomSheetRef = useRef(null);
 
   const handleViewComments = () => {
-    bottomSheetRef.current.present();
+    // Aggiungere controllo di sicurezza
+    if (bottomSheetRef.current) {
+      bottomSheetRef.current.present();
+    }
   };
 
   return (
     <View style={styles.footerIconsContainer}>
       <View style={styles.footerIcons}>
-        <TouchableOpacity onPress={() => handlePostLike(post, currentUser)}>
+        <TouchableOpacity 
+          onPress={() => handlePostLike(post, currentUser)}
+          activeOpacity={0.7}
+        >
           {post.likes_by_users.includes(currentUser.email) ? (
             <MaterialCommunityIcons
               name="cards-heart"
               size={27}
-              color={"#f33"}
+              color="#f33"
               style={styles.heartIcon}
             />
           ) : (
             <MaterialCommunityIcons
               name="cards-heart-outline"
               size={27}
-              color={"#fff"}
+              color="#fff"
               style={styles.heartIcon}
             />
           )}
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => {
-            handleViewComments();
-          }}
+          onPress={handleViewComments}
+          activeOpacity={0.7}
         >
           <MaterialCommunityIcons
             name="chat-outline"
             size={27}
-            color={"#fff"}
+            color="#fff"
             style={styles.chatIcon}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => sharePost(post)}>
+        <TouchableOpacity 
+          onPress={() => sharePost(post)}
+          activeOpacity={0.7}
+        >
           <Feather
             name="send"
             size={24}
-            color={"#fff"}
+            color="#fff"
             style={styles.sendIcon}
           />
         </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={() => savePost(post, currentUser)}>
+      <TouchableOpacity 
+        onPress={() => savePost(post, currentUser)}
+        activeOpacity={0.7}
+      >
         {currentUser.saved_posts &&
         currentUser.saved_posts.includes(post.id) ? (
           <Ionicons
             name="bookmark"
             size={24}
-            color={"#fff"}
+            color="#fff"
             style={styles.bookmarkIcon}
           />
         ) : (
           <Feather
             name="bookmark"
             size={24}
-            color={"#fff"}
+            color="#fff"
             style={styles.bookmarkIcon}
           />
         )}

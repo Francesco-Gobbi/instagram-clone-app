@@ -1,3 +1,4 @@
+
 import {
   StyleSheet,
   Text,
@@ -5,7 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { SIZES } from "../../../constants";
 import { Image } from "expo-image";
@@ -13,28 +14,22 @@ import useUploadComment from "../../../hooks/useUploadComment";
 import TransparentBackdrop from "../../shared/bottomSheets/TransparentBackdrop";
 
 const BottomSheetComment = ({ bottomSheetRef, currentUser, post }) => {
-  const [dynamicSnapPoints, setDynamicSnapPoints] = useState(["14"]);
   const [value, setValue] = useState("");
-
   const { uploadComment, isLoading } = useUploadComment(post, currentUser);
+
+  // Utilizzare snapPoints fissi invece di dinamici per evitare problemi
+  const snapPoints = useMemo(() => ["25%"], []);
 
   const handleSubmitComment = async (value) => {
     await uploadComment(value);
     setValue("");
   };
 
-  const handleDynamicSheet = (textInputHeight) => {
-    const initialHeight = 13;
-    let newHeight = textInputHeight - 20;
-    newHeight = Math.ceil(newHeight / 8) + initialHeight;
-    setDynamicSnapPoints([newHeight.toString()]);
-  };
-
   return (
     <BottomSheetModal
       ref={bottomSheetRef}
       index={0}
-      snapPoints={dynamicSnapPoints}
+      snapPoints={snapPoints}
       backgroundStyle={{
         borderRadius: 0,
         backgroundColor: "#000",
@@ -51,90 +46,78 @@ const BottomSheetComment = ({ bottomSheetRef, currentUser, post }) => {
         <View style={styles.inputContainer}>
           <View style={styles.iconContainer}>
             <TouchableOpacity
-              onPress={() => {
-                setValue(value + "❤️");
-              }}
+              onPress={() => setValue(value + "❤️")}
+              activeOpacity={0.7}
             >
               <Text style={styles.chatIcon}>❤️</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => {
-                setValue(value + "🙌");
-              }}
+              onPress={() => setValue(value + "🙌")}
+              activeOpacity={0.7}
             >
               <Text style={styles.chatIcon}>🙌</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => {
-                setValue(value + "🔥");
-              }}
+              onPress={() => setValue(value + "🔥")}
+              activeOpacity={0.7}
             >
               <Text style={styles.chatIcon}>🔥</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => {
-                setValue(value + "👏");
-              }}
+              onPress={() => setValue(value + "👏")}
+              activeOpacity={0.7}
             >
               <Text style={styles.chatIcon}>👏</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => {
-                setValue(value + "😢");
-              }}
+              onPress={() => setValue(value + "😢")}
+              activeOpacity={0.7}
             >
               <Text style={styles.chatIcon}>😢</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => {
-                setValue(value + "😍");
-              }}
+              onPress={() => setValue(value + "😍")}
+              activeOpacity={0.7}
             >
               <Text style={styles.chatIcon}>😍</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => {
-                setValue(value + "😮");
-              }}
+              onPress={() => setValue(value + "😮")}
+              activeOpacity={0.7}
             >
               <Text style={styles.chatIcon}>😮</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => {
-                setValue(value + "😂");
-              }}
+              onPress={() => setValue(value + "😂")}
+              activeOpacity={0.7}
             >
               <Text style={styles.chatIcon}>😂</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.writingContainer}>
             <Image
-              source={{
-                uri: currentUser.profile_picture,
-              }}
+              source={{ uri: currentUser.profile_picture }}
               style={styles.profilePicture}
             />
             <View style={styles.inputWrapper}>
               <BottomSheetTextInput
-                placeholder={`Add a comment...`}
-                placeholderTextColor={"#858585"}
+                placeholder="Add a comment..."
+                placeholderTextColor="#858585"
                 style={styles.textInput}
-                defaultValue={value}
+                value={value} // Cambiare da defaultValue a value
                 onChangeText={(text) => setValue(text)}
                 autoCapitalize="sentences"
                 autoCorrect={true}
                 maxLength={255}
-                onContentSizeChange={(e) => {
-                  handleDynamicSheet(e.nativeEvent.contentSize.height);
-                }}
                 multiline
                 autoFocus
               />
               {!isLoading ? (
                 <TouchableOpacity
                   onPress={() => value !== "" && handleSubmitComment(value)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.postBtn}>{value !== "" && "Post"}</Text>
+                  <Text style={styles.postBtn}>{value !== "" ? "Post" : ""}</Text>
                 </TouchableOpacity>
               ) : (
                 <ActivityIndicator style={styles.activityIndicator} />
@@ -146,6 +129,7 @@ const BottomSheetComment = ({ bottomSheetRef, currentUser, post }) => {
     </BottomSheetModal>
   );
 };
+
 
 export default BottomSheetComment;
 

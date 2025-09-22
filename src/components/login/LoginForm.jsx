@@ -13,10 +13,11 @@ import { MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import firebase from "../../services/firebase";
-import { appwriteClient, account } from "../../services/appwrite";
+import appwriteService from "../../services/appwrite";
 import MessageModal from "../shared/modals/MessageModal";
 import Animated from "react-native-reanimated";
 import useAuthPersistence from '../../utils/useAuthPersistence';
+const appwriteAccount = appwriteService.account;
 
 const LoginForm = React.forwardRef(({ navigation }, ref) => {
   const [obsecureText, setObsecureText] = useState(true);
@@ -29,7 +30,6 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
   const [developerMessage, setDeveloperMessage] = useState(false);
   const { isLoading, user, saveUserSecurely } = useAuthPersistence();
   
-  // Ref per il TextInput della password
   const passwordInputRef = useRef(null);
 
   useEffect(() => {
@@ -112,152 +112,131 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
   };
 
    // Funzione per creare utente di sessione in Appwrite
-  const createAppwriteSession = async (email, password) => {
-    try {
-      console.log("Creating Appwrite session for:", email);
-      
-      // Verifica se esiste già una sessione attiva
-      try {
-        const currentUser = await account.get();
-        console.log("Existing Appwrite session found, deleting it");
-        await account.deleteSession('current');
-      } catch (sessionError) {
-        // Nessuna sessione esistente, procediamo
-        console.log("No existing Appwrite session");
+   const createAppwriteSession = async (email, password) => {
+    const sessionCreator = async () => {
+      if (typeof appwriteAccount.createEmailPasswordSession === 'function') {
+        return appwriteAccount.createEmailPasswordSession(email, password);
       }
+      if (typeof appwriteAccount.createEmailSession === 'function') {
+        return appwriteAccount.createEmailSession(email, password);
+      }
+      throw new Error('Metodo di sessione Appwrite non disponibile nel client attuale.');
+    };
 
-      // Crea una nuova sessione
-      const session = await account.createEmailSession(email, password);
-      console.log("Appwrite session created successfully");
-      
-      // Ottieni le informazioni dell'utente
-      const appwriteUser = await account.get();
-      console.log("Appwrite user data retrieved:", appwriteUser.$id);
-      
+    try {
+      // Elimina eventuali sessioni esistenti
+      try {
+        await appwriteAccount.deleteSession('current');
+      } catch {
+        /* nessuna sessione attiva */
+      }
+      const session = await sessionCreator();
+      const appwriteUser = await appwriteAccount.get();
       return {
         sessionId: session.$id,
         userId: appwriteUser.$id,
-        token: session.secret || session.providerAccessToken || session.$id, // Il token può variare in base alla configurazione
-        appwriteUser: appwriteUser
+        expire: session.expire, // scadenza Unix:contentReference[oaicite:3]{index=3}
+        secret: session.secret, // se disponibile (SDK server-side)
+        appwriteUser,
       };
-      
-    } catch (appwriteError) {
-      console.error("Appwrite session creation failed:", appwriteError);
-      
-      // Se l'utente non esiste in Appwrite, potremmo crearlo
-      if (appwriteError.code === 401 || appwriteError.message?.includes('Invalid credentials')) {
-        try {
-          console.log("User not found in Appwrite, attempting to create...");
-          
-          // Genera un ID unico per Appwrite (puoi usare l'UID di Firebase)
-          const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          
-          // Crea l'utente in Appwrite
-          const newUser = await account.create(userId, email, password);
-          console.log("New Appwrite user created:", newUser.$id);
-          
-          // Crea la sessione per il nuovo utente
-          const session = await account.createEmailSession(email, password);
-          const appwriteUser = await account.get();
-          
-          return {
-            sessionId: session.$id,
-            userId: appwriteUser.$id,
-            token: session.secret || session.providerAccessToken || session.$id,
-            appwriteUser: appwriteUser
-          };
-          
-        } catch (createError) {
-          console.error("Failed to create Appwrite user:", createError);
-          throw createError;
-        }
-      } else {
-        throw appwriteError;
+    } catch (error) {
+      // Utente inesistente? Crealo e riprova
+      if (error.code === 401 || /Invalid credentials/i.test(error.message)) {
+        const newId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const defaultName = (email?.split('@')[0] || 'User').trim().slice(0, 128) || 'User';
+
+        const createAccount = async () => {
+          try {
+            return await appwriteAccount.create({ userId: newId, email, password, name: defaultName });
+          } catch (creationError) {
+            if (creationError?.message?.includes('Missing required parameter')) {
+              return await appwriteAccount.create(newId, email, password, defaultName);
+            }
+            throw creationError;
+          }
+        };
+
+        await createAccount();
+        const session = await sessionCreator();
+        const appwriteUser = await appwriteAccount.get();
+        return {
+          sessionId: session.$id,
+          userId: appwriteUser.$id,
+          expire: session.expire,
+          secret: session.secret,
+          appwriteUser,
+        };
       }
+      throw error;
     }
   };
 
-  const onLogin = async (email, password) => {
-    if (isLoggingIn) return; 
-    
+ const handleLogin = async (email, password) => {
+    if (isLoggingIn) return;
     setIsLoggingIn(true);
     Keyboard.dismiss();
-    
     try {
-      const userCredentials = await firebase
-        .auth()
-        .signInWithEmailAndPassword(email, password);
-
-      // Verifica lo status di approvazione
-      const userStatus = await checkUserApprovalStatus(userCredentials.user.uid);
-      
+      // Login Firebase
+      const credentials = await firebase.auth().signInWithEmailAndPassword(email, password);
+      // Controllo stato utente
+      const userStatus = await checkUserApprovalStatus(credentials.user.uid);
       if (userStatus === 'pending') {
-        // Logout immediato se l'utente non è approvato
         await firebase.auth().signOut();
         navigation.navigate('PendingApproval');
         return;
-      } else if (userStatus === 'rejected') {
+      }
+      if (userStatus === 'rejected') {
         await firebase.auth().signOut();
-        handleDataError("Your account has been rejected. Please contact your administrator.");
+        handleDataError('Your account has been rejected. Please contact your administrator.');
         return;
       }
-
-      const appwriteSessionData = await createAppwriteSession(email, password);
-
+      // Login Appwrite
+      const appwriteData = await createAppwriteSession(email, password);
+      // Oggetto da salvare con useAuthPersistence
       const userData = {
-        uid: userCredentials.user.uid,
-        email: userCredentials.user.email,
-        
-        appwriteUserId: appwriteSessionData.userId,
-        appwriteSessionId: appwriteSessionData.sessionId,
-        appwriteToken: appwriteSessionData.token,
-        
+        uid: credentials.user.uid,
+        email: credentials.user.email,
+        // Info Appwrite utili per ricreare la sessione
+        appwriteUserId: appwriteData.userId,
+        appwriteSessionId: appwriteData.sessionId,
+        appwriteExpire: appwriteData.expire,
+        appwriteSecret: appwriteData.secret,
+        // Informazioni utente opzionali
         loginTimestamp: new Date().toISOString(),
-        
         appwriteUserData: {
-          name: appwriteSessionData.appwriteUser.name || '',
-          emailVerification: appwriteSessionData.appwriteUser.emailVerification || false,
-          status: appwriteSessionData.appwriteUser.status || false,
-        }
+          name: appwriteData.appwriteUser.name || '',
+          emailVerification: appwriteData.appwriteUser.emailVerification || false,
+          status: appwriteData.appwriteUser.status || false,
+        },
       };
-      
+      // Salva in Keychain/AsyncStorage tramite il tuo hook; l'effetto in AuthNavigation gestirà il cambio stack
       await saveUserSecurely(userData, password);
-      
-      console.log("🔥 Firebase Login Successful ✅", userCredentials.user.email);
-      
     } catch (error) {
-      console.error("Login error:", error);
+      console.error('Login error:', error);
+      // Pulizia in caso di errore
       try {
         await firebase.auth().signOut();
-        await account.deleteSession('current').catch(() => {});
-      } catch (cleanupError) {
-        console.error("Cleanup error:", cleanupError);
-      }
-      let errorMessage;
-      
-      // Gestisci errori specifici di Appwrite
+        await appwriteAccount.deleteSession('current').catch(() => {});
+      } catch {}
+      // Mostra messaggio d’errore appropriato
       if (error.code && error.code >= 400 && error.code < 500) {
-        errorMessage = "Error creating storage session. Please try again.";
-      } else {
-        errorMessage = getFirebaseErrorMessage(error);
-      }
-      
-      // Se l'errore è user-disabled, mostra la pagina di attesa
-      if (error.code === 'auth/user-disabled') {
+        handleDataError('Error creating storage session. Please try again.');
+      } else if (error.code === 'auth/user-disabled') {
         navigation.navigate('PendingApproval');
       } else {
-        handleDataError(errorMessage);
+        handleDataError('An error occurred during login. Please try again.');
       }
     } finally {
       setIsLoggingIn(false);
     }
   };
+  
    return (
     <Animated.View ref={ref} style={styles.container}>
       <Formik
         initialValues={{ email: "", password: "" }}
         onSubmit={(values) => {
-          onLogin(values.email, values.password);
+          handleLogin(values.email, values.password);
         }}
         validationSchema={LoginFormSchema}
         validateOnMount={true}

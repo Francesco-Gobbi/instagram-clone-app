@@ -10,25 +10,49 @@ import useCheckStoriesSeen from "../../hooks/useCheckStoriesSeen";
 import { LinearGradient } from "expo-linear-gradient";
 import { STORY_GRADIENT_COLORS } from "../../utils/theme";
 
-const Interaction = ({ navigation, item, currentUser, text }) => {
+const Interaction = ({ navigation, notification, currentUser }) => {
   const { checkStoriesSeen } = useCheckStoriesSeen();
+  const { type, post, actor } = notification || {};
+
+  const actorUsername = actor?.username || "Unknown";
+  const actorEmail = actor?.email;
+  const avatarUri =
+    actor?.profile_picture ||
+    post?.profile_picture ||
+    post?.owner_profile_picture ||
+    post?.imageUrl ||
+    currentUser?.profile_picture;
+  const postPreviewUri = post?.imageUrl || post?.thumbnail || avatarUri;
 
   const handleUserProfile = () => {
+    if (!actorEmail) {
+      return;
+    }
     navigation.navigate("UserDetail", {
-      email: item.comments[item.comments.length - 1].email,
+      email: actorEmail,
     });
   };
 
   const handleCheckPost = () => {
-    navigation.navigate("Detail", { item: item });
+    navigation.navigate("Detail", { item: post, fromProfile: false });
   };
+
+  const showStoryBorder =
+    type === "comment" &&
+    actorUsername &&
+    checkStoriesSeen(actorUsername, currentUser.email);
+
+  const interactionLabel =
+    type === "comment" ? "Commented your post." : "Liked your post.";
 
   return (
     <View style={styles.container}>
       <View style={styles.rowContainer}>
-        <TouchableOpacity onPress={() => handleUserProfile()}>
-          {text === "commented" &&
-          checkStoriesSeen(item.username, currentUser.email) ? (
+        <TouchableOpacity
+          onPress={handleUserProfile}
+          disabled={!actorEmail}
+        >
+          {showStoryBorder ? (
             <LinearGradient
               start={[0.9, 0.45]}
               end={[0.07, 1.03]}
@@ -36,48 +60,33 @@ const Interaction = ({ navigation, item, currentUser, text }) => {
               style={styles.rainbowBorder}
             >
               <Image
-                source={{
-                  uri:
-                    text === "commented"
-                      ? item.comments[item.comments.length - 1].profile_picture
-                      : item.new_likes[1],
-                }}
+                source={{ uri: avatarUri }}
                 style={styles.image}
               />
             </LinearGradient>
           ) : (
             <Image
-              source={{
-                uri:
-                  text === "commented"
-                    ? item.comments[item.comments.length - 1].profile_picture
-                    : item.new_likes[1],
-              }}
+              source={{ uri: avatarUri }}
               style={styles.nonRainbowImage}
             />
           )}
         </TouchableOpacity>
         <View style={styles.userContainer}>
-          <TouchableOpacity onPress={() => handleUserProfile()}>
-            <Text style={styles.username}>
-              {text === "commented"
-                ? item.comments[item.comments.length - 1].username
-                : item.new_likes[0]}
-            </Text>
+          <TouchableOpacity
+            onPress={handleUserProfile}
+            disabled={!actorEmail}
+          >
+            <Text style={styles.username}>{actorUsername}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleCheckPost()}>
-            <Text style={styles.name}>
-              {text === "commented"
-                ? "Commented your post."
-                : "Liked your post."}
-            </Text>
+          <TouchableOpacity onPress={handleCheckPost}>
+            <Text style={styles.name}>{interactionLabel}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={() => handleCheckPost()}>
-          <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+        <TouchableOpacity onPress={handleCheckPost}>
+          <Image source={{ uri: postPreviewUri }} style={styles.postImage} />
         </TouchableOpacity>
       </View>
     </View>

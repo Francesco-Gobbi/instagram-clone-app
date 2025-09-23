@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Platform,
   StatusBar,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState, useRef } from "react";
@@ -26,6 +27,11 @@ const FLASH_MODE = {
   AUTO: 'auto'
 };
 
+const CAPTURE_MODE = {
+  PHOTO: 'photo',
+  VIDEO: 'video',
+};
+
 const CameraModule = ({
   setCameraModalVisible,
   setCapturedPhoto,
@@ -36,11 +42,52 @@ const CameraModule = ({
   const camRef = useRef(null);
   const [facing, setFacing] = useState(CAMERA_TYPE.BACK);
   const [flashMode, setFlashMode] = useState(FLASH_MODE.OFF);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const skipNextPressRef = useRef(false);
   const [permission, requestPermission] = useCameraPermissions();
-  
-  const { ChooseImageFromGallery } = useImageGallery({ 
-    setSelectedImage: setCapturedPhoto 
+  const [captureMode, setCaptureMode] = useState(() =>
+    selectedType === "New reel" ? CAPTURE_MODE.VIDEO : CAPTURE_MODE.PHOTO
+  );
+
+  const isVideoMode = captureMode === CAPTURE_MODE.VIDEO;
+  const allowVideoCapture = selectedType === "New reel";
+  const canRecordVideo = allowVideoCapture && isVideoMode;
+  const maxVideoDuration = canRecordVideo ? 60 : 0;
+
+  const handleSelectedAsset = (asset) => {
+    if (!asset) {
+      return;
+    }
+
+    if (selectedType === "New reel") {
+      const normalized = {
+        uri: asset.uri,
+        filename: asset.fileName || asset.filename || asset.uri?.split("/").pop(),
+        duration: asset.duration ?? 0,
+        mediaType: asset.type || asset.mediaType || "video",
+        id: asset.assetId || asset.id || Date.now().toString(),
+        fromGallery: true,
+      };
+      setCapturedPhoto(normalized);
+    } else {
+      setCapturedPhoto(asset.uri || asset);
+    }
+  };
+
+  const {
+    ChooseImageFromGallery,
+    ChooseVideoFromGallery,
+  } = useImageGallery({
+    setSelectedImage: handleSelectedAsset,
   });
+  useEffect(() => {
+    setIsCameraReady(false);
+  }, [selectedType]);
+
+  useEffect(() => {
+    setCaptureMode(selectedType === "New reel" ? CAPTURE_MODE.VIDEO : CAPTURE_MODE.PHOTO);
+  }, [selectedType]);
 
   useEffect(() => {
     if (!permission) {
@@ -67,35 +114,166 @@ const CameraModule = ({
   }
 
   const handleTakePicture = async () => {
-    if (camRef.current) {
-      try {
-        const data = await camRef.current.takePictureAsync({
-          quality: 0.8,
-          base64: false,
-        });
-        const imageUri = data.uri;
-        setCapturedPhoto(imageUri);
-      } catch (error) {
-        console.error("Error taking picture:", error);
-      }
+    if (!isCameraReady) {
+      Alert.alert("Fotocamera non pronta", "Attendi che la fotocamera completi l'avvio prima di scattare.");
+      return;
     }
-    setCameraModalVisible(false);
-  };
 
-  const handleCloseModal = () => {
-    setCameraModalVisible(false);
-  };
+    if (!camRef.current) {
+      return;
+    }
 
+    try {
+      const data = await camRef.current.takePictureAsync({
+        quality: 0.8,
+        base64: false,
+      });
+
+      if (data?.uri) {
+        if (typeof setCapturedPhoto === "function") {
+          setCapturedPhoto(data.uri);
+        }
+        setCameraModalVisible(false);
+      }
+    } catch (error) {
+      console.error("Error taking picture:", error);
+    }
+  };
   const toggleCameraFacing = () => {
-    setFacing(current => 
+    setIsCameraReady(false);
+    setFacing(current =>
       current === CAMERA_TYPE.BACK ? CAMERA_TYPE.FRONT : CAMERA_TYPE.BACK
     );
   };
 
   const toggleFlash = () => {
-    setFlashMode(current => 
+    setFlashMode(current =>
       current === FLASH_MODE.OFF ? FLASH_MODE.ON : FLASH_MODE.OFF
     );
+  };
+
+  const startVideoRecording = () => {
+    if (!canRecordVideo || !camRef.current || isRecording) {
+      return false;
+    }
+
+    if (!isCameraReady) {
+      Alert.alert(
+        "Fotocamera non pronta",
+        "Attendi che la fotocamera completi l'avvio prima di registrare."
+      );
+      return false;
+    }
+
+    setIsRecording(true);
+    skipNextPressRef.current = true;
+
+    const recordOptions = {
+      quality: '1080p',
+      mute: false,
+    };
+
+    if (maxVideoDuration) {
+      recordOptions.maxDuration = maxVideoDuration;
+    }
+
+    camRef.current
+      .recordAsync(recordOptions)
+      .then((video) => {
+        if (video?.uri && typeof setCapturedPhoto === 'function') {
+          const videoId = Date.now().toString();
+
+          setCapturedPhoto({
+            uri: video.uri,
+            id: 'camera_' + videoId,
+            duration: video.duration ?? 0,
+            filename: video.uri.split('/').pop(),
+            mediaType: 'video',
+            fromCamera: true,
+          });
+          setCameraModalVisible(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Error recording video:', error);
+        Alert.alert(
+          'Registrazione non riuscita',
+          error?.message || 'Impossibile avviare la registrazione del video.'
+        );
+      })
+      .finally(() => {
+        setIsRecording(false);
+        skipNextPressRef.current = false;
+      });
+
+    return true;
+  };
+
+  const stopVideoRecording = async () => {
+    if (!isRecording || !camRef.current) {
+      return;
+    }
+
+    try {
+      await camRef.current.stopRecording();
+    } catch (error) {
+      const message = String(error || '').toLowerCase();
+      if (!message.includes('not recording')) {
+        console.error('Error stopping video recording:', error);
+        Alert.alert(
+          'Interruzione non riuscita',
+          error?.message || 'Impossibile fermare la registrazione.'
+        );
+      } else {
+        console.warn('Stop recording called too early:', error);
+      }
+    } finally {
+      setIsRecording(false);
+      skipNextPressRef.current = false;
+    }
+  };
+
+
+  const handleCapturePress = () => {
+    if (canRecordVideo) {
+      if (!isCameraReady) {
+        Alert.alert(
+          "Fotocamera non pronta",
+          "Attendi che la fotocamera completi l'avvio prima di registrare."
+        );
+        return;
+      }
+
+      if (isRecording) {
+        stopVideoRecording();
+      } else {
+        startVideoRecording();
+      }
+      return;
+    }
+
+    if (isVideoMode && !allowVideoCapture) {
+      Alert.alert(
+        "Video non disponibile",
+        "Passa alla modalità Reel per registrare un video."
+      );
+      return;
+    }
+
+    if (isRecording || skipNextPressRef.current) {
+      return;
+    }
+
+    handleTakePicture();
+  };
+
+  const handleCloseModal = () => {
+    if (isRecording) {
+      stopVideoRecording();
+      return;
+    }
+
+    setCameraModalVisible(false);
   };
 
   return (
@@ -114,16 +292,70 @@ const CameraModule = ({
           style={styles.camera}
           facing={facing}
           flash={flashMode}
+          onCameraReady={() => setIsCameraReady(true)}
           ref={camRef}
         />
       </View>
 
       {selectedType === "New post" && <View style={styles.shadowBowBottom} />}
       <View style={styles.shotButtonContainer}>
-        <View style={styles.shotButtonOutside}>
-          <TouchableOpacity onPress={handleTakePicture}>
-            <View style={styles.shotButtonInside} />
+        <View
+          style={[
+            styles.shotButtonOutside,
+            isRecording && styles.shotButtonOutsideRecording,
+          ]}
+        >
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleCapturePress}
+          >
+            <View
+              style={[
+                styles.shotButtonInside,
+                isRecording && styles.shotButtonInsideRecording,
+              ]}
+            />
           </TouchableOpacity>
+        </View>
+        <View style={styles.modeSelectorContainer}>
+          {[CAPTURE_MODE.PHOTO, CAPTURE_MODE.VIDEO].map((mode) => {
+            const isActive = captureMode === mode;
+            const isVideoOption = mode === CAPTURE_MODE.VIDEO;
+            const disabled = isVideoOption && !allowVideoCapture;
+            const label = mode === CAPTURE_MODE.PHOTO ? "FOTO" : "VIDEO";
+
+            return (
+              <TouchableOpacity
+                key={mode}
+                activeOpacity={disabled ? 1 : 0.8}
+                onPress={() => {
+                  if (disabled) {
+                    Alert.alert(
+                      "Modalita non disponibile",
+                      "Per registrare un video seleziona prima l'opzione Reel."
+                    );
+                    return;
+                  }
+                  setCaptureMode(mode);
+                }}
+                style={[
+                  styles.modeOption,
+                  isActive && styles.modeOptionActive,
+                  disabled && styles.modeOptionDisabled,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.modeOptionText,
+                    isActive && styles.modeOptionTextActive,
+                    disabled && styles.modeOptionTextDisabled,
+                  ]}
+                >
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
       <View style={styles.mainContainer}>
@@ -149,7 +381,17 @@ const CameraModule = ({
         </View>
 
         <View style={styles.iconContainer}>
-          <TouchableOpacity onPress={ChooseImageFromGallery}>
+          <TouchableOpacity
+            onPress={async () => {
+              const asset = selectedType === "New reel"
+                ? await ChooseVideoFromGallery()
+                : await ChooseImageFromGallery();
+
+              if (asset) {
+                setCameraModalVisible(false);
+              }
+            }}
+          >
             <MaterialIcons name="photo-library" size={29} color="#fff" />
           </TouchableOpacity>
 
@@ -296,6 +538,45 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 100,
   },
+  shotButtonOutsideRecording: {
+    borderColor: "#f44",
+  },
+  shotButtonInsideRecording: {
+    backgroundColor: "#f33",
+    transform: [{ scale: 0.75 }],
+    borderRadius: 20,
+  },
+  modeSelectorContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 28,
+  },
+  modeOption: {
+    paddingVertical: 6,
+    paddingHorizontal: 18,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+  modeOptionActive: {
+    backgroundColor: "#fff",
+  },
+  modeOptionDisabled: {
+    backgroundColor: "rgba(255,255,255,0.05)",
+  },
+  modeOptionText: {
+    color: "#bbb",
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: 0.4,
+  },
+  modeOptionTextActive: {
+    color: "#000",
+  },
+  modeOptionTextDisabled: {
+    color: "#555",
+  },
   modal: {
     flex: 1,
     backgroundColor: "#000",
@@ -329,3 +610,21 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

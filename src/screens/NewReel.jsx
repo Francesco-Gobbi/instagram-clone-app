@@ -6,8 +6,9 @@ import {
   Platform,
   StatusBar,
   Alert,
+  ActivityIndicator,
 } from "react-native";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Animated, { FadeIn, FadeOut, ZoomInDown } from "react-native-reanimated";
 import { SIZES } from "../constants";
 import {
@@ -17,27 +18,34 @@ import {
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
 import { useUserContext } from "../contexts/UserContext";
-import useUploadStory from "../hooks/useUploadStory";
-import useResizePictures from "../hooks/useResizePictures";
 import { Image } from "expo-image";
 import { VideoView, useVideoPlayer } from "expo-video";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
 import { LIST } from "../utils/text";
+import appwriteService from "../services/appwrite";
+import firebase from "../services/firebase";
 
 const NewReel = ({ navigation, route }) => {
   const { selectedImage } = route.params || {};
-  const { uploadStory, loader } = useUploadStory();
-  const { resizeStoryPicture } = useResizePictures();
   const { currentUser } = useUserContext();
+
+  useEffect(() => {
+    if (selectedImage?.mediaType && !selectedImage.mediaType.toLowerCase().includes("video")) {
+      Alert.alert("Video richiesto", "Per creare un reel devi selezionare un video.");
+      navigation.goBack();
+    }
+  }, [selectedImage, navigation]);
 
   const [opacity, setOpacity] = useState(0);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Create video player
-  const player = useVideoPlayer(selectedImage.uri, player => {
+  const player = useVideoPlayer(selectedImage.uri, (player) => {
     player.loop = true;
     player.muted = false;
   });
@@ -49,13 +57,119 @@ const NewReel = ({ navigation, route }) => {
   }, []);
 
   const handleSubmitButton = async () => {
-    Alert.alert(
-      "Upload not allowed",
-      "We apologize, but the upload was deactivated due to server storage limitations."
-    );
+    if (isUploading) {
+      return;
+    }
+
+    if (!selectedImage?.uri) {
+      Alert.alert(
+        "Missing video",
+        "Select a valid video before uploading."
+      );
+      return;
+    }
+
+    if (!currentUser?.email) {
+      Alert.alert(
+        "Sign-in required",
+        "You need to be signed in to upload a reel."
+      );
+      return;
+    }
+
+    if (!appwriteService.isConfigured()) {
+      Alert.alert(
+        "Appwrite not configured",
+        "Unable to upload the reel because Appwrite is not configured."
+      );
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      if (player?.pause) {
+        player.pause();
+      }
+      setIsPlaying(false);
+
+      const extensionFromName =
+        selectedImage?.filename?.split(".").pop()?.toLowerCase() || "mp4";
+      const safeExtension =
+        extensionFromName.length <= 5 ? extensionFromName : "mp4";
+      const fileName = `reel_${Date.now()}.${safeExtension}`;
+
+      const uploadResult = await appwriteService.uploadFile(
+        selectedImage.uri,
+        currentUser.email,
+        fileName,
+        "video",
+        (progress) => {
+          if (typeof progress === "number") {
+            const normalized = Math.max(
+              0,
+              Math.min(100, Math.round(progress))
+            );
+            setUploadProgress(normalized);
+          }
+        }
+      );
+
+      if (!uploadResult?.success || !uploadResult?.fileUrl) {
+        throw new Error("Video upload failed.");
+      }
+
+      const reelData = {
+        videoUrl: uploadResult.fileUrl,
+        videoFileId: uploadResult.fileId,
+        videoBucketId: appwriteService.bucketId,
+        caption: "",
+        username: currentUser.username,
+        profile_picture: currentUser.profile_picture,
+        owner_uid: currentUser.owner_uid,
+        owner_email: currentUser.email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        likes_by_users: [],
+        new_likes: null,
+        comments: [],
+        shared: 0,
+        duration: selectedImage?.duration || 0,
+        mimeType: uploadResult.mimeType,
+      };
+
+      await firebase
+        .firestore()
+        .collection("users")
+        .doc(currentUser.email)
+        .collection("reels")
+        .add(reelData);
+
+      setUploadProgress(100);
+
+      Alert.alert(
+        "Reel uploaded",
+        "Your reel has been uploaded successfully."
+      );
+
+      navigation.navigate("Main Screen", { screen: "Videos" });
+    } catch (error) {
+      console.error("Upload reel error:", error);
+      Alert.alert(
+        "Upload error",
+        error.message || "We couldn't upload your reel. Please try again."
+      );
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   const handlePlayPause = () => {
+    if (isUploading) {
+      return;
+    }
+
     if (isPlaying) {
       player.pause();
       setIsPlaying(false);
@@ -149,13 +263,13 @@ const NewReel = ({ navigation, route }) => {
             style={styles.image}
           />
         )}
-        
+
         <VideoView
           style={styles.video}
           player={player}
           contentFit="cover"
         />
-        
+
         <TouchableOpacity
           onPress={handlePlayPause}
           style={styles.playButtonContainer}
@@ -165,7 +279,7 @@ const NewReel = ({ navigation, route }) => {
               entering={FadeIn.duration(1000)}
               exiting={FadeOut.duration(1000)}
             >
-              <Ionicons name="ios-play" size={50} color="white" />
+              <Ionicons name="play" size={50} color="white" />
             </Animated.View>
           )}
         </TouchableOpacity>
@@ -194,10 +308,25 @@ const NewReel = ({ navigation, route }) => {
           <Text style={styles.userText}>Close Friends</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => handleSubmitButton()}
-          style={styles.nextButtonContainer}
+          onPress={handleSubmitButton}
+          style={[
+            styles.nextButtonContainer,
+            isUploading && styles.disabledButton,
+          ]}
+          disabled={isUploading}
         >
-          <Ionicons name="arrow-forward" size={30} color={"#000"} />
+          {isUploading ? (
+            <View style={styles.uploadStatus}>
+              <ActivityIndicator color="#000" size="small" />
+              {uploadProgress > 0 && (
+                <Text style={styles.uploadStatusText}>
+                  {`${uploadProgress}%`}
+                </Text>
+              )}
+            </View>
+          ) : (
+            <Ionicons name="arrow-forward" size={30} color={"#000"} />
+          )}
         </TouchableOpacity>
       </Animated.View>
       <MessageModal
@@ -316,6 +445,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  disabledButton: {
+    opacity: 0.65,
+  },
+  uploadStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  uploadStatusText: {
+    color: "#000",
+    fontWeight: "600",
+    fontSize: 12,
+  },
   buttonText: {
     color: "#fff",
     fontWeight: "700",
@@ -336,3 +478,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
+

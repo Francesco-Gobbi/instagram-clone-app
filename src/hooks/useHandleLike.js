@@ -20,8 +20,13 @@ const useHandleLike = () => {
                             ? firebase.firestore.FieldValue.arrayUnion(currentUser.email)
                             : firebase.firestore.FieldValue.arrayRemove(currentUser.email),
                         new_likes: currentLikeStatus
-                            ? [currentUser.username, currentUser.profile_picture]
-                            : [],
+                            ? {
+                                username: currentUser.username,
+                                profile_picture: currentUser.profile_picture,
+                                email: currentUser.email,
+                                likedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                              }
+                            : firebase.firestore.FieldValue.delete(),
                     }
                     );
 

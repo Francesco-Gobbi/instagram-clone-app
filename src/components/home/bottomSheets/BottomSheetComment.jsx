@@ -18,7 +18,7 @@ const BottomSheetComment = ({ bottomSheetRef, currentUser, post }) => {
   const { uploadComment, isLoading } = useUploadComment(post, currentUser);
 
   // Utilizzare snapPoints fissi invece di dinamici per evitare problemi
-  const snapPoints = useMemo(() => ["25%"], []);
+  const snapPoints = useMemo(() => [SIZES.Height * 0.25], []);
 
   const handleSubmitComment = async (value) => {
     await uploadComment(value);

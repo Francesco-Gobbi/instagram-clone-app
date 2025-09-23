@@ -29,10 +29,9 @@ const BottomSheetComments = ({
   // Memoizzare i snapPoints
   const snapPoints = useMemo(() => {
     if (Platform.OS === "ios") {
-      return ["68%", "94%"];
-    } else {
-      return ["99%"];
+      return [SIZES.Height * 0.68, SIZES.Height * 0.94];
     }
+    return [SIZES.Height * 0.99];
   }, []);
 
   useEffect(() => {

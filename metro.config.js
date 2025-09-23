@@ -28,6 +28,11 @@ config.resolver.assetExts = [
     'png', 'jpg', 'jpeg', 'svg', 'gif', 'webp'
 ];
 
+config.resolver.sourceExts = [
+    ...(config.resolver.sourceExts || []),
+    'cjs'
+];
+
 // Configura le piattaforme
 config.resolver.platforms = ['ios', 'android', 'native', 'web'];
 

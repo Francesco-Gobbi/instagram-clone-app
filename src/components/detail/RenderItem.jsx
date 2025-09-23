@@ -21,6 +21,7 @@ const RenderItem = ({
   setBottomSheetIndex,
   sharedIndex,
   setLayoutHeight,
+  fromProfileView = false,
 }) => {
   const findHeight = (layout) => {
     let { x, y, width, height } = layout;
@@ -34,19 +35,26 @@ const RenderItem = ({
         findHeight(event.nativeEvent.layout);
       }}
     >
-      <Divider width={0.5} color="#222" />
-      <Header
-        navigation={navigation}
-        post={post}
-        currentUser={currentUser}
-        bottomSheetRef={bottomSheetRefOptions}
-        setBottomSheetIndex={setBottomSheetIndex}
-        sharedIndex={sharedIndex}
-      />
+      {!fromProfileView && (
+        <>
+          <Divider width={0.5} color="#222" />
+          <Header
+            navigation={navigation}
+            post={post}
+            currentUser={currentUser}
+            bottomSheetRef={bottomSheetRefOptions}
+            setBottomSheetIndex={setBottomSheetIndex}
+            sharedIndex={sharedIndex}
+          />
+        </>
+      )}
       {Platform.OS === "ios" && sharedIndex === 0 && (
         <Animated.Image
           source={{ uri: post.imageUrl }}
-          style={styles.imageContainer}
+          style={[
+            styles.imageContainer,
+            fromProfileView && styles.imageContainerCompact,
+          ]}
           sharedTransitionTag={post.id.toString()}
         />
       )}
@@ -62,14 +70,16 @@ const RenderItem = ({
       <Likes post={post} navigation={navigation} />
 
       <Caption post={post} />
-      <Comments
-        post={post}
-        currentUser={currentUser}
-        bottomSheetRef={bottomSheetRefComments}
-        bottomSheetRefComment={bottomSheetRefComment}
-        setBottomSheetIndex={setBottomSheetIndex}
-        sharedIndex={sharedIndex}
-      />
+      {!fromProfileView && (
+        <Comments
+          post={post}
+          currentUser={currentUser}
+          bottomSheetRef={bottomSheetRefComments}
+          bottomSheetRefComment={bottomSheetRefComment}
+          setBottomSheetIndex={setBottomSheetIndex}
+          sharedIndex={sharedIndex}
+        />
+      )}
       <Date post={post} />
       <View style={{ height: 10 }}></View>
     </View>
@@ -90,9 +100,13 @@ const styles = StyleSheet.create({
     minWidth: SIZES.Width,
     zIndex: -1,
   },
+  imageContainerCompact: {
+    top: 0,
+  },
   Image: {
     marginVertical: 12,
     height: SIZES.Width,
     width: SIZES.Width,
   },
 });
+

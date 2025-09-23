@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
-import * as MediaLibrary from 'expo-media-library';
+import { useState, useEffect } from "react";
+import * as MediaLibrary from "expo-media-library";
 
-const useMediaLibrary = (selectedAlbum) => {
+const MEDIA_FETCH_LIMIT = 18;
+
+const useMediaLibrary = (selectedAlbum, selectedType) => {
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -9,7 +11,7 @@ const useMediaLibrary = (selectedAlbum) => {
 
   useEffect(() => {
     fetchMedia();
-  }, [selectedAlbum]);
+  }, [selectedAlbum, selectedType]);
 
   const fetchMedia = async () => {
     try {
@@ -18,64 +20,84 @@ const useMediaLibrary = (selectedAlbum) => {
 
       const { status } = await MediaLibrary.requestPermissionsAsync();
 
-      if (status !== 'granted') {
-        throw new Error('Permesso negato per accedere alla libreria media');
+      if (status !== "granted") {
+        throw new Error("Permesso negato per accedere alla libreria media");
       }
 
+      const isReelSelection = selectedType === "New reel";
+
       const mediaOptions = {
-        first: 30,
+        first: MEDIA_FETCH_LIMIT,
         sortBy: [MediaLibrary.SortBy.creationTime],
-        mediaType: [MediaLibrary.MediaType.photo, MediaLibrary.MediaType.video],
+        mediaType: isReelSelection
+          ? [MediaLibrary.MediaType.video]
+          : [MediaLibrary.MediaType.photo, MediaLibrary.MediaType.video],
         album: selectedAlbum,
       };
 
       const mediaAssets = await MediaLibrary.getAssetsAsync(mediaOptions);
 
+      const processedAssets = await Promise.all(
+        mediaAssets.assets.map(async (asset) => {
+          try {
+            const shouldDownload =
+              isReelSelection && asset.mediaType === MediaLibrary.MediaType.video;
+
+            const assetInfo = await MediaLibrary.getAssetInfoAsync(
+              asset,
+              shouldDownload ? { shouldDownload: true } : undefined
+            );
+
+            const uri = assetInfo?.localUri || assetInfo?.uri || asset.uri;
+
+            if (!uri) {
+              console.warn("Asset senza URI valido:", asset.id);
+              return null;
+            }
+
+            return {
+              id: asset.id,
+              uri,
+              filename: assetInfo?.filename || asset.filename,
+              mediaType: asset.mediaType,
+              width: asset.width,
+              height: asset.height,
+              duration: asset.duration,
+              creationTime: asset.creationTime,
+              modificationTime: asset.modificationTime,
+            };
+          } catch (assetError) {
+            console.warn("Errore nel processare asset:", asset.id, assetError);
+            return null;
+          }
+        })
+      );
+
       const imageAssets = [];
       const videoAssets = [];
 
-      for (const asset of mediaAssets.assets) {
-        try {
-          const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
-
-          const processedAsset = {
-            id: asset.id,
-            uri: assetInfo.localUri || assetInfo.uri || asset.uri,
-            filename: asset.filename,
-            mediaType: asset.mediaType,
-            width: asset.width,
-            height: asset.height,
-            duration: asset.duration,
-            creationTime: asset.creationTime,
-            modificationTime: asset.modificationTime,
-          };
-
-          if (!processedAsset.uri) {
-            console.warn('Asset senza URI valido:', asset.id);
-            continue;
-          }
-
-          if (asset.mediaType === MediaLibrary.MediaType.photo) {
-            imageAssets.push(processedAsset);
-          } else if (asset.mediaType === MediaLibrary.MediaType.video) {
-            videoAssets.push(processedAsset);
-          }
-        } catch (assetError) {
-          console.warn('Errore nel processare asset:', asset.id, assetError);
+      processedAssets.forEach((asset) => {
+        if (!asset) {
+          return;
         }
-      }
 
-      console.log(`Recuperate ${imageAssets.length} immagini e ${videoAssets.length} video`);
+        if (asset.mediaType === MediaLibrary.MediaType.photo) {
+          imageAssets.push(asset);
+        } else if (asset.mediaType === MediaLibrary.MediaType.video) {
+          videoAssets.push(asset);
+        }
+      });
 
       setImages(imageAssets);
       setVideos(videoAssets);
 
       if (mediaAssets.hasNextPage) {
-        console.log('Ci sono più media disponibili - implementa pagination se necessario');
+        console.log(
+          "Sono disponibili altri media - implementa pagination se necessario"
+        );
       }
-
     } catch (err) {
-      console.error('Errore nel recupero dei media:', err);
+      console.error("Errore nel recupero dei media:", err);
       setError(err.message);
       setImages([]);
       setVideos([]);
@@ -90,9 +112,9 @@ const useMediaLibrary = (selectedAlbum) => {
 
   const loadMoreMedia = async () => {
     try {
-      console.log('LoadMore non ancora implementato');
+      console.log("LoadMore non ancora implementato");
     } catch (err) {
-      console.error('Errore nel caricamento di più media:', err);
+      console.error("Errore nel caricamento di piu media:", err);
     }
   };
 
@@ -107,3 +129,4 @@ const useMediaLibrary = (selectedAlbum) => {
 };
 
 export default useMediaLibrary;
+

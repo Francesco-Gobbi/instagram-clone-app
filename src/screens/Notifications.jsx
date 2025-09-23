@@ -24,6 +24,7 @@ const Notifications = ({ navigation, route }) => {
   const { posts } = useFetchUserPosts(currentUser.email);
   const { requests } = useFetchRequests({ user: currentUser });
   const [notificationCounter, setNotificationCounter] = useState(0);
+  const [notificationsData, setNotificationsData] = useState([]);
 
   useEffect(() => {
     if ((currentUser?.event_notification ?? 0) > 0) {
@@ -37,35 +38,116 @@ const Notifications = ({ navigation, route }) => {
     }
   }, []);
 
+  const normalizeLikePayload = (raw) => {
+    if (!raw) {
+      return null;
+    }
+
+    if (Array.isArray(raw)) {
+      const [username, profile_picture, email] = raw;
+      if (!username && !profile_picture && !email) {
+        return null;
+      }
+
+      return {
+        username: username || "",
+        profile_picture: profile_picture || "",
+        email: email || "",
+      };
+    }
+
+    if (typeof raw === "object") {
+      const { username, profile_picture, email, likedAt } = raw;
+
+      if (!username && !profile_picture && !email) {
+        return null;
+      }
+
+      return {
+        username: username || "",
+        profile_picture: profile_picture || "",
+        email: email || "",
+        likedAt,
+      };
+    }
+
+    return null;
+  };
+
   useEffect(() => {
-    let counter = 0;
-    if (posts) {
+    if (!Array.isArray(posts) || posts.length === 0) {
+      const requestsCount = currentUser?.followers_request?.length || 0;
+      setNotificationsData([]);
+      setNotificationCounter(requestsCount);
       return;
     }
-    
-    for (let i = 0; i < posts.length || 0; i++) {
-      if (posts[i].comments && posts[i].comments.length > 0) {
-        if (
-          posts[i].comments[posts[i].comments.length - 1].email !==
-          currentUser.email
-        ) {
-          counter++;
-        }
-      }
-      if (posts[i].new_likes.length > 0) {
-        counter++;
-      }
-    }
 
-    if (
-      currentUser.followers_request &&
-      (currentUser.followers_request?.length || 0 ) > 0
-    ) {
-      counter = counter + currentUser.followers_request.length;
-    }
+    const items = [];
 
-    setNotificationCounter(counter);
-  }, [posts]);
+    posts.forEach((post) => {
+      if (!post || post.id === "empty") {
+        return;
+      }
+
+      const comments = Array.isArray(post.comments) ? post.comments : [];
+      const lastComment = comments.length > 0 ? comments[comments.length - 1] : null;
+
+      if (
+        lastComment &&
+        lastComment.email &&
+        lastComment.email !== currentUser.email
+      ) {
+        items.push({
+          id: `${post.id}_comment_${lastComment.id || lastComment.createdAt || Date.now()}`,
+          type: "comment",
+          post,
+          actor: {
+            username: lastComment.username,
+            email: lastComment.email,
+            profile_picture: lastComment.profile_picture,
+          },
+          createdAt:
+            typeof lastComment.createdAt?.toMillis === "function"
+              ? lastComment.createdAt.toMillis()
+              : typeof lastComment.createdAt === "number"
+              ? lastComment.createdAt
+              : typeof post.createdAt?.toMillis === "function"
+              ? post.createdAt.toMillis()
+              : post.createdAt || Date.now(),
+        });
+      }
+
+      const likeData = normalizeLikePayload(post.new_likes);
+      if (
+        likeData &&
+        likeData.email &&
+        likeData.email !== currentUser.email
+      ) {
+        items.push({
+          id: `${post.id}_like_${likeData.email}`,
+          type: "like",
+          post,
+          actor: likeData,
+          createdAt:
+            typeof likeData.likedAt?.toMillis === "function"
+              ? likeData.likedAt.toMillis()
+              : typeof likeData.likedAt === "number"
+              ? likeData.likedAt
+              : typeof post.createdAt?.toMillis === "function"
+              ? post.createdAt.toMillis()
+              : post.createdAt || Date.now(),
+        });
+      }
+    });
+
+    items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    setNotificationsData(items);
+
+    const requestsCount = currentUser?.followers_request?.length || 0;
+    setNotificationCounter(items.length + requestsCount);
+  }, [posts, currentUser]);
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -93,32 +175,15 @@ const Notifications = ({ navigation, route }) => {
 
           <View>
             <FlatList
-              style={{}}
-              data={posts}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) =>
-                item.id !== "empty" &&
-                (item.comments?.length || 0) > 0 &&
-                item.comments[(item.comments?.length || 0) - 1].username !==
-                  currentUser.username ? (
-                  <Interaction
-                    navigation={navigation}
-                    item={item}
-                    currentUser={currentUser}
-                    text={"commented"}
-                  />
-                ) : (
-                  item.id !== "empty" &&
-                  (item.new_likes?.length || 0) > 0 && (
-                    <Interaction
-                      navigation={navigation}
-                      item={item}
-                      currentUser={currentUser}
-                      text={"liked"}
-                    />
-                  )
-                )
-              }
+              data={notificationsData}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <Interaction
+                  navigation={navigation}
+                  notification={item}
+                  currentUser={currentUser}
+                />
+              )}
             />
           </View>
         </View>

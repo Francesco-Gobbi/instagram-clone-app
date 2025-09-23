@@ -9,8 +9,10 @@ import {
   Platform,
   StatusBar,
   ActivityIndicator,
+  Alert,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import useImageGallery from "../hooks/useImageGallery"
 import { SIZES } from "../constants";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
 import useMediaLibrary from "../hooks/useMediaLibrary";
@@ -37,7 +39,59 @@ const MediaLibrary = ({ navigation, route }) => {
   const { scrollY, animatedStyle } = useOpacityAnimation();
   const { allAlbums, selectedAlbum, selectedAlbumTitle, handleAlbumSelection } =
     useAlbumSelector({ setAlbumModalVisible });
-  const { images, videos } = useMediaLibrary(selectedAlbum);
+  const { images, videos } = useMediaLibrary(selectedAlbum, selectedType);
+
+  const setCapturedPhoto = (photo) => {
+    const uri = typeof photo === "string" ? photo : photo?.uri;
+
+    if (!uri) {
+      return;
+    }
+
+    const payload =
+      typeof photo === "object" && photo !== null
+        ? { ...photo, uri }
+        : { uri };
+
+    if (!payload.id) {
+      payload.id = Date.now().toString();
+    }
+
+    if (selectedType === "New reel") {
+      const mediaType = typeof payload.mediaType === "string" ? payload.mediaType.toLowerCase() : "";
+      const hasVideoMime = mediaType.includes("video");
+      const videoUri = uri.toLowerCase();
+      const hasVideoExtension =
+        videoUri.endsWith(".mp4") ||
+        videoUri.endsWith(".mov") ||
+        videoUri.endsWith(".m4v") ||
+        videoUri.endsWith(".avi");
+      if (!hasVideoMime && !hasVideoExtension) {
+        Alert.alert(
+          "Seleziona un video",
+          "Per creare un reel devi scegliere o registrare un video."
+        );
+        return;
+      }
+    }
+    if (selectedType === "New post") {
+      setSelectedImage(uri);
+    } else if (selectedType === "Add to story") {
+      navigation.navigate("NewStory", { selectedImage: payload });
+    } else if (selectedType === "New reel") {
+      navigation.navigate("NewReel", { selectedImage: payload });
+    }
+  };
+
+  const {
+    ChooseImageFromGallery: openImagePicker,
+    ChooseVideoFromGallery: openVideoPicker,
+    loading: pickerLoading,
+  } = useImageGallery({
+    setSelectedImage: setCapturedPhoto,
+  });
+
+  const hasOpenedReelPickerRef = useRef(false);
   const [selectorVisible, setSelectorVisible] = useState(true);
 
   const handleScroll = (event) => {
@@ -51,16 +105,33 @@ const MediaLibrary = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    if (images.length > 0) {
+    if (selectedType === "New post" && images.length > 0) {
       setSelectedImage(images[0].uri);
+    } else if (selectedType === "New post" && images.length === 0) {
+      setSelectedImage(blankPhotoUri);
     }
-  }, [images]);
+  }, [images, selectedType]);
+
+  useEffect(() => {
+    if (selectedType === "New reel") {
+      if (!pickerLoading && !hasOpenedReelPickerRef.current) {
+        hasOpenedReelPickerRef.current = true;
+        openVideoPicker();
+      }
+    } else {
+      hasOpenedReelPickerRef.current = false;
+    }
+  }, [selectedType, pickerLoading]);
 
   const handleImageSelection = (image) => {
     setSelectedImage(image.uri);
   };
 
   const handleTypeSelector = (type) => {
+    if (type === selectedType) {
+      return;
+    }
+
     setSelectedType(type);
   };
 
@@ -68,16 +139,17 @@ const MediaLibrary = ({ navigation, route }) => {
     navigation.navigate("NewPost", { selectedImage });
   };
 
-  const setCapturedPhoto = (photo) => {
-    if (selectedType === "New post") {
-      setSelectedImage(photo);
-    } else if (selectedType === "Add to story") {
-      const updatedPhoto = { uri: photo, id: "123" };
-      navigation.navigate("NewStory", { selectedImage: updatedPhoto });
-    } else if (selectedType === "New reel") {
-      const updatedVideo = { uri: photo, id: "123" };
-      navigation.navigate("NewReel", { selectedImage: updatedVideo });
+  const handleAlbumTitlePress = async () => {
+    if (selectedAlbumTitle === "Recents") {
+      if (pickerLoading) {
+        return;
+      }
+
+      await (selectedType === "New reel" ? openVideoPicker() : openImagePicker());
+      return;
     }
+
+    setAlbumModalVisible(true);
   };
 
   const renderItem = ({ item }) => {
@@ -181,17 +253,22 @@ const MediaLibrary = ({ navigation, route }) => {
           </View>
         ) : selectedType === "Add to story" ? null : null}
         <View style={styles.LibraryBarContainer}>
-          <TouchableOpacity onPress={() => setAlbumModalVisible(true)}>
-            <View style={styles.albunButtonContainer}>
+          <View style={styles.albunButtonContainer}>
+            <TouchableOpacity onPress={handleAlbumTitlePress}>
               <Text style={styles.albunButtonText}>{selectedAlbumTitle}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setAlbumModalVisible(true)}
+              style={styles.albunButtonIconWrapper}
+            >
               <MaterialIcons
                 name="keyboard-arrow-down"
                 size={20}
                 color={"#fff"}
                 style={styles.albunButtonIcon}
               />
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity onPress={() => setCameraModalVisible(true)}>
             <View style={styles.cameraButtonContainer}>
               <Feather name="camera" size={17} color={"#fff"} />
@@ -335,15 +412,19 @@ const styles = StyleSheet.create({
   },
   albunButtonContainer: {
     flexDirection: "row",
+    alignItems: "center",
   },
   albunButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "800",
   },
-  albunButtonIcon: {
+  albunButtonIconWrapper: {
     paddingTop: 3,
-    marginLeft: 2,
+    marginLeft: 6,
+  },
+  albunButtonIcon: {
+    marginLeft: 0,
   },
   cameraButtonContainer: {
     justifyContent: "center",

@@ -20,6 +20,7 @@ import RenderItem from "../components/detail/RenderItem";
 
 const Detail = ({ navigation, route }) => {
   const { item } = route.params || {};
+  const fromProfile = route.params?.fromProfile ?? false;
   const { currentUser } = useUserContext();
   const { timeToReplaceData, onSnapshotData } = useFetchUserPosts(
     item.owner_email
@@ -114,6 +115,7 @@ const Detail = ({ navigation, route }) => {
               setBottomSheetIndex={setBottomSheetIndex}
               sharedIndex={index}
               setLayoutHeight={setLayoutHeight}
+              fromProfileView={fromProfile}
             />
           )}
           ListFooterComponent={() => <View style={{ height: 100 }} />}

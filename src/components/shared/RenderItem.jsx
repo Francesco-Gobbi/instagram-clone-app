@@ -4,12 +4,12 @@ import { Image } from "expo-image";
 import Animated from "react-native-reanimated";
 import { SIZES } from "../../constants";
 
-const RenderItem = ({ navigation, item }) => {
+const RenderItem = ({ navigation, item, fromProfile = false }) => {
   return (
     <View>
       {item.imageUrl && (
         <TouchableOpacity
-          onPress={() => navigation.navigate("Detail", { item: item })}
+          onPress={() => navigation.navigate("Detail", { item, fromProfile })}
           style={styles.imagesContainer}
           key={item.id}
         >

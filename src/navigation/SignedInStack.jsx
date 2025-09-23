@@ -25,7 +25,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
 import { UserProvider } from "../contexts/UserContext";
 import { StoriesProvider } from "../contexts/StoriesContext";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 const Stack = createNativeStackNavigator();
 
@@ -33,8 +32,7 @@ const SignedInStack = () => {
   return (
     <StoriesProvider>
       <UserProvider>
-        <BottomSheetModalProvider>
-          <NavigationContainer>
+        <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               <Stack.Screen name="Main Screen" component={BottomTabs} />
               <Stack.Screen name="Home" component={Home} />
@@ -186,7 +184,6 @@ const SignedInStack = () => {
               />
             </Stack.Navigator>
           </NavigationContainer>
-        </BottomSheetModalProvider>
       </UserProvider>
     </StoriesProvider>
   );

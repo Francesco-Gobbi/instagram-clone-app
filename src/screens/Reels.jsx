@@ -8,7 +8,7 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback, useEffect, memo } from "react";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { SIZES } from "../constants";
@@ -31,6 +31,179 @@ import Skeleton from "../components/reels/Skeleton";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
+
+const ReelItem = memo(({ 
+  item,
+  index,
+  currentUser,
+  navigation,
+  isMuted,
+  handleLike,
+  handleFeatureNotImplemented,
+  setMessageModalVisible,
+  handleLongPress,
+  handlePressOut,
+  handlePress,
+  setCurrentIndex,
+  videoPlayersRef,
+  progressBarValue,
+}) => {
+  const player = useVideoPlayer(item.videoUrl, (playerInstance) => {
+    playerInstance.loop = true;
+    playerInstance.muted = isMuted;
+  });
+
+  useEffect(() => {
+    videoPlayersRef.current[index] = player;
+    return () => {
+      if (videoPlayersRef.current[index] === player) {
+        videoPlayersRef.current[index] = null;
+      }
+      if (player?.pause) {
+        player.pause();
+      }
+    };
+  }, [index, player, videoPlayersRef]);
+
+  useEffect(() => {
+    if (player) {
+      player.muted = isMuted;
+    }
+  }, [isMuted, player]);
+
+  const handleUserProfile = () => {
+    if (currentUser.email === item.owner_email) {
+      navigation.navigate("Profile");
+    } else {
+      navigation.navigate("UserDetail", {
+        email: item.owner_email,
+      });
+    }
+  };
+
+  return (
+    <View>
+      <TouchableWithoutFeedback
+        delayLongPress={200}
+        onLongPress={handleLongPress}
+        onPressOut={handlePressOut}
+        onPress={handlePress}
+      >
+        <View>
+          <VideoView
+            style={styles.video}
+            player={player}
+            contentFit="cover"
+            onLoad={() => {
+              if (index === 0) {
+                setCurrentIndex(0);
+                player.play();
+              }
+            }}
+          />
+        </View>
+      </TouchableWithoutFeedback>
+
+      <View style={styles.sideContainer}>
+        <TouchableOpacity
+          onPress={() => handleLike(item)}
+          style={styles.touchableOpacity}
+        >
+          {item.likes_by_users.includes(currentUser.email) ? (
+            <MaterialCommunityIcons
+              name="cards-heart"
+              size={30}
+              color="#e33"
+              style={styles.heartIcon}
+            />
+          ) : (
+            <MaterialCommunityIcons
+              name="cards-heart-outline"
+              size={30}
+              color="#fff"
+              style={styles.heartIcon}
+            />
+          )}
+          <Text style={styles.sideText}>{item.likes_by_users.length}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+          style={styles.touchableOpacity}
+        >
+          <MaterialCommunityIcons
+            name="chat-outline"
+            size={32}
+            color="#fff"
+            style={styles.chatIcon}
+          />
+          <Text style={styles.sideText}>{item.comments.length}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+          style={styles.touchableOpacity}
+        >
+          <Feather
+            name="send"
+            size={26}
+            color="#fff"
+            style={styles.sendIcon}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+          style={styles.touchableOpacity}
+        >
+          <Text style={styles.sideText}>{item.shared}</Text>
+          <Ionicons name="ellipsis-horizontal" size={26} color="#fff" />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.userContainer}>
+        <View style={styles.rowContainer}>
+          <TouchableOpacity
+            onPress={handleUserProfile}
+            style={styles.profileContainer}
+          >
+            <LinearGradient
+              start={[0.9, 0.45]}
+              end={[0.07, 1.03]}
+              colors={STORY_GRADIENT_COLORS}
+              style={styles.rainbowBorder}
+            >
+              <Image
+                source={{
+                  uri: item.profile_picture,
+                }}
+                style={styles.profilePicture}
+              />
+            </LinearGradient>
+            <Text style={styles.profileUsername}>{item.username}</Text>
+            <MaterialCommunityIcons
+              name="check-decagram"
+              size={12}
+              color="#fff"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.touchableOpacity}>
+            <View style={styles.followContainer}>
+              <Text style={styles.followText}>Follow</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.captionText}>{item.caption}</Text>
+      </View>
+      <View>
+        <Progress.Bar
+          progress={progressBarValue}
+          width={SIZES.Width}
+          height={1.2}
+          useNativeDriver={true}
+          color="#fff"
+          style={styles.progressBar}
+        />
+      </View>
+    </View>
+  );
+});
 
 const Reels = ({ navigation }) => {
   const videoPlayersRef = useRef([]);
@@ -65,149 +238,39 @@ const Reels = ({ navigation }) => {
       });
   };
 
-  const renderItem = ({ item, index }) => {
-    const handleUserProfile = () => {
-      if (currentUser.email === item.owner_email) {
-        navigation.navigate("Profile");
-      } else {
-        navigation.navigate("UserDetail", {
-          email: item.owner_email,
-        });
-      }
-    };
-
-    // Create video player for this item
-    const player = useVideoPlayer(item.videoUrl, player => {
-      player.loop = true;
-      player.muted = isMuted;
-    });
-
-    // Store player reference
-    videoPlayersRef.current[index] = player;
-
-    return (
-      <View>
-        <TouchableWithoutFeedback
-          delayLongPress={200}
-          onLongPress={handleLongPress}
-          onPressOut={handlePressOut}
-          onPress={handlePress}
-        >
-          <View>
-            <VideoView
-              style={styles.video}
-              player={player}
-              contentFit="cover"
-              onLoad={() => {
-                if (index === 0) {
-                  setCurrentIndex(0);
-                  player.play();
-                }
-              }}
-            />
-          </View>
-        </TouchableWithoutFeedback>
-
-        <View style={styles.sideContainer}>
-          <TouchableOpacity
-            onPress={() => handleLike(item)}
-            style={styles.touchableOpacity}
-          >
-            {item.likes_by_users.includes(currentUser.email) ? (
-              <MaterialCommunityIcons
-                name="cards-heart"
-                size={30}
-                color="#e33"
-                style={styles.heartIcon}
-              />
-            ) : (
-              <MaterialCommunityIcons
-                name="cards-heart-outline"
-                size={30}
-                color="#fff"
-                style={styles.heartIcon}
-              />
-            )}
-            <Text style={styles.sideText}>{item.likes_by_users.length}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
-            style={styles.touchableOpacity}
-          >
-            <MaterialCommunityIcons
-              name="chat-outline"
-              size={32}
-              color="#fff"
-              style={styles.chatIcon}
-            />
-            <Text style={styles.sideText}>{item.comments.length}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
-            style={styles.touchableOpacity}
-          >
-            <Feather
-              name="send"
-              size={26}
-              color="#fff"
-              style={styles.sendIcon}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
-            style={styles.touchableOpacity}
-          >
-            <Text style={styles.sideText}>{item.shared}</Text>
-            <Ionicons name="ellipsis-horizontal" size={26} color="#fff" />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.userContainer}>
-          <View style={styles.rowContainer}>
-            <TouchableOpacity
-              onPress={handleUserProfile}
-              style={styles.profileContainer}
-            >
-              <LinearGradient
-                start={[0.9, 0.45]}
-                end={[0.07, 1.03]}
-                colors={STORY_GRADIENT_COLORS}
-                style={styles.rainbowBorder}
-              >
-                <Image
-                  source={{
-                    uri: item.profile_picture,
-                  }}
-                  style={styles.profilePicture}
-                />
-              </LinearGradient>
-              <Text style={styles.profileUsername}>{item.username}</Text>
-              <MaterialCommunityIcons
-                name="check-decagram"
-                size={12}
-                color="#fff"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.touchableOpacity}>
-              <View style={styles.followContainer}>
-                <Text style={styles.followText}>Follow</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.captionText}>{item.caption}</Text>
-        </View>
-        <View>
-          <Progress.Bar
-            progress={progressBarValue}
-            width={SIZES.Width}
-            height={1.2}
-            useNativeDriver={true}
-            color="#fff"
-            style={styles.progressBar}
-          />
-        </View>
-      </View>
-    );
-  };
+  const renderItem = useCallback(
+    ({ item, index }) => (
+      <ReelItem
+        item={item}
+        index={index}
+        currentUser={currentUser}
+        navigation={navigation}
+        isMuted={isMuted}
+        handleLike={handleLike}
+        handleFeatureNotImplemented={handleFeatureNotImplemented}
+        setMessageModalVisible={setMessageModalVisible}
+        handleLongPress={handleLongPress}
+        handlePressOut={handlePressOut}
+        handlePress={handlePress}
+        setCurrentIndex={setCurrentIndex}
+        videoPlayersRef={videoPlayersRef}
+        progressBarValue={progressBarValue}
+      />
+    ),
+    [
+      currentUser,
+      navigation,
+      isMuted,
+      handleLike,
+      handleLongPress,
+      handlePressOut,
+      handlePress,
+      setCurrentIndex,
+      videoPlayersRef,
+      progressBarValue,
+      setMessageModalVisible,
+    ]
+  );
 
   return (
     <View style={styles.container}>
@@ -270,20 +333,16 @@ const Reels = ({ navigation }) => {
                 event.nativeEvent.layoutMeasurement.height
             );
 
-            // Pause previous and next videos
             if (videoPlayersRef.current[newIndex - 1]) {
               videoPlayersRef.current[newIndex - 1].pause();
             }
             if (videoPlayersRef.current[newIndex + 1]) {
               videoPlayersRef.current[newIndex + 1].pause();
             }
-            
-            // Play current video if playing is enabled
-            if (playingVideo) {
-              if (videoPlayersRef.current[newIndex]) {
-                videoPlayersRef.current[newIndex].play();
-                setCurrentIndex(newIndex);
-              }
+
+            if (playingVideo && videoPlayersRef.current[newIndex]) {
+              videoPlayersRef.current[newIndex].play();
+              setCurrentIndex(newIndex);
             }
           }}
         />

@@ -31,7 +31,7 @@ const useUploadPost = () => {
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
 
                     likes_by_users: [],
-                    new_likes: [],
+                    new_likes: null,
                     comments: [],
 
                     likesCount: 0,

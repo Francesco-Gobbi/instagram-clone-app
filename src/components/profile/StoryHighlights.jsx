@@ -31,7 +31,7 @@ const StoryHighlights = ({ navigation, currentUser }) => {
           data={posts}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <RenderItem navigation={navigation} item={item} />
+            <RenderItem navigation={navigation} item={item} fromProfile={true} />
           )}
           numColumns={3}
           ListHeaderComponent={renderListHeaderComponent}

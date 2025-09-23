@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  Pressable,
   KeyboardAvoidingView,
   Keyboard,
   ActivityIndicator,
@@ -25,8 +26,14 @@ import useChatSendMessage from "../hooks/useChatSendMessage";
 import BottomSheetOptions from "../components/story/BottomSheetOptions";
 
 const Story = ({ navigation, route }) => {
-  const { stories, currentUser } = route.params || {};
-  const { handleResume, handlePause, currentStoryIndex, progressBar } =
+  const { stories = [], currentUser } = route.params || {};
+  const progressWidth = SIZES.Width * 0.95;
+  const segmentGap = 4;
+  const progressSegmentWidth = stories?.length
+    ? (progressWidth - segmentGap * Math.max(stories.length - 1, 0)) / stories.length
+    : progressWidth;
+  const loadingRowStyle = [styles.loadingBarRow, { width: progressWidth }];
+  const { handleResume, handlePause, nextStory, prevStory, currentStoryIndex, progressBar } =
     useProgressBarTimer({ stories, navigation });
   useSeenStory({ stories, currentUser, currentStoryIndex });
   const { shareStory } = useSharePost();
@@ -61,6 +68,16 @@ const Story = ({ navigation, route }) => {
       Keyboard.dismiss();
       handleResume();
     }
+  };
+
+  const handleSkipForward = () => {
+    handlePause();
+    nextStory();
+  };
+
+  const handleSkipBackward = () => {
+    handlePause();
+    prevStory();
   };
 
   const handleStoryShare = async () => {
@@ -113,14 +130,37 @@ const Story = ({ navigation, route }) => {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.keyboardAvoidingView}
         >
+          <View style={styles.navigationOverlay} pointerEvents="box-none">
+            <Pressable
+              style={[styles.navigationZone, styles.navigationZoneLeft]}
+              onPress={handleSkipBackward}
+              onPressIn={handlePause}
+              onPressOut={handleResume}
+            />
+            <Pressable
+              style={[styles.navigationZone, styles.navigationZoneRight]}
+              onPress={handleSkipForward}
+              onPressIn={handlePause}
+              onPressOut={handleResume}
+            />
+          </View>
           <View style={styles.headerContainer}>
-            <View style={styles.loadeingBarContainer}>
-              <Progress.Bar
-                progress={progressBar}
-                width={SIZES.Width * 0.95}
-                height={1}
-                color="#fff"
-              />
+            <View style={loadingRowStyle}>
+              {stories.map((_, index) => {
+                const progress = index < currentStoryIndex ? 1 : index === currentStoryIndex ? progressBar : 0;
+                return (
+                  <View key={index.toString()} style={styles.loadingBarSegment}>
+                    <Progress.Bar
+                      progress={progress}
+                      width={progressSegmentWidth}
+                      height={2}
+                      color="#fff"
+                      unfilledColor="rgba(255,255,255,0.3)"
+                      borderWidth={0}
+                    />
+                  </View>
+                );
+              })}
             </View>
 
             <View style={styles.subheaderContent}>
@@ -242,6 +282,40 @@ const Story = ({ navigation, route }) => {
 export default Story;
 
 const styles = StyleSheet.create({
+  navigationOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: SIZES.Height * 0.25,
+    flexDirection: "row",
+    zIndex: 2,
+  },
+  navigationZone: {
+    flex: 1,
+  },
+  navigationZoneLeft: {
+  },
+  navigationZoneRight: {
+  },
+  loadingBarRow: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 10 : (StatusBar.currentHeight || 0) + 10,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    zIndex: 3,
+  },
+  loadingBarSegment: {
+    height: 2,
+  },
+  loadingBarSegment: {
+    flex: 0,
+  },
+  loadingBarSegment: {
+    marginHorizontal: 2,
+  },
   container: {
     flex: 1,
     backgroundColor: "#000",
@@ -265,10 +339,6 @@ const styles = StyleSheet.create({
     top: 110,
     height: 100,
     zIndex: 1,
-  },
-  loadeingBarContainer: {
-    marginTop: 10,
-    alignItems: "center",
   },
   subheaderContent: {
     flexDirection: "row",
@@ -359,3 +429,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+
+
+
+
+
+

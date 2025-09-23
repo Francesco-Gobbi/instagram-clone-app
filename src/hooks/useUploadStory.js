@@ -34,7 +34,7 @@ const useUploadStory = () => {
                     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
 
                     likes_by_users: [],
-                    new_likes: [],
+                    new_likes: null,
                     seen_by_users: [],
 
                     likesCount: 0,

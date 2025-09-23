@@ -32,8 +32,8 @@ const SignedOutStack = () => (
           animation: "slide_from_right",
         }}
       />
-    </Stack.Navigator>
-  </NavigationContainer>
+      </Stack.Navigator>
+    </NavigationContainer>
 );
 
 export default SignedOutStack;

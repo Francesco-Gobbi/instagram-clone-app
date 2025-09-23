@@ -6,10 +6,10 @@ import {
   TextInput,
   ActivityIndicator,
   Platform,
-  StatusBar,
+    StatusBar,
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Divider } from "react-native-elements";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useUserContext } from "../../../contexts/UserContext";
@@ -18,23 +18,50 @@ import firebase from "../../../services/firebase";
 const Gender = ({ navigation }) => {
   const { currentUser } = useUserContext();
   const [loader, setLoader] = useState(false);
-  const [values, setValues] = useState(currentUser.gender);
+  const genderOptions = useMemo(
+    () => ["Male", "Female", "Custom", "Prefer not to say"],
+    []
+  );
+
+  const initialGender = useMemo(() => {
+    const stored = Array.isArray(currentUser?.gender)
+      ? currentUser.gender
+      : null;
+
+    if (stored && stored.length) {
+      const [selected = "Prefer not to say", custom = ""] = stored;
+      return [selected, custom ?? ""];
+    }
+
+    return ["Prefer not to say", ""];
+  }, [currentUser?.gender]);
+
+  const [values, setValues] = useState(initialGender);
   const [isValid, setIsValid] = useState(false);
 
-  genderOptions = ["Male", "Female", "Custom", "Prefer not to say"];
+  useEffect(() => {
+    setValues(initialGender);
+  }, [initialGender]);
 
   useEffect(() => {
-    if (values[0] === "Custom" && values[1] === "") {
+    const [selectedOption, customValue] = values;
+    const [savedOption, savedCustom] = initialGender;
+
+    if (selectedOption === "Custom" && customValue.trim() === "") {
       setIsValid(false);
-    } else if (
-      values[0] === currentUser.gender[0] &&
-      values[1] === currentUser.gender[1]
+      return;
+    }
+
+    if (
+      selectedOption === savedOption &&
+      (selectedOption !== "Custom" || customValue === savedCustom)
     ) {
       setIsValid(false);
-    } else {
-      setIsValid(true);
+      return;
     }
-  }, [values]);
+
+    setIsValid(true);
+  }, [values, initialGender]);
 
   const handleSubmitGender = async (values) => {
     if (!loader) {

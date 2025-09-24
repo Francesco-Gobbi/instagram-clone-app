@@ -32,6 +32,40 @@ import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
 
+const pausePlayer = (player) => {
+  if (!player) return;
+  if (typeof player.pause === 'function') {
+    try {
+      player.pause();
+      return;
+    } catch (error) {
+      console.warn('Unable to pause reel player:', error?.message || error);
+    }
+  }
+  if (typeof player.pauseAsync === 'function') {
+    player.pauseAsync().catch((error) =>
+      console.warn('Unable to pause reel player async:', error?.message || error)
+    );
+  }
+};
+
+const playPlayer = (player) => {
+  if (!player) return;
+  if (typeof player.play === 'function') {
+    try {
+      player.play();
+      return;
+    } catch (error) {
+      console.warn('Unable to play reel player:', error?.message || error);
+    }
+  }
+  if (typeof player.playAsync === 'function') {
+    player.playAsync().catch((error) =>
+      console.warn('Unable to play reel player async:', error?.message || error)
+    );
+  }
+};
+
 const ReelItem = memo(({ 
   item,
   index,
@@ -59,9 +93,7 @@ const ReelItem = memo(({
       if (videoPlayersRef.current[index] === player) {
         videoPlayersRef.current[index] = null;
       }
-      if (player?.pause) {
-        player.pause();
-      }
+      pausePlayer(player);
     };
   }, [index, player, videoPlayersRef]);
 
@@ -73,7 +105,7 @@ const ReelItem = memo(({
 
   const handleUserProfile = () => {
     if (currentUser.email === item.owner_email) {
-      navigation.navigate("Profile");
+      navigation.navigate("Main Screen", { screen: "Account" });
     } else {
       navigation.navigate("UserDetail", {
         email: item.owner_email,
@@ -127,7 +159,7 @@ const ReelItem = memo(({
           <Text style={styles.sideText}>{item.likes_by_users.length}</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+          onPress={() => navigation.navigate("Detail", { item, entryPoint: "reel" })}
           style={styles.touchableOpacity}
         >
           <MaterialCommunityIcons
@@ -139,7 +171,19 @@ const ReelItem = memo(({
           <Text style={styles.sideText}>{item.comments.length}</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+          onPress={() => {
+            const chatUser = {
+              email: item.owner_email,
+              username: item.username,
+              name: item.name || item.username,
+              profile_picture: item.profile_picture,
+            };
+            if (chatUser.email === currentUser.email) {
+              navigation.navigate("Chat");
+            } else {
+              navigation.navigate("Chating", { user: chatUser });
+            }
+          }}
           style={styles.touchableOpacity}
         >
           <Feather
@@ -223,6 +267,15 @@ const Reels = ({ navigation }) => {
     handlePressOut,
     handlePress,
   } = usePlayReels({ videoRefs: videoPlayersRef, focusedScreen });
+
+  useEffect(() => {
+    videoPlayersRef.current = new Array(videos.length).fill(null);
+    if (videos.length > 0) {
+      setCurrentIndex(0);
+    } else {
+      setCurrentIndex(null);
+    }
+  }, [videos.length, setCurrentIndex]);
 
   const handleLike = (item) => {
     firebase
@@ -322,7 +375,7 @@ const Reels = ({ navigation }) => {
           ref={flatListRef}
           data={videos}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id?.toString()}
           initialNumToRender={3}
           maxToRenderPerBatch={3}
           windowSize={5}
@@ -333,15 +386,14 @@ const Reels = ({ navigation }) => {
                 event.nativeEvent.layoutMeasurement.height
             );
 
-            if (videoPlayersRef.current[newIndex - 1]) {
-              videoPlayersRef.current[newIndex - 1].pause();
-            }
-            if (videoPlayersRef.current[newIndex + 1]) {
-              videoPlayersRef.current[newIndex + 1].pause();
-            }
+            const previousPlayer = videoPlayersRef.current[newIndex - 1];
+            const nextPlayer = videoPlayersRef.current[newIndex + 1];
+            pausePlayer(previousPlayer);
+            pausePlayer(nextPlayer);
 
-            if (playingVideo && videoPlayersRef.current[newIndex]) {
-              videoPlayersRef.current[newIndex].play();
+            const currentPlayer = videoPlayersRef.current[newIndex];
+            if (playingVideo && currentPlayer) {
+              playPlayer(currentPlayer);
               setCurrentIndex(newIndex);
             }
           }}
@@ -499,3 +551,5 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.Height * 0.006,
   },
 });
+
+

@@ -1,16 +1,16 @@
+import React, { useState } from "react";
 import {
+  TouchableOpacity,
+  ActivityIndicator,
   StyleSheet,
   Text,
   View,
-  TouchableOpacity,
-  ActivityIndicator,
   Platform,
   StatusBar,
 } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Divider } from "react-native-elements";
 import { useUserContext } from "../contexts/UserContext";
-import React, { useState, useRef } from "react";
 import ProfilePicture from "../components/profile/edit/ProfilePicture";
 import useUploadPicture from "../hooks/useUploadPicture";
 import useUploadProfilePicture from "../hooks/useUploadProfilePicture";
@@ -22,35 +22,58 @@ const EditProfile = ({ navigation }) => {
   const { uploadPicture, uploading } = useUploadPicture();
   const { uploadProfilePicture, loader } = useUploadProfilePicture();
   const [previewImage, setPreviewImage] = useState(null);
-
-  const bottomSheetRef = useRef(null);
+  const [pictureOptionsVisible, setPictureOptionsVisible] = useState(false);
 
   const childPropChange = (newImage) => {
     setPreviewImage(newImage);
   };
 
   const handleUploadPicture = async () => {
+    if (!previewImage) {
+      return;
+    }
+
     const uploadedImageUri = await uploadPicture(
       previewImage,
-      currentUser.email,
+      currentUser?.email,
       "profile_picture"
     );
-    await uploadProfilePicture(uploadedImageUri, currentUser.email);
+    await uploadProfilePicture(uploadedImageUri, currentUser?.email);
+    setPreviewImage(null);
   };
 
   const handlePictureModal = () => {
-    bottomSheetRef.current.present();
+    setPictureOptionsVisible(true);
   };
+
+  const renderGender = () => {
+    const gender = currentUser?.gender;
+    if (Array.isArray(gender) && gender.length > 0) {
+      return gender[0] === "Custom" ? gender[1] || "Custom" : gender[0];
+    }
+    if (typeof gender === "string" && gender.length > 0) {
+      return gender;
+    }
+    return "Gender";
+  };
+
+  const safeName = currentUser?.name || "Name";
+  const safeBio = currentUser?.bio || "Bio";
+  const safeUsername = currentUser?.username || "Username";
+  const safeLink = currentUser?.link || "Add a Link";
+  const hasName = Boolean(currentUser?.name);
+  const hasBio = Boolean(currentUser?.bio);
+  const hasLink = Boolean(currentUser?.link);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.titleContainer}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <MaterialIcons name="arrow-back-ios" size={26} color={"#fff"} />
+          <MaterialIcons name="arrow-back-ios" size={26} color="#fff" />
         </TouchableOpacity>
 
         <Text style={styles.textTitle}>Edit profile</Text>
-        {uploading ? (
+        {uploading || loader ? (
           <ActivityIndicator style={styles.activityIndicator} />
         ) : previewImage ? (
           <TouchableOpacity
@@ -62,15 +85,15 @@ const EditProfile = ({ navigation }) => {
             <Text style={styles.doneBtn}>Done</Text>
           </TouchableOpacity>
         ) : (
-          <Text>Done</Text>
+          <Text style={styles.doneDisabled}>Done</Text>
         )}
       </View>
       <Divider width={0.4} color={"#222"} />
       <View style={styles.imageContainer}>
-        <TouchableOpacity onPress={() => handlePictureModal()}>
+        <TouchableOpacity onPress={handlePictureModal}>
           <Image
             source={{
-              uri: previewImage ? previewImage : currentUser.profile_picture,
+              uri: previewImage ? previewImage : currentUser?.profile_picture,
             }}
             style={styles.image}
           />
@@ -87,13 +110,9 @@ const EditProfile = ({ navigation }) => {
         >
           <Text style={styles.descriptiveText}>Name</Text>
           <Text
-            style={
-              currentUser.name.length > 0
-                ? styles.editableText
-                : styles.editableBlurText
-            }
+            style={hasName ? styles.editableText : styles.editableBlurText}
           >
-            {currentUser.name.length > 0 ? currentUser.name : "Name"}
+            {hasName ? safeName : "Name"}
           </Text>
         </TouchableOpacity>
         <Divider width={0.4} color={"#222"} />
@@ -104,7 +123,7 @@ const EditProfile = ({ navigation }) => {
           style={styles.rowContainer}
         >
           <Text style={styles.descriptiveText}>Username</Text>
-          <Text style={styles.editableText}>{currentUser.username}</Text>
+          <Text style={styles.editableText}>{safeUsername}</Text>
         </TouchableOpacity>
         <Divider width={0.4} color={"#222"} />
         <TouchableOpacity
@@ -115,13 +134,9 @@ const EditProfile = ({ navigation }) => {
         >
           <Text style={styles.descriptiveText}>Bio</Text>
           <Text
-            style={
-              currentUser.bio.length > 0
-                ? styles.editableText
-                : styles.editableBlurText
-            }
+            style={hasBio ? styles.editableText : styles.editableBlurText}
           >
-            {currentUser.bio.length > 0 ? currentUser.bio : "Bio"}
+            {hasBio ? safeBio : "Bio"}
           </Text>
         </TouchableOpacity>
         <Divider width={0.4} color={"#222"} />
@@ -134,13 +149,9 @@ const EditProfile = ({ navigation }) => {
           <Text style={styles.descriptiveText}>Link</Text>
           <Text
             numberOfLines={1}
-            style={
-              currentUser.link.length > 0
-                ? styles.editableText
-                : styles.editableBlurText
-            }
+            style={hasLink ? styles.editableText : styles.editableBlurText}
           >
-            {currentUser.link.length > 0 ? currentUser.link : "Add a Link"}
+            {hasLink ? safeLink : "Add a Link"}
           </Text>
           <MaterialIcons name="keyboard-arrow-right" size={24} color="#999" />
         </TouchableOpacity>
@@ -152,19 +163,15 @@ const EditProfile = ({ navigation }) => {
           style={styles.rowContainer}
         >
           <Text style={styles.descriptiveText}>Gender</Text>
-          <Text style={styles.editableText}>
-            {currentUser.gender[0] == "Custom"
-              ? currentUser.gender[1]
-              : currentUser.gender[0]}
-          </Text>
+          <Text style={styles.editableText}>{renderGender()}</Text>
           <MaterialIcons name="keyboard-arrow-right" size={24} color="#999" />
         </TouchableOpacity>
         <Divider width={0.4} color={"#222"} />
       </View>
       <ProfilePicture
-        bottomSheetRef={bottomSheetRef}
+        visible={pictureOptionsVisible}
+        onClose={() => setPictureOptionsVisible(false)}
         currentUser={currentUser}
-        navigation={navigation}
         onPropChange={childPropChange}
       />
     </SafeAreaView>
@@ -195,6 +202,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#19f",
+  },
+  doneDisabled: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#555",
   },
   activityIndicator: {
     alignSelf: "center",

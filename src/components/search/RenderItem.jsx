@@ -8,7 +8,7 @@ const RenderItem = ({ navigation, item }) => {
   return (
     <TouchableOpacity
       activeOpacity={0.6}
-      onPress={() => navigation.navigate("Detail", { item: item })}
+      onPress={() => navigation.navigate("Detail", { item, entryPoint: "search" })}
       style={styles.imagesContainer}
       key={item.id}
     >

@@ -27,11 +27,9 @@ const LikedBy = ({ navigation, user, currentUser }) => {
 
   const handleUserProfile = () => {
     if (currentUser.email === user.email) {
-      navigation.navigate("Profile");
+      navigation.navigate('Main Screen', { screen: 'Account' });
     } else {
-      navigation.navigate("UserDetail", {
-        email: user.email,
-      });
+      navigation.navigate('UserDetail', { email: user.email });
     }
   };
 

@@ -27,11 +27,6 @@ const FLASH_MODE = {
   AUTO: 'auto'
 };
 
-const CAPTURE_MODE = {
-  PHOTO: 'photo',
-  VIDEO: 'video',
-};
-
 const CameraModule = ({
   setCameraModalVisible,
   setCapturedPhoto,
@@ -43,18 +38,10 @@ const CameraModule = ({
   const [facing, setFacing] = useState(CAMERA_TYPE.BACK);
   const [flashMode, setFlashMode] = useState(FLASH_MODE.OFF);
   const [isRecording, setIsRecording] = useState(false);
-  const [isCameraReady, setIsCameraReady] = useState(false);
-  const skipNextPressRef = useRef(false);
   const [permission, requestPermission] = useCameraPermissions();
-  const [captureMode, setCaptureMode] = useState(() =>
-    selectedType === "New reel" ? CAPTURE_MODE.VIDEO : CAPTURE_MODE.PHOTO
-  );
 
-  const isVideoMode = captureMode === CAPTURE_MODE.VIDEO;
   const allowVideoCapture = selectedType === "New reel";
-  const canRecordVideo = allowVideoCapture && isVideoMode;
-  const maxVideoDuration = canRecordVideo ? 60 : 0;
-
+  const maxVideoDuration = allowVideoCapture ? 60 : 0;
   const handleSelectedAsset = (asset) => {
     if (!asset) {
       return;
@@ -81,13 +68,7 @@ const CameraModule = ({
   } = useImageGallery({
     setSelectedImage: handleSelectedAsset,
   });
-  useEffect(() => {
-    setIsCameraReady(false);
-  }, [selectedType]);
 
-  useEffect(() => {
-    setCaptureMode(selectedType === "New reel" ? CAPTURE_MODE.VIDEO : CAPTURE_MODE.PHOTO);
-  }, [selectedType]);
 
   useEffect(() => {
     if (!permission) {
@@ -114,18 +95,13 @@ const CameraModule = ({
   }
 
   const handleTakePicture = async () => {
-    if (!isCameraReady) {
-      Alert.alert("Fotocamera non pronta", "Attendi che la fotocamera completi l'avvio prima di scattare.");
-      return;
-    }
-
     if (!camRef.current) {
       return;
     }
 
     try {
       const data = await camRef.current.takePictureAsync({
-        quality: 0.8,
+        quality: 0.85,
         base64: false,
       });
 
@@ -140,8 +116,7 @@ const CameraModule = ({
     }
   };
   const toggleCameraFacing = () => {
-    setIsCameraReady(false);
-    setFacing(current =>
+    setFacing((current) =>
       current === CAMERA_TYPE.BACK ? CAMERA_TYPE.FRONT : CAMERA_TYPE.BACK
     );
   };
@@ -152,65 +127,46 @@ const CameraModule = ({
     );
   };
 
-  const startVideoRecording = () => {
-    if (!canRecordVideo || !camRef.current || isRecording) {
-      return false;
-    }
-
-    if (!isCameraReady) {
-      Alert.alert(
-        "Fotocamera non pronta",
-        "Attendi che la fotocamera completi l'avvio prima di registrare."
-      );
-      return false;
+  const startVideoRecording = async () => {
+    if (!allowVideoCapture || !camRef.current || isRecording) {
+      return;
     }
 
     setIsRecording(true);
-    skipNextPressRef.current = true;
 
-    const recordOptions = {
-      quality: '1080p',
-      mute: false,
-    };
-
-    if (maxVideoDuration) {
-      recordOptions.maxDuration = maxVideoDuration;
-    }
-
-    camRef.current
-      .recordAsync(recordOptions)
-      .then((video) => {
-        if (video?.uri && typeof setCapturedPhoto === 'function') {
-          const videoId = Date.now().toString();
-
-          setCapturedPhoto({
-            uri: video.uri,
-            id: 'camera_' + videoId,
-            duration: video.duration ?? 0,
-            filename: video.uri.split('/').pop(),
-            mediaType: 'video',
-            fromCamera: true,
-          });
-          setCameraModalVisible(false);
-        }
-      })
-      .catch((error) => {
-        console.error('Error recording video:', error);
-        Alert.alert(
-          'Registrazione non riuscita',
-          error?.message || 'Impossibile avviare la registrazione del video.'
-        );
-      })
-      .finally(() => {
-        setIsRecording(false);
-        skipNextPressRef.current = false;
+    try {
+      const recording = await camRef.current.recordAsync({
+        quality: '1080p',
+        mute: false,
+        maxDuration: maxVideoDuration,
       });
 
-    return true;
+      if (recording?.uri && typeof setCapturedPhoto === 'function') {
+        const videoId = Date.now().toString();
+
+        setCapturedPhoto({
+          uri: recording.uri,
+          id: 'camera_' + videoId,
+          duration: recording.duration ?? 0,
+          filename: recording.uri.split('/').pop(),
+          mediaType: 'video',
+          fromCamera: true,
+        });
+        setCameraModalVisible(false);
+      }
+    } catch (error) {
+      console.error('Error recording video:', error);
+      Alert.alert(
+        'Registrazione non riuscita',
+        error?.message || 'Impossibile avviare la registrazione del video.'
+      );
+    } finally {
+      setIsRecording(false);
+    }
   };
 
   const stopVideoRecording = async () => {
-    if (!isRecording || !camRef.current) {
+    if (!allowVideoCapture || !isRecording || !camRef.current) {
       return;
     }
 
@@ -224,26 +180,12 @@ const CameraModule = ({
           'Interruzione non riuscita',
           error?.message || 'Impossibile fermare la registrazione.'
         );
-      } else {
-        console.warn('Stop recording called too early:', error);
       }
-    } finally {
-      setIsRecording(false);
-      skipNextPressRef.current = false;
     }
   };
 
-
   const handleCapturePress = () => {
-    if (canRecordVideo) {
-      if (!isCameraReady) {
-        Alert.alert(
-          "Fotocamera non pronta",
-          "Attendi che la fotocamera completi l'avvio prima di registrare."
-        );
-        return;
-      }
-
+    if (allowVideoCapture) {
       if (isRecording) {
         stopVideoRecording();
       } else {
@@ -252,21 +194,12 @@ const CameraModule = ({
       return;
     }
 
-    if (isVideoMode && !allowVideoCapture) {
-      Alert.alert(
-        "Video non disponibile",
-        "Passa alla modalità Reel per registrare un video."
-      );
-      return;
-    }
-
-    if (isRecording || skipNextPressRef.current) {
+    if (isRecording) {
       return;
     }
 
     handleTakePicture();
   };
-
   const handleCloseModal = () => {
     if (isRecording) {
       stopVideoRecording();
@@ -292,7 +225,6 @@ const CameraModule = ({
           style={styles.camera}
           facing={facing}
           flash={flashMode}
-          onCameraReady={() => setIsCameraReady(true)}
           ref={camRef}
         />
       </View>
@@ -317,52 +249,15 @@ const CameraModule = ({
             />
           </TouchableOpacity>
         </View>
-        <View style={styles.modeSelectorContainer}>
-          {[CAPTURE_MODE.PHOTO, CAPTURE_MODE.VIDEO].map((mode) => {
-            const isActive = captureMode === mode;
-            const isVideoOption = mode === CAPTURE_MODE.VIDEO;
-            const disabled = isVideoOption && !allowVideoCapture;
-            const label = mode === CAPTURE_MODE.PHOTO ? "FOTO" : "VIDEO";
-
-            return (
-              <TouchableOpacity
-                key={mode}
-                activeOpacity={disabled ? 1 : 0.8}
-                onPress={() => {
-                  if (disabled) {
-                    Alert.alert(
-                      "Modalita non disponibile",
-                      "Per registrare un video seleziona prima l'opzione Reel."
-                    );
-                    return;
-                  }
-                  setCaptureMode(mode);
-                }}
-                style={[
-                  styles.modeOption,
-                  isActive && styles.modeOptionActive,
-                  disabled && styles.modeOptionDisabled,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.modeOptionText,
-                    isActive && styles.modeOptionTextActive,
-                    disabled && styles.modeOptionTextDisabled,
-                  ]}
-                >
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
       </View>
-      <View style={styles.mainContainer}>
+      <View style={[styles.mainContainer, options && styles.mainContainerCompact]}>
         <View
           style={[
             styles.titleContainer,
-            { height: selectedType === "New post" ? 50 : 72 },
+            {
+              height: selectedType === "New post" ? 50 : 72,
+              paddingTop: options ? 12 : 4,
+            },
           ]}
         >
           <TouchableOpacity onPress={handleCloseModal}>
@@ -381,59 +276,29 @@ const CameraModule = ({
         </View>
 
         <View style={styles.iconContainer}>
-          <TouchableOpacity
-            onPress={async () => {
-              const asset = selectedType === "New reel"
-                ? await ChooseVideoFromGallery()
-                : await ChooseImageFromGallery();
+          {!options && (
+            <TouchableOpacity
+              hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+              disabled={isRecording}
+              onPress={async () => {
+                const asset = selectedType === "New reel"
+                  ? await ChooseVideoFromGallery()
+                  : await ChooseImageFromGallery();
 
-              if (asset) {
-                setCameraModalVisible(false);
-              }
-            }}
-          >
-            <MaterialIcons name="photo-library" size={29} color="#fff" />
-          </TouchableOpacity>
-
-          {options && (
-            <View style={styles.optionsContainer}>
-              <TouchableOpacity onPress={() => setSelectedType("New post")}>
-                <Text
-                  style={
-                    selectedType === "New post"
-                      ? styles.optionsSelectedText
-                      : styles.optionText
-                  }
-                >
-                  POST
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setSelectedType("Add to story")}>
-                <Text
-                  style={
-                    selectedType === "Add to story"
-                      ? styles.optionsSelectedText
-                      : styles.optionText
-                  }
-                >
-                  STORY
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setSelectedType("New reel")}>
-                <Text
-                  style={
-                    selectedType === "New reel"
-                      ? styles.optionsSelectedText
-                      : styles.optionText
-                  }
-                >
-                  REEL
-                </Text>
-              </TouchableOpacity>
-            </View>
+                if (asset) {
+                  setCameraModalVisible(false);
+                }
+              }}
+            >
+              <MaterialIcons name="photo-library" size={29} color="#fff" />
+            </TouchableOpacity>
           )}
 
-          <TouchableOpacity onPress={toggleCameraFacing}>
+          <TouchableOpacity
+            hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+            disabled={isRecording}
+            onPress={toggleCameraFacing}
+          >
             <Ionicons name="reload-circle-outline" size={34} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -496,6 +361,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "space-between",
     marginHorizontal: 14,
+    paddingTop: 6,
+  },
+  mainContainerCompact: {
+    paddingTop: 18,
   },
   titleContainer: {
     flexDirection: "row",
@@ -546,37 +415,6 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.75 }],
     borderRadius: 20,
   },
-  modeSelectorContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 28,
-  },
-  modeOption: {
-    paddingVertical: 6,
-    paddingHorizontal: 18,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.12)",
-  },
-  modeOptionActive: {
-    backgroundColor: "#fff",
-  },
-  modeOptionDisabled: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-  },
-  modeOptionText: {
-    color: "#bbb",
-    fontSize: 13,
-    fontWeight: "600",
-    letterSpacing: 0.4,
-  },
-  modeOptionTextActive: {
-    color: "#000",
-  },
-  modeOptionTextDisabled: {
-    color: "#555",
-  },
   modal: {
     flex: 1,
     backgroundColor: "#000",
@@ -594,22 +432,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  optionsContainer: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  optionText: {
-    color: "#999",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  optionsSelectedText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-    alignSelf: "center",
-  },
 });
+
+
 
 
 

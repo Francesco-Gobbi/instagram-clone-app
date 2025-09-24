@@ -55,14 +55,11 @@ const BottomSheetOptions = ({
   };
 
   const handleAboutAccount = () => {
+    bottomSheetRef.current.close();
     if (currentUser.email === post.owner_email) {
-      bottomSheetRef.current.close();
-      navigation.navigate("Profile");
+      navigation.navigate('Main Screen', { screen: 'Account' });
     } else {
-      bottomSheetRef.current.close();
-      navigation.navigate("UserDetail", {
-        email: post.owner_email,
-      });
+      navigation.navigate('UserDetail', { email: post.owner_email });
     }
   };
 

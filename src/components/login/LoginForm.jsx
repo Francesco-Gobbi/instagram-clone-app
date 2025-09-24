@@ -97,9 +97,13 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
   };
 
   // Funzione per verificare lo status dell'utente
-  const checkUserApprovalStatus = async (uid) => {
+  const checkUserApprovalStatus = async (userEmail) => {
     try {
-      const userDoc = await firebase.firestore().collection('users').doc(uid).get();
+      if (!userEmail) {
+        return null;
+      }
+
+      const userDoc = await firebase.firestore().collection('users').doc(userEmail).get();
       if (userDoc.exists) {
         const userData = userDoc.data();
         return userData.status;
@@ -179,15 +183,20 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
       // Login Firebase
       const credentials = await firebase.auth().signInWithEmailAndPassword(email, password);
       // Controllo stato utente
-      const userStatus = await checkUserApprovalStatus(credentials.user.uid);
-      if (userStatus === 'pending') {
+      const userStatus = await checkUserApprovalStatus(credentials.user.email);
+      if (userStatus === null) {
         await firebase.auth().signOut();
-        navigation.navigate('PendingApproval');
+        handleDataError('We could not locate your account data. Please contact support.');
         return;
       }
-      if (userStatus === 'rejected') {
+      if (userStatus && userStatus !== 'approved') {
+        const targetScreen = userStatus === 'pending' ? 'PendingApproval' : null;
         await firebase.auth().signOut();
-        handleDataError('Your account has been rejected. Please contact your administrator.');
+        if (targetScreen) {
+          navigation.navigate(targetScreen);
+        } else {
+          handleDataError('Your account status does not allow access. Please contact your administrator.');
+        }
         return;
       }
       // Login Appwrite

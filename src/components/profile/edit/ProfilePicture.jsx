@@ -1,145 +1,158 @@
-import { StyleSheet, Text, View, TouchableOpacity, Modal } from "react-native";
-import React, { useState, useMemo, useEffect } from "react";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import CustomBackdrop from "../../shared/bottomSheets/CustomBackdrop";
-import { Foundation, Feather, Ionicons } from "@expo/vector-icons";
-import useImageGallery from "../../../hooks/useImageGallery";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Modal,
+  TouchableWithoutFeedback,
+} from "react-native";
+import React, { useState, useEffect } from "react";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import CameraModule from "../../shared/CameraModule";
 import { Image } from "expo-image";
 
-const ProfilePicture = ({ bottomSheetRef, currentUser, onPropChange }) => {
-  const snapPoints = useMemo(() => [312], []);
-  const [selectedImage, setSelectedImage] = useState(null);
+const ProfilePicture = ({
+  visible,
+  onClose,
+  currentUser,
+  onPropChange,
+  blankUserImageUri = "https://randomuser.me/api/portraits/women/53.jpg",
+}) => {
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
-  const { ChooseImageFromGallery } = useImageGallery({
-    setSelectedImage,
-  });
 
   useEffect(() => {
-    setPreviewImage(selectedImage);
-  }, [selectedImage]);
-
-  useEffect(() => {
-    setPreviewImage(capturedPhoto);
+    if (capturedPhoto) {
+      setPreviewImage(capturedPhoto);
+    }
   }, [capturedPhoto]);
 
   useEffect(() => {
-    onPropChange(previewImage);
-  }, [previewImage]);
+    if (typeof onPropChange === "function") {
+      onPropChange(previewImage);
+    }
+  }, [previewImage, onPropChange]);
 
-  const handleCameraPicture = () => {
-    setCameraModalVisible(true);
+  const closeOptions = () => {
+    if (typeof onClose === "function") {
+      onClose();
+    }
   };
 
-  const handleGalleryPicture = () => {
-    ChooseImageFromGallery();
+  const handleCameraPicture = () => {
+    closeOptions();
+    setCameraModalVisible(true);
   };
 
   const handleRemovePicture = () => {
     setPreviewImage(blankUserImageUri);
+    closeOptions();
   };
 
-  return (
-    <BottomSheetModal
-      ref={bottomSheetRef}
-      index={0}
-      snapPoints={snapPoints}
-      backgroundStyle={{ borderRadius: 25, backgroundColor: "#232325" }}
-      backdropComponent={CustomBackdrop}
-      handleComponent={() => (
-        <View style={styles.closeLineContainer}>
-          <View style={styles.closeLine}></View>
-        </View>
-      )}
-    >
-      <View style={styles.mainContainer}>
-        <Image
-          source={{
-            uri: previewImage ? previewImage : currentUser.profile_picture,
-          }}
-          style={styles.image}
-        />
-        <TouchableOpacity
-          onPress={() => handleGalleryPicture()}
-          style={styles.rowContainer}
-        >
-          <Foundation name="photo" size={29} color="#fff" />
-          <Text style={styles.text}>Choose from library</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => handleCameraPicture()}
-          style={styles.rowContainer}
-        >
-          <Feather name="camera" size={26} color="#fff" />
-          <Text style={styles.text}>Take Photo</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => handleRemovePicture()}
-          style={styles.rowContainer}
-        >
-          <Ionicons
-            name="trash-outline"
-            size={28}
-            color="#f00"
-            style={{ transform: [{ scaleX: 1.3 }] }}
-          />
-          <Text style={styles.redText}>Remove current picture</Text>
-        </TouchableOpacity>
+  const renderOptions = () => (
+    <TouchableWithoutFeedback onPress={closeOptions}>
+      <View style={styles.backdrop}>
+        <TouchableWithoutFeedback>
+          <View style={styles.optionsContainer}>
+            <Image
+              source={{
+                uri: previewImage ?? currentUser?.profile_picture ?? undefined,
+              }}
+              style={styles.previewImage}
+            />
+
+            <TouchableOpacity
+              onPress={handleCameraPicture}
+              style={styles.rowContainer}
+            >
+              <Feather name="camera" size={26} color="#fff" />
+              <Text style={styles.text}>Take Photo</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleRemovePicture}
+              style={styles.rowContainer}
+            >
+              <Ionicons
+                name="trash-outline"
+                size={28}
+                color="#f44"
+                style={{ transform: [{ scaleX: 1.25 }] }}
+              />
+              <Text style={styles.redText}>Remove current picture</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableWithoutFeedback>
       </View>
+    </TouchableWithoutFeedback>
+  );
+
+  return (
+    <>
+      <Modal
+        animationType="fade"
+        transparent
+        visible={visible}
+        onRequestClose={closeOptions}
+      >
+        {renderOptions()}
+      </Modal>
+
       <Modal
         animationType="slide"
         transparent={false}
         visible={cameraModalVisible}
+        onRequestClose={() => setCameraModalVisible(false)}
       >
         <CameraModule
           setCameraModalVisible={setCameraModalVisible}
           setCapturedPhoto={setCapturedPhoto}
+          options
         />
       </Modal>
-    </BottomSheetModal>
+    </>
   );
 };
 
 export default ProfilePicture;
 
 const styles = StyleSheet.create({
-  closeLineContainer: {
-    alignSelf: "center",
-  },
-  closeLine: {
-    width: 40,
-    height: 4,
-    borderRadius: 5,
-    backgroundColor: "#777",
-    marginTop: 9,
-  },
-  mainContainer: {
+  backdrop: {
     flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
   },
-  image: {
-    marginVertical: 28,
-    contentFit: "cover",
+  optionsContainer: {
+    backgroundColor: "#232325",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 18,
+    paddingBottom: 28,
+    paddingHorizontal: 22,
+  },
+  previewImage: {
     alignSelf: "center",
-    height: 100,
-    width: 100,
-    borderRadius: 100,
+    height: 104,
+    width: 104,
+    borderRadius: 52,
+    marginBottom: 24,
+    backgroundColor: "#1a1a1a",
   },
   rowContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 20,
     marginBottom: 18,
   },
   text: {
     color: "#fff",
     fontSize: 16,
-    marginLeft: 16,
+    marginLeft: 18,
   },
   redText: {
-    color: "#f00",
-    fontSize: 16.5,
-    marginLeft: 15,
+    color: "#f44",
+    fontSize: 16,
+    marginLeft: 16,
+    fontWeight: "600",
   },
 });

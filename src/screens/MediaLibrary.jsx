@@ -12,7 +12,7 @@ import {
   Alert,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
-import useImageGallery from "../hooks/useImageGallery"
+import useImageGallery from "../hooks/useImageGallery";
 import { SIZES } from "../constants";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
 import useMediaLibrary from "../hooks/useMediaLibrary";
@@ -31,7 +31,7 @@ const MediaLibrary = ({ navigation, route }) => {
   const { initialSelectedType, selectorAvailable = true } = route.params || {};
   const blankPhotoUri = Image.resolveAssetSource(blankPhoto).uri;
   const [selectedImage, setSelectedImage] = useState(blankPhotoUri);
-  const [selectedType, setSelectedType] = useState(initialSelectedType);
+  const [selectedType, setSelectedType] = useState(initialSelectedType ?? "New post");
   const [albumModalVisible, setAlbumModalVisible] = useState(false);
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
@@ -39,7 +39,7 @@ const MediaLibrary = ({ navigation, route }) => {
   const { scrollY, animatedStyle } = useOpacityAnimation();
   const { allAlbums, selectedAlbum, selectedAlbumTitle, handleAlbumSelection } =
     useAlbumSelector({ setAlbumModalVisible });
-  const { images, videos } = useMediaLibrary(selectedAlbum, selectedType);
+  const { images, videos, loading, error, refetchMedia } = useMediaLibrary(selectedAlbum, selectedType);
 
   const setCapturedPhoto = (photo) => {
     const uri = typeof photo === "string" ? photo : photo?.uri;
@@ -57,16 +57,28 @@ const MediaLibrary = ({ navigation, route }) => {
       payload.id = Date.now().toString();
     }
 
+    if (typeof payload.duration !== "number") {
+      payload.duration = 0;
+    }
+
     if (selectedType === "New reel") {
+      if (!payload.mediaType) {
+        payload.mediaType = "video";
+      }
+
       const mediaType = typeof payload.mediaType === "string" ? payload.mediaType.toLowerCase() : "";
+      const normalizedUri = typeof uri === "string" ? uri.split("?")[0].toLowerCase() : "";
       const hasVideoMime = mediaType.includes("video");
-      const videoUri = uri.toLowerCase();
       const hasVideoExtension =
-        videoUri.endsWith(".mp4") ||
-        videoUri.endsWith(".mov") ||
-        videoUri.endsWith(".m4v") ||
-        videoUri.endsWith(".avi");
-      if (!hasVideoMime && !hasVideoExtension) {
+        normalizedUri.endsWith(".mp4") ||
+        normalizedUri.endsWith(".mov") ||
+        normalizedUri.endsWith(".m4v") ||
+        normalizedUri.endsWith(".avi") ||
+        normalizedUri.endsWith(".webm") ||
+        normalizedUri.endsWith(".mkv");
+      const hasDuration = typeof payload.duration === "number" && payload.duration > 0;
+
+      if (!hasVideoMime && !hasVideoExtension && !hasDuration) {
         Alert.alert(
           "Seleziona un video",
           "Per creare un reel devi scegliere o registrare un video."
@@ -86,12 +98,10 @@ const MediaLibrary = ({ navigation, route }) => {
   const {
     ChooseImageFromGallery: openImagePicker,
     ChooseVideoFromGallery: openVideoPicker,
-    loading: pickerLoading,
   } = useImageGallery({
     setSelectedImage: setCapturedPhoto,
   });
 
-  const hasOpenedReelPickerRef = useRef(false);
   const [selectorVisible, setSelectorVisible] = useState(true);
 
   const handleScroll = (event) => {
@@ -105,23 +115,17 @@ const MediaLibrary = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    if (selectedType === "New post" && images.length > 0) {
-      setSelectedImage(images[0].uri);
-    } else if (selectedType === "New post" && images.length === 0) {
+    if (selectedType === "New post") {
+      if (images.length > 0) {
+        setSelectedImage(images[0].uri);
+      } else {
+        setSelectedImage(blankPhotoUri);
+      }
+    } else {
       setSelectedImage(blankPhotoUri);
     }
   }, [images, selectedType]);
 
-  useEffect(() => {
-    if (selectedType === "New reel") {
-      if (!pickerLoading && !hasOpenedReelPickerRef.current) {
-        hasOpenedReelPickerRef.current = true;
-        openVideoPicker();
-      }
-    } else {
-      hasOpenedReelPickerRef.current = false;
-    }
-  }, [selectedType, pickerLoading]);
 
   const handleImageSelection = (image) => {
     setSelectedImage(image.uri);
@@ -140,12 +144,15 @@ const MediaLibrary = ({ navigation, route }) => {
   };
 
   const handleAlbumTitlePress = async () => {
-    if (selectedAlbumTitle === "Recents") {
-      if (pickerLoading) {
-        return;
-      }
+    const openPicker = selectedType === "New reel" ? openVideoPicker : openImagePicker;
 
-      await (selectedType === "New reel" ? openVideoPicker() : openImagePicker());
+    if (selectedAlbumTitle === "Recents") {
+      await openPicker();
+      return;
+    }
+
+    if (!allAlbums || allAlbums.length === 0) {
+      await openPicker();
       return;
     }
 
@@ -222,26 +229,24 @@ const MediaLibrary = ({ navigation, route }) => {
           />
         </TouchableOpacity>
         <Text style={styles.headerText}>{selectedType}</Text>
-        {selectedImage !== blankPhotoUri ? (
-          <View style={{ width: 50 }}>
-            {selectedType === "New post" ? (
-              <TouchableOpacity onPress={() => handleNextButton()}>
+        <View style={{ width: 50, alignItems: "flex-end" }}>
+          {selectedType === "New post" ? (
+            selectedImage !== blankPhotoUri && !loading ? (
+              <TouchableOpacity onPress={handleNextButton}>
                 <Text style={styles.nextButton}>Next</Text>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity
-                onPress={() =>
-                  handleFeatureNotImplemented(setMessageModalVisible)
-                }
-                style={{ alignItems: "flex-end", marginRight: 4 }}
-              >
-                <MaterialIcons name="settings" size={24} color={"#fff"} />
-              </TouchableOpacity>
-            )}
-          </View>
-        ) : (
-          <ActivityIndicator />
-        )}
+              <ActivityIndicator color="#fff" size="small" />
+            )
+          ) : (
+            <TouchableOpacity
+              onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+              style={{ alignItems: "flex-end", marginRight: 4 }}
+            >
+              <MaterialIcons name="settings" size={24} color={"#fff"} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       <View style={styles.mediaContainer}>
         {selectedType === "New post" ? (
@@ -281,9 +286,26 @@ const MediaLibrary = ({ navigation, route }) => {
           renderItem={renderItem}
           keyExtractor={(item, index) => item.id.toString()}
           numColumns={selectedType === "New post" ? 4 : 3}
-          onScroll={(event) => {
-            handleScroll(event);
-          }}
+          onScroll={handleScroll}
+          refreshing={loading}
+          onRefresh={refetchMedia}
+          ListEmptyComponent={
+            !loading ? (
+              <View style={styles.emptyStateContainer}>
+                <Text style={styles.emptyStateText}>
+                  {error
+                    ? "Impossibile caricare i media. Controlla i permessi."
+                    : "Nessun contenuto disponibile"}
+                </Text>
+              </View>
+            ) : null
+          }
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={
+            selectedType === "New post"
+              ? undefined
+              : { paddingBottom: 40 }
+          }
         />
 
         {selectorAvailable && selectorVisible && (
@@ -470,5 +492,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     marginBottom: 4,
+  },
+  emptyStateContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    color: "#999",
+    fontSize: 14,
   },
 });

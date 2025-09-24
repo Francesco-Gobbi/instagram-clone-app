@@ -56,12 +56,10 @@ const BottomSheetOptions = ({
 
   const handleAboutAccount = () => {
     if (currentUser.email === post.owner_email) {
-      navigation.navigate("Profile");
+      navigation.navigate('Main Screen', { screen: 'Account' });
     } else {
       navigation.popToTop();
-      navigation.navigate("UserDetail", {
-        email: post.owner_email,
-      });
+      navigation.navigate('UserDetail', { email: post.owner_email });
     }
   };
 

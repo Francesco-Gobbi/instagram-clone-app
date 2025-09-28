@@ -8,7 +8,7 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
-import React, { useState, useRef, useCallback, useEffect, memo } from "react";
+import React, { useState, useRef, useCallback, useEffect, memo, useMemo } from "react";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { SIZES } from "../constants";
@@ -21,6 +21,7 @@ import {
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { STORY_GRADIENT_COLORS } from "../utils/theme";
+import { createExpoVideoSource } from "../utils/videoSource";
 import { useUserContext } from "../contexts/UserContext";
 import { useIsFocused } from "@react-navigation/native";
 import * as Progress from "react-native-progress";
@@ -82,7 +83,15 @@ const ReelItem = memo(({
   videoPlayersRef,
   progressBarValue,
 }) => {
-  const player = useVideoPlayer(item.videoUrl, (playerInstance) => {
+  const videoSource = useMemo(() => {
+    const source = createExpoVideoSource(item?.videoUrl, item?.mimeType);
+    if (source) {
+      return source;
+    }
+    return { uri: item?.videoUrl || '' };
+  }, [item?.videoUrl, item?.mimeType]);
+
+  const player = useVideoPlayer(videoSource, (playerInstance) => {
     playerInstance.loop = true;
     playerInstance.muted = isMuted;
   });
@@ -136,104 +145,106 @@ const ReelItem = memo(({
         </View>
       </TouchableWithoutFeedback>
 
-      <View style={styles.sideContainer}>
-        <TouchableOpacity
-          onPress={() => handleLike(item)}
-          style={styles.touchableOpacity}
-        >
-          {item.likes_by_users.includes(currentUser.email) ? (
-            <MaterialCommunityIcons
-              name="cards-heart"
-              size={30}
-              color="#e33"
-              style={styles.heartIcon}
-            />
-          ) : (
-            <MaterialCommunityIcons
-              name="cards-heart-outline"
-              size={30}
-              color="#fff"
-              style={styles.heartIcon}
-            />
-          )}
-          <Text style={styles.sideText}>{item.likes_by_users.length}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Detail", { item, entryPoint: "reel" })}
-          style={styles.touchableOpacity}
-        >
-          <MaterialCommunityIcons
-            name="chat-outline"
-            size={32}
-            color="#fff"
-            style={styles.chatIcon}
-          />
-          <Text style={styles.sideText}>{item.comments.length}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            const chatUser = {
-              email: item.owner_email,
-              username: item.username,
-              name: item.name || item.username,
-              profile_picture: item.profile_picture,
-            };
-            if (chatUser.email === currentUser.email) {
-              navigation.navigate("Chat");
-            } else {
-              navigation.navigate("Chating", { user: chatUser });
-            }
-          }}
-          style={styles.touchableOpacity}
-        >
-          <Feather
-            name="send"
-            size={26}
-            color="#fff"
-            style={styles.sendIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
-          style={styles.touchableOpacity}
-        >
-          <Text style={styles.sideText}>{item.shared}</Text>
-          <Ionicons name="ellipsis-horizontal" size={26} color="#fff" />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.userContainer}>
-        <View style={styles.rowContainer}>
-          <TouchableOpacity
-            onPress={handleUserProfile}
-            style={styles.profileContainer}
-          >
-            <LinearGradient
-              start={[0.9, 0.45]}
-              end={[0.07, 1.03]}
-              colors={STORY_GRADIENT_COLORS}
-              style={styles.rainbowBorder}
+      <View style={styles.bottomMetaContainer}>
+        <View style={styles.userContainer}>
+          <View style={styles.rowContainer}>
+            <TouchableOpacity
+              onPress={handleUserProfile}
+              style={styles.profileContainer}
             >
-              <Image
-                source={{
-                  uri: item.profile_picture,
-                }}
-                style={styles.profilePicture}
+              <LinearGradient
+                start={[0.9, 0.45]}
+                end={[0.07, 1.03]}
+                colors={STORY_GRADIENT_COLORS}
+                style={styles.rainbowBorder}
+              >
+                <Image
+                  source={{
+                    uri: item.profile_picture,
+                  }}
+                  style={styles.profilePicture}
+                />
+              </LinearGradient>
+              <Text style={styles.profileUsername}>{item.username}</Text>
+              <MaterialCommunityIcons
+                name="check-decagram"
+                size={12}
+                color="#fff"
               />
-            </LinearGradient>
-            <Text style={styles.profileUsername}>{item.username}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.touchableOpacity}>
+              <View style={styles.followContainer}>
+                <Text style={styles.followText}>Follow</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.captionText}>{item.caption}</Text>
+        </View>
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity
+            onPress={() => handleLike(item)}
+            style={styles.actionButton}
+          >
+            {item.likes_by_users.includes(currentUser.email) ? (
+              <MaterialCommunityIcons
+                name="cards-heart"
+                size={30}
+                color="#e33"
+                style={styles.heartIcon}
+              />
+            ) : (
+              <MaterialCommunityIcons
+                name="cards-heart-outline"
+                size={30}
+                color="#fff"
+                style={styles.heartIcon}
+              />
+            )}
+            <Text style={styles.actionLabel}>{item.likes_by_users.length}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+            style={styles.actionButton}
+          >
             <MaterialCommunityIcons
-              name="check-decagram"
-              size={12}
+              name="chat-outline"
+              size={32}
               color="#fff"
+              style={styles.chatIcon}
+            />
+            <Text style={styles.actionLabel}>{item.comments.length}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              const chatUser = {
+                email: item.owner_email,
+                username: item.username,
+                name: item.name || item.username,
+                profile_picture: item.profile_picture,
+              };
+              if (chatUser.email === currentUser.email) {
+                navigation.navigate("Chat");
+              } else {
+                navigation.navigate("Chating", { user: chatUser });
+              }
+            }}
+            style={styles.actionButton}
+          >
+            <Feather
+              name="send"
+              size={26}
+              color="#fff"
+              style={styles.sendIcon}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.touchableOpacity}>
-            <View style={styles.followContainer}>
-              <Text style={styles.followText}>Follow</Text>
-            </View>
+          <TouchableOpacity
+            onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+            style={styles.actionButton}
+          >
+            <Ionicons name="ellipsis-horizontal" size={26} color="#fff" />
+            <Text style={styles.actionLabel}>{item.shared}</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.captionText}>{item.caption}</Text>
       </View>
       <View>
         <Progress.Bar
@@ -456,26 +467,36 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 23,
   },
-  sideContainer: {
+  bottomMetaContainer: {
     position: "absolute",
     bottom: 0,
+    left: 0,
     right: 0,
-    marginBottom: 15,
-    marginRight: 15,
-    justifyContent: "center",
+    paddingHorizontal: 16,
+    paddingBottom: Platform.OS === "ios" ? 28 : 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    gap: 16,
+  },
+  actionsContainer: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingBottom: 26,
-    gap: 10,
+    gap: 18,
+    paddingBottom: 4,
+  },
+  actionButton: {
+    alignItems: "center",
+  },
+  actionLabel: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 12,
+    marginTop: 4,
   },
   touchableOpacity: {
     alignItems: "center",
     gap: 3,
-  },
-  sideText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 12,
-    marginBottom: 26,
   },
   heartIcon: {
     transform: [{ scaleY: 1.2 }, { scaleX: 1.2 }],
@@ -487,11 +508,10 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "20deg" }, { scaleY: 1.2 }, { scaleX: 1.2 }],
   },
   userContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    marginBottom: 15,
-    marginLeft: 15,
+    flex: 1,
+    justifyContent: "flex-end",
+    paddingBottom: 12,
+    paddingLeft: 4,
   },
   rowContainer: {
     flexDirection: "row",
@@ -546,9 +566,8 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     position: "absolute",
-    bottom: 0,
+    bottom: Platform.OS === "ios" ? 22 : 16,
     zIndex: 1,
-    marginBottom: SIZES.Height * 0.006,
   },
 });
 

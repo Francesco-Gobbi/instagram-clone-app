@@ -8,7 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Animated, { FadeIn, FadeOut, ZoomInDown } from "react-native-reanimated";
 import { SIZES } from "../constants";
 import {
@@ -24,6 +24,7 @@ import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
 import { LIST } from "../utils/text";
+import { createExpoVideoSource } from "../utils/videoSource";
 import appwriteService from "../services/appwrite";
 import firebase from "../services/firebase";
 
@@ -45,9 +46,21 @@ const NewReel = ({ navigation, route }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   // Create video player
-  const player = useVideoPlayer(selectedImage.uri, (player) => {
-    player.loop = true;
-    player.muted = false;
+  const videoSource = useMemo(() => {
+    const mimeType = selectedImage?.mimeType || selectedImage?.type;
+    const source = createExpoVideoSource(selectedImage?.uri, mimeType);
+    if (source) {
+      return source;
+    }
+    if (selectedImage?.uri) {
+      return { uri: selectedImage.uri };
+    }
+    return { uri: '' };
+  }, [selectedImage?.uri, selectedImage?.mimeType, selectedImage?.type]);
+
+  const player = useVideoPlayer(videoSource, (playerInstance) => {
+    playerInstance.loop = true;
+    playerInstance.muted = false;
   });
 
   useEffect(() => {

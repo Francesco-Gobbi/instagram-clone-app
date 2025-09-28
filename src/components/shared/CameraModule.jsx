@@ -8,7 +8,7 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { SIZES } from "../../constants";
@@ -40,8 +40,24 @@ const CameraModule = ({
   const [isRecording, setIsRecording] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
 
-  const allowVideoCapture = selectedType === "New reel";
-  const maxVideoDuration = allowVideoCapture ? 60 : 0;
+  const allowPhotoMode = selectedType !== "New reel";
+  const allowVideoMode = selectedType === "New reel" || selectedType === "Add to story";
+  const [captureMode, setCaptureMode] = useState(allowPhotoMode ? "photo" : "video");
+
+  useEffect(() => {
+    setCaptureMode((previousMode) => {
+      if (!allowVideoMode) {
+        return "photo";
+      }
+      if (!allowPhotoMode) {
+        return "video";
+      }
+      return previousMode;
+    });
+  }, [allowPhotoMode, allowVideoMode, selectedType]);
+
+  const isVideoMode = captureMode === "video" && allowVideoMode;
+  const maxVideoDuration = selectedType === "New reel" ? 60 : 30;
   const handleSelectedAsset = (asset) => {
     if (!asset) {
       return;
@@ -128,7 +144,7 @@ const CameraModule = ({
   };
 
   const startVideoRecording = async () => {
-    if (!allowVideoCapture || !camRef.current || isRecording) {
+    if (!isVideoMode || !camRef.current || isRecording) {
       return;
     }
 
@@ -166,7 +182,7 @@ const CameraModule = ({
   };
 
   const stopVideoRecording = async () => {
-    if (!allowVideoCapture || !isRecording || !camRef.current) {
+    if (!isRecording || !camRef.current) {
       return;
     }
 
@@ -185,7 +201,7 @@ const CameraModule = ({
   };
 
   const handleCapturePress = () => {
-    if (allowVideoCapture) {
+    if (isVideoMode) {
       if (isRecording) {
         stopVideoRecording();
       } else {
@@ -249,6 +265,60 @@ const CameraModule = ({
             />
           </TouchableOpacity>
         </View>
+        {(allowPhotoMode || allowVideoMode) && (
+          <View style={styles.captureModeSelector}>
+            {allowPhotoMode && (
+              <TouchableOpacity
+                key="photo"
+                style={[
+                  styles.captureModeButton,
+                  captureMode === "photo" && styles.captureModeButtonActive,
+                ]}
+                onPress={() => {
+                  if (!isRecording) {
+                    setCaptureMode("photo");
+                  }
+                }}
+                disabled={captureMode === "photo"}
+                activeOpacity={0.85}
+              >
+                <Text
+                  style={[
+                    styles.captureModeLabel,
+                    captureMode === "photo" && styles.captureModeLabelActive,
+                  ]}
+                >
+                  Foto
+                </Text>
+              </TouchableOpacity>
+            )}
+            {allowVideoMode && (
+              <TouchableOpacity
+                key="video"
+                style={[
+                  styles.captureModeButton,
+                  captureMode === "video" && styles.captureModeButtonActive,
+                ]}
+                onPress={() => {
+                  if (!isRecording) {
+                    setCaptureMode("video");
+                  }
+                }}
+                disabled={captureMode === "video"}
+                activeOpacity={0.85}
+              >
+                <Text
+                  style={[
+                    styles.captureModeLabel,
+                    captureMode === "video" && styles.captureModeLabelActive,
+                  ]}
+                >
+                  Video
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
       <View style={[styles.mainContainer, options && styles.mainContainerCompact]}>
         <View
@@ -388,6 +458,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1,
+    gap: 16,
   },
   shotButtonOutside: {
     height: 78,
@@ -398,7 +469,7 @@ const styles = StyleSheet.create({
     borderColor: "#fff",
     borderWidth: 4,
     alignItems: "center",
-    marginBottom: SIZES.Width * 0.19,
+    marginBottom: 18,
     zIndex: 1,
   },
   shotButtonInside: {
@@ -414,6 +485,34 @@ const styles = StyleSheet.create({
     backgroundColor: "#f33",
     transform: [{ scale: 0.75 }],
     borderRadius: 20,
+  },
+  captureModeSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
+    borderRadius: 24,
+  },
+  captureModeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  captureModeButtonActive: {
+    backgroundColor: "#fff",
+  },
+  captureModeLabel: {
+    color: "#f0f0f0",
+    fontWeight: "700",
+    letterSpacing: 0.4,
+    fontSize: 13,
+    textTransform: "uppercase",
+  },
+  captureModeLabelActive: {
+    color: "#000",
   },
   modal: {
     flex: 1,

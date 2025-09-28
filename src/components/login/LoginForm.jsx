@@ -100,18 +100,49 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
   const checkUserApprovalStatus = async (userEmail) => {
     try {
       if (!userEmail) {
-        return null;
+        return { exists: false };
       }
 
-      const userDoc = await firebase.firestore().collection('users').doc(userEmail).get();
-      if (userDoc.exists) {
-        const userData = userDoc.data();
-        return userData.status;
+      const userDocRef = firebase.firestore().collection('users').doc(userEmail);
+      const userDoc = await userDocRef.get();
+
+      if (!userDoc.exists) {
+        return { exists: false };
       }
-      return null;
+
+      const userData = userDoc.data() || {};
+      const approvedAtRaw = userData.approvedAt ?? null;
+
+      let approvedAtDate = null;
+      if (approvedAtRaw) {
+        if (typeof approvedAtRaw.toDate === 'function') {
+          approvedAtDate = approvedAtRaw.toDate();
+        } else {
+          const parsed = new Date(approvedAtRaw);
+          if (!Number.isNaN(parsed.getTime())) {
+            approvedAtDate = parsed;
+          }
+        }
+      }
+
+      const isApprovedByTimestamp =
+        approvedAtDate instanceof Date &&
+        !Number.isNaN(approvedAtDate.getTime()) &&
+        approvedAtDate.getTime() <= Date.now();
+      const status = userData.status ?? null;
+      const isApproved = status === 'approved' || isApprovedByTimestamp;
+
+      return {
+        exists: true,
+        isApproved,
+        status,
+        approvedAt: approvedAtDate,
+        rawApprovedAt: approvedAtRaw,
+        userDocRef,
+      };
     } catch (error) {
       console.error('Error checking user status:', error);
-      return null;
+      return { exists: false, error };
     }
   };
 
@@ -182,15 +213,17 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
     try {
       // Login Firebase
       const credentials = await firebase.auth().signInWithEmailAndPassword(email, password);
-      // Controllo stato utente
-      const userStatus = await checkUserApprovalStatus(credentials.user.email);
-      if (userStatus === null) {
+      // Controllo stato utente basato su approvedAt/status
+      const approval = await checkUserApprovalStatus(credentials.user.email);
+
+      if (!approval.exists || approval.error) {
         await firebase.auth().signOut();
         handleDataError('We could not locate your account data. Please contact support.');
         return;
       }
-      if (userStatus && userStatus !== 'approved') {
-        const targetScreen = userStatus === 'pending' ? 'PendingApproval' : null;
+
+      if (!approval.isApproved) {
+        const targetScreen = approval.status === 'pending' ? 'PendingApproval' : null;
         await firebase.auth().signOut();
         if (targetScreen) {
           navigation.navigate(targetScreen);
@@ -198,6 +231,20 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
           handleDataError('Your account status does not allow access. Please contact your administrator.');
         }
         return;
+      }
+
+      if (approval.status !== 'approved' && approval.userDocRef) {
+        try {
+          await approval.userDocRef.set(
+            {
+              status: 'approved',
+              approvedAt: approval.rawApprovedAt || firebase.firestore.FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+          );
+        } catch (statusSyncError) {
+          console.warn('Unable to sync user approval status:', statusSyncError);
+        }
       }
       // Login Appwrite
       const appwriteData = await createAppwriteSession(email, password);

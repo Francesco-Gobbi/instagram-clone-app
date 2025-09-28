@@ -221,47 +221,51 @@ const Story = ({ navigation, route }) => {
             />
           </View>
           {activeStory.owner_email !== currentUser.email ? (
-            <View style={styles.inputContainer}>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  placeholder="Send message"
-                  placeholderTextColor={"#fff"}
-                  style={styles.textInput}
-                  onFocus={() => handleOnFocus()}
-                  onBlur={() => handleOnBlur()}
-                  value={textMessage}
-                  onChangeText={(text) => setTextMessage(text)}
-                  autoCapitalize="sentences"
-                  autoCorrect={true}
-                  maxLength={255}
-                  multiline
-                />
-                {focusedBar &&
-                  textMessage !== "" &&
-                  (loading ? (
-                    <ActivityIndicator />
-                  ) : (
-                    <TouchableOpacity onPress={() => handleOnSubmit()}>
-                      <Text style={styles.sendBtn}>Send</Text>
-                    </TouchableOpacity>
-                  ))}
-              </View>
-
-              {!focusedBar && (
-                <View style={styles.iconContainer}>
-                  <TouchableOpacity onPress={() => handleToggleLike()}>
-                    {isLiked[currentStoryIndex] ? (
-                      <Ionicons name="heart" size={30} color={"#f00"} />
+            <View style={styles.bottomActionContainer}>
+              <View style={[styles.bottomActionBar, focusedBar && styles.bottomActionBarFocused]}>
+                <View style={styles.bottomInputWrapper}>
+                  <TextInput
+                    placeholder="Send message"
+                    placeholderTextColor={"#fff"}
+                    style={styles.bottomTextInput}
+                    onFocus={() => handleOnFocus()}
+                    onBlur={() => handleOnBlur()}
+                    value={textMessage}
+                    onChangeText={(text) => setTextMessage(text)}
+                    autoCapitalize="sentences"
+                    autoCorrect={true}
+                    maxLength={255}
+                    multiline
+                  />
+                  {focusedBar &&
+                    textMessage !== "" &&
+                    (loading ? (
+                      <ActivityIndicator />
                     ) : (
-                      <Ionicons name="heart-outline" size={30} color={"#fff"} />
+                      <TouchableOpacity onPress={() => handleOnSubmit()}>
+                        <Text style={styles.sendBtn}>Send</Text>
+                      </TouchableOpacity>
+                    ))}
+                </View>
+
+                {!focusedBar && (
+                  <TouchableOpacity
+                    style={styles.bottomHeartButton}
+                    onPress={() => handleToggleLike()}
+                  >
+                    {isLiked[currentStoryIndex] ? (
+                      <Ionicons name="heart" size={28} color={"#f00"} />
+                    ) : (
+                      <Ionicons name="heart-outline" size={28} color={"#fff"} />
                     )}
                   </TouchableOpacity>
-                </View>
-              )}
+                )}
+              </View>
             </View>
           ) : (
             null
           )}
+
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
       <BottomSheetOptions
@@ -375,44 +379,60 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '20deg' }],
     marginTop: -2,
   },
-  inputContainer: {
+  bottomActionContainer: {
+    width: '100%',
+    paddingHorizontal: 8,
+    paddingBottom: Platform.OS === "ios" ? 24 : 18,
+    marginTop: 'auto',
+  },
+  bottomActionBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 15,
-    marginBottom: Platform.OS === "android" ? 10 : 20,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    marginHorizontal: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.42)",
+    borderRadius: 28,
+    gap: 12,
   },
-  inputWrapper: {
+  bottomActionBarFocused: {
+    backgroundColor: "rgba(0, 0, 0, 0.65)",
+  },
+  bottomInputWrapper: {
     flex: 1,
-    minHeight: 40,
-    borderWidth: 0.5,
-    borderColor: "#fff",
-    borderRadius: 20,
-    marginTop: 5,
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.6)",
+    borderRadius: 24,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: 3,
-    paddingBottom: 8,
-    paddingHorizontal: 15,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
   },
-  textInput: {
+  bottomTextInput: {
+    flex: 1,
     color: "#fff",
-    fontSize: 19,
+    fontSize: 17,
     fontWeight: "500",
-    maxWidth: SIZES.Width * 0.7,
-    minWidth: SIZES.Width * 0.6,
+    marginRight: 12,
   },
   sendBtn: {
     color: "#fff",
-    fontSize: 19,
-    fontWeight: "800",
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 0.2,
   },
-  iconContainer: {
-    flexDirection: "row",
+  bottomHeartButton: {
+    height: 48,
+    width: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.4)",
     alignItems: "center",
-    marginLeft: 10,
-    gap: 10,
+    justifyContent: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
   },
 });
 

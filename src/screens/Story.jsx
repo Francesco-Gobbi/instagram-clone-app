@@ -24,6 +24,7 @@ import useHandleLike from "../hooks/useHandleLike";
 import Animated, { ZoomIn } from "react-native-reanimated";
 import useChatSendMessage from "../hooks/useChatSendMessage";
 import BottomSheetOptions from "../components/story/BottomSheetOptions";
+import { Alert } from "react-native";
 
 const Story = ({ navigation, route }) => {
   const { stories = [], currentUser } = route.params || {};
@@ -37,6 +38,7 @@ const Story = ({ navigation, route }) => {
     useProgressBarTimer({ stories, navigation });
   useSeenStory({ stories, currentUser, currentStoryIndex });
   const activeStory = stories[currentStoryIndex] || {};
+  const [sentFlag, setSentFlag] = useState(false);
 
   const { shareStory } = useSharePost();
   const { handleStoryLike } = useHandleLike();
@@ -63,7 +65,7 @@ const Story = ({ navigation, route }) => {
     name: activeStory.name,
     profile_picture: activeStory.profile_picture,
   };
-  const { chatSendMessage, loading, textMessage, setTextMessage } =
+  const { chatSendMessage, sendPostComment, loading, textMessage, setTextMessage } =
     useChatSendMessage({ user, currentUser });
   const bottomSheetRef = useRef(null);
 
@@ -72,14 +74,32 @@ const Story = ({ navigation, route }) => {
     setIsLiked({ [currentStoryIndex]: !isLiked[currentStoryIndex] });
   };
 
-  const handleOnSubmit = async () => {
-    await chatSendMessage();
+  const handleOffFocus = () => {
+    setKeyboardVisible(false);
+    setFocusedBar(false);
+    handleResume();
+  }
+
+ const handleOnSubmit = async () => {
+  const postId = activeStory.id || activeStory.postId;
+  const postOwnerEmail = activeStory.owner_email;
+
+  const res = await sendPostComment({
+    postId,
+    postOwnerEmail,
+    message: textMessage
+  });
+
+  if (res?.ok) {
+    setSentFlag(true);
+    setTimeout(() => setSentFlag(false), 1200);
 
     if (keyboardVisible) {
       Keyboard.dismiss();
-      handleResume();
+      handleOffFocus();
     }
-  };
+  }
+};
 
   const handleSkipForward = () => {
     handlePause();
@@ -94,6 +114,7 @@ const Story = ({ navigation, route }) => {
   const handleStoryShare = async () => {
     handlePause();
     await shareStory(activeStory);
+    setSentFlag(true)
     handleResume();
   };
 
@@ -124,6 +145,12 @@ const Story = ({ navigation, route }) => {
 
   return (
     <Animated.View entering={ZoomIn.duration(150)} style={styles.container}>
+      {sentFlag && (
+        <View style={{ position: 'absolute', bottom: (Platform.OS === 'ios' ? 80 : 64), alignSelf: 'center', backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16 }}>
+          <Text style={{ color: '#fff', fontWeight: '700' }}>Inviato ✓</Text>
+        </View>
+      )}
+      
       <Image
         source={activeStory.imageUrl ? { uri: activeStory.imageUrl } : undefined}
         style={styles.image}
@@ -206,7 +233,10 @@ const Story = ({ navigation, route }) => {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.keyboardAvoidingView}
         >
-          <View style={styles.navigationOverlay} pointerEvents="box-none">
+          <View
+            style={styles.navigationOverlay}
+            pointerEvents={focusedBar ? "none" : "auto"}
+          >
             <Pressable
               style={[styles.navigationZone, styles.navigationZoneLeft]}
               onPress={handleSkipBackward}
@@ -237,15 +267,13 @@ const Story = ({ navigation, route }) => {
                     maxLength={255}
                     multiline
                   />
-                  {focusedBar &&
-                    textMessage !== "" &&
-                    (loading ? (
-                      <ActivityIndicator />
-                    ) : (
-                      <TouchableOpacity onPress={() => handleOnSubmit()}>
-                        <Text style={styles.sendBtn}>Send</Text>
-                      </TouchableOpacity>
-                    ))}
+                  {focusedBar && textMessage !== "" && (loading ? (
+                    <ActivityIndicator />
+                  ) : (
+                    <TouchableOpacity onPress={handleOnSubmit}>
+                      <Text style={styles.sendBtn}>Send</Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
 
                 {!focusedBar && (

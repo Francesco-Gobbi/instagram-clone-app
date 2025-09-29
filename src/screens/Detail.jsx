@@ -56,18 +56,6 @@ const Detail = ({ navigation, route }) => {
     }
   }, [timeToReplaceData]);
 
-  const handleOpenAuthorProfile = () => {
-    if (!authorEmail) {
-      return;
-    }
-
-    if (isAuthorCurrentUser) {
-      navigation.navigate('Main Screen', { screen: 'Account' });
-    } else {
-      navigation.navigate('UserDetail', { email: authorEmail });
-    }
-  };
-
   const handleGoBack = () => {
     navigation.goBack();
   };

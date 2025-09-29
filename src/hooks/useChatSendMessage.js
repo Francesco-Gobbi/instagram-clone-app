@@ -7,6 +7,46 @@ const useChatSendMessage = ({ user, currentUser }) => {
     const [loading, setLoading] = useState(false);
     const [textMessage, setTextMessage] = useState("");
 
+    const sendPostComment = async ({ postId, postOwnerEmail, message }) => {
+        if (!postId || !postOwnerEmail || !message?.trim()) return;
+
+        setLoading(true);
+        try {
+            const postRef = firebase.firestore()
+                .collection('users')
+                .doc(postOwnerEmail)
+                .collection('stories')
+                .doc(postId);
+
+            const comment = {
+                message: message.trim(),
+                sender_email: currentUser.email,
+                timestamp: new Date(Date.now()),
+                _type: 'story_comment',
+            };
+
+            await postRef.update({
+                comments: firebase.firestore.FieldValue.arrayUnion(comment)
+            }, { merge: true });
+
+            await firebase.firestore()
+                .collection('users')
+                .doc(postOwnerEmail)
+                .set({
+                    event_notification: firebase.firestore.FieldValue.increment(1)
+                }, { merge: true });
+
+            console.log('Commento inviato con successo al post:', postId);
+            setTextMessage("");
+            return { ok: true };
+        } catch (e) {
+            console.log('sendPostComment error:', e);
+            return { ok: false, error: e };
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const chatSendMessage = async () => {
         if (!loading) {
             setLoading(true);
@@ -80,10 +120,11 @@ const useChatSendMessage = ({ user, currentUser }) => {
 
     return {
         chatSendMessage,
+        sendPostComment,
         loading,
         textMessage,
         setTextMessage
     };
 }
 
-export default useChatSendMessage
+export default useChatSendMessage;

@@ -19,9 +19,8 @@ import { Image } from "expo-image";
 import { BlurView } from "expo-blur";
 import ModalNotification from "../notifications/ModalNotification";
 import { SIZES } from "../../constants";
-import { Ionicons } from '@expo/vector-icons';
 
-const Header = ({ navigation, headerOpacity, currentUser }) => {
+const Header = ({ navigation, headerOpacity, currentUser, post }) => {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [notificationModal, setNotificationModal] = useState(false);
 
@@ -37,62 +36,26 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
     }
   }, [currentUser]);
 
+  const handleUserProfile = () => {
+    if (currentUser?.email && post?.owner_email && currentUser.email === post.owner_email) {
+      navigation.navigate("Main Screen", { screen: "Account" });
+    } else {
+      // TODO: correggi la navigate in modo che vada al post della persona
+      navigation.navigate("UserDetail", { email: post?.owner_email });    }
+  };
+
   return (
     <Animated.View style={{ opacity: headerOpacity }}>
-      <View style={styles.container}>
-        <TouchableOpacity
-          style={styles.ShentaoHubContainer}
-          onPress={() => setFilterModalVisible(true)}
-        >
-          <Image
-            style={styles.logo}
-            source={require("../../../assets/images/new-header-logo.png")}
-          />
-          <MaterialIcons
-            name={"keyboard-arrow-down"}
-            size={20}
-            color={COLORS.silver}
-          />
-        </TouchableOpacity>
-
-        <View style={styles.iconsContainer}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate("Notifications", {
-                currentUser: currentUser,
-              });
-            }}
-          >
-            {(currentUser?.event_notification ?? 0) > 0 && (
-              <View style={styles.unreadBadgeSmallContainer} />
-            )}
-            <View style={styles.iconsContainer}>
-              <MaterialCommunityIcons
-                name="cards-heart-outline"
-                size={28}
-                color={COLORS.silver}
-              />
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("Chat")}>
-            {(currentUser?.chat_notification ?? 0) > 0 && (
-              <View style={styles.unreadBadgeContainer}>
-                <Text style={styles.unreadBadgeText}>
-                  {currentUser.chat_notification}
-                </Text>
-              </View>
-            )}
-            <View style={styles.iconsContainer}>
-              <Ionicons
-                name="chatbubble-outline"
-                size={24}
-                color="white"
-              />
-            </View>
+        <View style={styles.rowContainer}>
+          <TouchableOpacity onPress={handleUserProfile} style={styles.profileContainer}>
+            <Image
+              source={ post?.profile_picture ? { uri: post.profile_picture } : "" }
+              style={styles.profilePicture}
+            />
+          <Text style={styles.profileUsername}>{post?.username ?? ""}</Text>        
+          <MaterialCommunityIcons name="check-decagram" size={12} color="#fff" />
           </TouchableOpacity>
         </View>
-      </View>
-      <View style={styles.divider} />
       <Modal
         visible={filterModalVisible}
         animationType="fade"
@@ -122,7 +85,7 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
                 <Text style={styles.modalText}>Favorites</Text>
                 <Feather name="star" size={28} color={"#fff"} />
               </TouchableOpacity>
-            </BlurView>
+            </BlurView> 
           </View>
         </TouchableWithoutFeedback>
       </Modal>
@@ -143,14 +106,51 @@ const styles = StyleSheet.create({
     marginTop: Platform.OS === "android" ? 24 : 22,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignposts: "center",
     marginRight: 20,
     zIndex: 1,
+  },
+  userContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+    paddingBottom: 12,
+    paddingLeft: 4,
+  },
+  rowContainer: {
+    paddingTop: 15,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  profileContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  rainbowBorder: {
+    height: 40.5,
+    width: 40.5,
+    borderRadius: 100,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  profilePicture: {
+    height: 39,
+    width: 39,
+    borderWidth: 2,
+    borderColor: "#666",
+    borderRadius: 100,
+  },
+  profileUsername: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
+    marginLeft: 3,
+    marginBottom: 4,
   },
   ShentaoHubContainer: {
     flexDirection: "row",
     justifyContent: "flex-start",
-    alignItems: "center",
+    alignposts: "center",
     marginLeft: 14,
   },
   logo: {
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     zIndex: 2,
     justifyContent: "center",
-    alignItems: "center",
+    alignposts: "center",
   },
   unreadBadgeContainer: {
     backgroundColor: COLORS.red,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     zIndex: 2,
     justifyContent: "center",
-    alignItems: "center",
+    alignposts: "center",
   },
   unreadBadgeText: {
     fontWeight: "600",
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     width: "100%",
-    height: 0.5,
+    height: 1,
     backgroundColor: COLORS.border,
   },
   modalBackdrop: {
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   modalRowContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignposts: "center",
     gap: 15,
     marginRight: 15,
     height: 46,

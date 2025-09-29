@@ -5,7 +5,6 @@ import { FlatList } from "react-native-gesture-handler";
 import React, { useState, useEffect, useRef } from "react";
 import TitleBar from "../components/shared/TitleBar";
 import Animated, {
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
   interpolateColor,
@@ -38,9 +37,6 @@ const Detail = ({ navigation, route }) => {
 
   const [posts, setPosts] = useState([item]);
   const authorEmail = item?.owner_email;
-  const authorUsername = item?.username || item?.owner_username || item?.owner_name || "";
-  const authorFullName = item?.name || "";
-  const authorAvatar = item?.profile_picture || item?.owner_profile_picture || null;
   const isAuthorCurrentUser = authorEmail && authorEmail === currentUser.email;
 
 
@@ -76,53 +72,12 @@ const Detail = ({ navigation, route }) => {
     navigation.goBack();
   };
 
-
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const opacity = useSharedValue(1);
-  const scale = useSharedValue(1);
-
   const gesture = Gesture.Pan()
-    .onUpdate((value) => {
-      translateX.value = value.translationX * 0.8;
-      translateY.value = value.translationY * 0.8;
-      const distance = Math.sqrt(
-        value.translationX * value.translationX +
-          value.translationY * value.translationY
-      );
-      const scaleValue = Math.min(Math.max(distance / 100, 1), 0.9);
-      scale.value = withTiming(scaleValue, { duration: 100 });
-    })
-    .onEnd(() => {
-      if (translateY.value > 75) {
-        opacity.value = 0;
-        runOnJS(navigation.goBack)();
-      } else {
-        translateX.value = withTiming(0, { duration: 300 });
-        translateY.value = withTiming(0, { duration: 300 });
-        scale.value = withTiming(1, { duration: 300 });
-      }
-    });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
-    backgroundColor: interpolateColor(
-      opacity.value,
-      [0, 1],
-      ["transparent", "#000"]
-    ),
-    borderRadius: 20,
-    overflow: "hidden",
-  }));
 
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View
-        style={[styles.container, animatedStyle]}
+        style={[styles.container]}
         entering={FadeIn.delay(300).duration(200)}
       >
         {fromSearch ? (
@@ -131,28 +86,7 @@ const Detail = ({ navigation, route }) => {
               onPress={handleGoBack}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-              <MaterialIcons name="arrow-back-ios" size={22} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleOpenAuthorProfile}
-              style={styles.searchAuthorInfo}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              {authorAvatar ? (
-                <Image source={{ uri: authorAvatar }} style={styles.searchAuthorAvatar} />
-              ) : (
-                <View style={styles.searchAvatarPlaceholder}>
-                  <MaterialIcons name="person" size={18} color="#000" />
-                </View>
-              )}
-              <View style={styles.searchAuthorTextContainer}>
-                <Text style={styles.searchAuthorUsername}>
-                  {isAuthorCurrentUser ? currentUser.username : authorUsername || "Profilo"}
-                </Text>
-                {!!authorFullName && (
-                  <Text style={styles.searchAuthorName}>{authorFullName}</Text>
-                )}
-              </View>
+              <MaterialIcons name="arrow-back-ios" size={27} color="#fff" />
             </TouchableOpacity>
             <View style={styles.searchHeaderSpacer} />
           </View>

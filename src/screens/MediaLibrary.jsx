@@ -89,9 +89,9 @@ const MediaLibrary = ({ navigation, route }) => {
     if (selectedType === "New post") {
       setSelectedImage(uri);
     } else if (selectedType === "Add to story") {
-      navigation.navigate("NewStory", { selectedImage: payload });
+      navigation.navigate("New Story", { selectedImage: payload });
     } else if (selectedType === "New Moment") {
-      navigation.navigate("NewMoment", { selectedImage: payload });
+      navigation.navigate("New Moment", { selectedImage: payload });
     }
   };
 
@@ -238,14 +238,7 @@ const MediaLibrary = ({ navigation, route }) => {
             ) : (
               <ActivityIndicator color="#fff" size="small" />
             )
-          ) : (
-            <TouchableOpacity
-              onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
-              style={{ alignItems: "flex-end", marginRight: 4 }}
-            >
-              <MaterialIcons name="settings" size={24} color={"#fff"} />
-            </TouchableOpacity>
-          )}
+          ) : (<></>)}
         </View>
       </View>
       <View style={styles.mediaContainer}>

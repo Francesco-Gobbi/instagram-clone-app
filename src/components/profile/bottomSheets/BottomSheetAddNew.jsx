@@ -28,7 +28,7 @@ const BottomSheetAddNew = ({ bottomSheetRef, navigation }) => {
           onPress={() => {
             bottomSheetRef.current.close();
             navigation.navigate("MediaLibrary", {
-              initialSelectedType: "New Moment",
+              initialSelectedType: "New moment",
               selectorAvailable: false,
             });
           }}

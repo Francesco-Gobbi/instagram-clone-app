@@ -70,7 +70,7 @@ const BottomTabs = ({ navigation }) => {
               {...props}
               onPress={() => {
                 navigation.navigate("MediaLibrary", {
-                  initialSelectedType: "New content",
+                  initialSelectedType: "Add to story",
                 });
               }}
             />

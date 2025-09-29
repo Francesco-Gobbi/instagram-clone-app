@@ -24,7 +24,7 @@ import { useUserContext } from "../contexts/UserContext";
 import { useFocusEffect } from "@react-navigation/native";
 import useFetchMoments from "../hooks/useFetchMoments";
 import firebase from "../services/firebase";
-import Skeleton from "../components/reels/Skeleton";
+import Skeleton from "../components/moment/Skeleton";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
@@ -332,7 +332,7 @@ const Moments = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
-            navigation.navigate("MediaLibrary", { initialSelectedType: "New Moment" });
+            navigation.navigate("MediaLibrary", { initialSelectedType: "New moment" });
           }}
         >
           <Ionicons name="camera-outline" size={32} color="#fff" style={{ marginTop: 6 }} />

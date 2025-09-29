@@ -73,7 +73,7 @@ const CameraNoPermission = ({ setCameraModalVisible, selectedType }) => {
             <TouchableOpacity>
               <Text
                 style={
-                  selectedType === "New Moment"
+                  selectedType === "New moment"
                     ? styles.optionsSelectedText
                     : styles.optionText
                 }

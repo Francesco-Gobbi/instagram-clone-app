@@ -27,7 +27,7 @@ const normalizeVideo = (doc) => {
   };
 };
 
-const useFetchReels = () => {
+const useFetchMoments = () => {
   const [videos, setVideos] = useState([]);
 
   useEffect(() => {
@@ -53,4 +53,4 @@ const useFetchReels = () => {
   };
 };
 
-export default useFetchReels;
+export default useFetchMoments;

@@ -9,7 +9,7 @@ import Follow from "../screens/Follow";
 import Likes from "../screens/Likes";
 import Notifications from "../screens/Notifications";
 import NewStory from "../screens/NewStory";
-import NewReel from "../screens/NewReel";
+import NewMoment from "../screens/NewMoment";
 import MediaLibrary from "../screens/MediaLibrary";
 import Story from "../screens/Story";
 import Detail from "../screens/Detail";
@@ -175,8 +175,8 @@ const SignedInStack = () => {
                 }}
               />
               <Stack.Screen
-                name="NewReel"
-                component={NewReel}
+                name="NewMoment"
+                component={NewMoment}
                 options={{
                   presentation: "transparentModal",
                   animation: "fade",

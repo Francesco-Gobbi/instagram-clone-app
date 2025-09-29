@@ -61,7 +61,7 @@ const MediaLibrary = ({ navigation, route }) => {
       payload.duration = 0;
     }
 
-    if (selectedType === "New reel") {
+    if (selectedType === "New Moment") {
       if (!payload.mediaType) {
         payload.mediaType = "video";
       }
@@ -81,7 +81,7 @@ const MediaLibrary = ({ navigation, route }) => {
       if (!hasVideoMime && !hasVideoExtension && !hasDuration) {
         Alert.alert(
           "Seleziona un video",
-          "Per creare un reel devi scegliere o registrare un video."
+          "Per creare un Moment devi scegliere o registrare un video."
         );
         return;
       }
@@ -90,8 +90,8 @@ const MediaLibrary = ({ navigation, route }) => {
       setSelectedImage(uri);
     } else if (selectedType === "Add to story") {
       navigation.navigate("NewStory", { selectedImage: payload });
-    } else if (selectedType === "New reel") {
-      navigation.navigate("NewReel", { selectedImage: payload });
+    } else if (selectedType === "New Moment") {
+      navigation.navigate("NewMoment", { selectedImage: payload });
     }
   };
 
@@ -144,7 +144,7 @@ const MediaLibrary = ({ navigation, route }) => {
   };
 
   const handleAlbumTitlePress = async () => {
-    const openPicker = selectedType === "New reel" ? openVideoPicker : openImagePicker;
+    const openPicker = selectedType === "New Moment" ? openVideoPicker : openImagePicker;
 
     if (selectedAlbumTitle === "Recents") {
       await openPicker();
@@ -191,7 +191,7 @@ const MediaLibrary = ({ navigation, route }) => {
           <TouchableOpacity
             key={item.id}
             onPress={() =>
-              navigation.navigate("NewReel", { selectedImage: item })
+              navigation.navigate("NewMoment", { selectedImage: item })
             }
           >
             <View style={styles.videoContainer}>
@@ -277,7 +277,7 @@ const MediaLibrary = ({ navigation, route }) => {
         </View>
         <FlatList
           key={selectedType}
-          data={selectedType === "New reel" ? videos : images}
+          data={selectedType === "New Moment" ? videos : images}
           renderItem={renderItem}
           keyExtractor={(item, index) => item.id.toString()}
           numColumns={selectedType === "New post" ? 4 : 3}
@@ -334,14 +334,14 @@ const MediaLibrary = ({ navigation, route }) => {
                   STORY
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleTypeSelector("New reel")}>
+              <TouchableOpacity onPress={() => handleTypeSelector("New Moment")}>
                 <Text
                   style={[
                     styles.selectorButton,
-                    { color: selectedType === "New reel" ? "#fff" : "#999" },
+                    { color: selectedType === "New Moment" ? "#fff" : "#999" },
                   ]}
                 >
-                  REEL
+                  MOMENT
                 </Text>
               </TouchableOpacity>
             </BlurView>

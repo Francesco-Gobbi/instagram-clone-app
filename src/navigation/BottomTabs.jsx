@@ -2,7 +2,7 @@ import { StyleSheet, TouchableOpacity, Platform } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Home from "../screens/Home";
 import Search from "../screens/Search";
-import Reels from "../screens/Reels";
+import Moments from "../screens/Moment";
 import Profile from "../screens/Profile";
 import Blank from "./Blank";
 import { darkTheme } from "../utils/theme";
@@ -95,7 +95,7 @@ const BottomTabs = ({ navigation }) => {
       {/* VIDEOS (MOVIE) - Quarta posizione */}
       <Tab.Screen
         name="Videos"
-        component={Reels}
+        component={Moments}
         options={{
           tabBarIcon: ({ focused }) => {
             return (

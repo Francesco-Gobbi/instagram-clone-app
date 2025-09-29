@@ -40,8 +40,8 @@ const CameraModule = ({
   const [isRecording, setIsRecording] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
 
-  const allowPhotoMode = selectedType !== "New reel";
-  const allowVideoMode = selectedType === "New reel" || selectedType === "Add to story";
+  const allowPhotoMode = selectedType !== "New Moment";
+  const allowVideoMode = selectedType === "New Moment" || selectedType === "Add to story";
   const [captureMode, setCaptureMode] = useState(allowPhotoMode ? "photo" : "video");
 
   useEffect(() => {
@@ -57,13 +57,13 @@ const CameraModule = ({
   }, [allowPhotoMode, allowVideoMode, selectedType]);
 
   const isVideoMode = captureMode === "video" && allowVideoMode;
-  const maxVideoDuration = selectedType === "New reel" ? 60 : 30;
+  const maxVideoDuration = selectedType === "New Moment" ? 60 : 30;
   const handleSelectedAsset = (asset) => {
     if (!asset) {
       return;
     }
 
-    if (selectedType === "New reel") {
+    if (selectedType === "New Moment") {
       const normalized = {
         uri: asset.uri,
         filename: asset.fileName || asset.filename || asset.uri?.split("/").pop(),
@@ -351,7 +351,7 @@ const CameraModule = ({
               hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
               disabled={isRecording}
               onPress={async () => {
-                const asset = selectedType === "New reel"
+                const asset = selectedType === "New Moment"
                   ? await ChooseVideoFromGallery()
                   : await ChooseImageFromGallery();
 

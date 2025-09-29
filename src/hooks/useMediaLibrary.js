@@ -24,12 +24,12 @@ const useMediaLibrary = (selectedAlbum, selectedType) => {
         throw new Error("Permesso negato per accedere alla libreria media");
       }
 
-      const isReelSelection = selectedType === "New reel";
+      const isMomentSelection = selectedType === "New Moment";
 
       const mediaOptions = {
         first: MEDIA_FETCH_LIMIT,
         sortBy: [MediaLibrary.SortBy.creationTime],
-        mediaType: isReelSelection
+        mediaType: isMomentSelection
           ? [MediaLibrary.MediaType.video]
           : [MediaLibrary.MediaType.photo, MediaLibrary.MediaType.video],
         album: selectedAlbum,
@@ -41,7 +41,7 @@ const useMediaLibrary = (selectedAlbum, selectedType) => {
         mediaAssets.assets.map(async (asset) => {
           try {
             const shouldDownload =
-              isReelSelection && asset.mediaType === MediaLibrary.MediaType.video;
+              isMomentSelection && asset.mediaType === MediaLibrary.MediaType.video;
 
             const assetInfo = await MediaLibrary.getAssetInfoAsync(
               asset,

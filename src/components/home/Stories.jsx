@@ -81,9 +81,10 @@ const Stories = ({ navigation, currentUser }) => {
                       style={styles.image}
                     />
                   </View>
-                  <View style={styles.addBtn}>
+                  {/* Sezione del pulsante plus per aggioungere storie */}
+                  {/* <View style={styles.addBtn}>
                     <Entypo name="plus" size={18} color="#eee" />
-                  </View>
+                  </View> */}
 
                   <Text style={styles.seenUser}>{LIST.stories.video}</Text>
                 </View>

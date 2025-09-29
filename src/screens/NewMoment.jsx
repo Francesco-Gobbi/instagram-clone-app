@@ -1,4 +1,4 @@
-import {
+﻿import {
   StyleSheet,
   Text,
   View,
@@ -34,7 +34,7 @@ const NewReel = ({ navigation, route }) => {
 
   useEffect(() => {
     if (selectedImage?.mediaType && !selectedImage.mediaType.toLowerCase().includes("video")) {
-      Alert.alert("Video richiesto", "Per creare un reel devi selezionare un video.");
+      Alert.alert("Video richiesto", "Per creare un Moment devi selezionare un video.");
       navigation.goBack();
     }
   }, [selectedImage, navigation]);
@@ -85,7 +85,7 @@ const NewReel = ({ navigation, route }) => {
     if (!currentUser?.email) {
       Alert.alert(
         "Sign-in required",
-        "You need to be signed in to upload a reel."
+        "You need to be signed in to upload a Moment."
       );
       return;
     }
@@ -93,7 +93,7 @@ const NewReel = ({ navigation, route }) => {
     if (!appwriteService.isConfigured()) {
       Alert.alert(
         "Appwrite not configured",
-        "Unable to upload the reel because Appwrite is not configured."
+        "Unable to upload the Moment because Appwrite is not configured."
       );
       return;
     }
@@ -161,16 +161,16 @@ const NewReel = ({ navigation, route }) => {
       setUploadProgress(100);
 
       Alert.alert(
-        "Reel uploaded",
-        "Your reel has been uploaded successfully."
+        "Moment uploaded",
+        "Your Moment has been uploaded successfully."
       );
 
       navigation.navigate("Main Screen", { screen: "Videos" });
     } catch (error) {
-      console.error("Upload reel error:", error);
+      console.error("Upload Moment error:", error);
       Alert.alert(
         "Upload error",
-        error.message || "We couldn't upload your reel. Please try again."
+        error.message || "We couldn't upload your Moment. Please try again."
       );
     } finally {
       setIsUploading(false);

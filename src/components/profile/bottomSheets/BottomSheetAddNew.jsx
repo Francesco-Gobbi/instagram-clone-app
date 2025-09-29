@@ -28,7 +28,7 @@ const BottomSheetAddNew = ({ bottomSheetRef, navigation }) => {
           onPress={() => {
             bottomSheetRef.current.close();
             navigation.navigate("MediaLibrary", {
-              initialSelectedType: "New Reel",
+              initialSelectedType: "New Moment",
               selectorAvailable: false,
             });
           }}
@@ -39,7 +39,7 @@ const BottomSheetAddNew = ({ bottomSheetRef, navigation }) => {
             size={28}
             color="#fff"
           />
-          <Text style={styles.text}>Reel</Text>
+          <Text style={styles.text}>Moment</Text>
         </TouchableOpacity>
         <View style={styles.divider} />
         <TouchableOpacity

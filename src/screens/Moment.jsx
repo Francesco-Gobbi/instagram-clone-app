@@ -4,7 +4,6 @@ import {
   TouchableOpacity,
   Text,
   FlatList,
-  TouchableWithoutFeedback,
   Platform,
   StatusBar,
 } from "react-native";
@@ -14,7 +13,6 @@ import { VideoView, useVideoPlayer } from "expo-video";
 import { SIZES } from "../constants";
 import {
   Ionicons,
-  MaterialIcons,
   MaterialCommunityIcons,
   Feather,
 } from "@expo/vector-icons";
@@ -23,51 +21,53 @@ import { LinearGradient } from "expo-linear-gradient";
 import { STORY_GRADIENT_COLORS } from "../utils/theme";
 import { createExpoVideoSource } from "../utils/videoSource";
 import { useUserContext } from "../contexts/UserContext";
-import { useIsFocused } from "@react-navigation/native";
-import * as Progress from "react-native-progress";
-import useFetchReels from "../hooks/useFetchReels";
-import usePlayReels from "../hooks/usePlayReels";
+import { useFocusEffect } from "@react-navigation/native";
+import useFetchMoments from "../hooks/useFetchMoments";
 import firebase from "../services/firebase";
 import Skeleton from "../components/reels/Skeleton";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
+import {
+  GestureHandlerRootView,
+  TapGestureHandler,
+} from "react-native-gesture-handler";
 
 const pausePlayer = (player) => {
   if (!player) return;
-  if (typeof player.pause === 'function') {
+  if (typeof player.pause === "function") {
     try {
       player.pause();
       return;
     } catch (error) {
-      console.warn('Unable to pause reel player:', error?.message || error);
+      console.warn("Unable to pause Moment player:", error?.message || error);
     }
   }
-  if (typeof player.pauseAsync === 'function') {
+  if (typeof player.pauseAsync === "function") {
     player.pauseAsync().catch((error) =>
-      console.warn('Unable to pause reel player async:', error?.message || error)
+      console.warn("Unable to pause Moment player async:", error?.message || error)
     );
   }
 };
 
 const playPlayer = (player) => {
   if (!player) return;
-  if (typeof player.play === 'function') {
+  if (typeof player.play === "function") {
     try {
       player.play();
       return;
     } catch (error) {
-      console.warn('Unable to play reel player:', error?.message || error);
+      console.warn("Unable to play Moment player:", error?.message || error);
     }
   }
-  if (typeof player.playAsync === 'function') {
+  if (typeof player.playAsync === "function") {
     player.playAsync().catch((error) =>
-      console.warn('Unable to play reel player async:', error?.message || error)
+      console.warn("Unable to play Moment player async:", error?.message || error)
     );
   }
 };
 
-const ReelItem = memo(({ 
+const MomentItem = memo(({
   item,
   index,
   currentUser,
@@ -76,19 +76,14 @@ const ReelItem = memo(({
   handleLike,
   handleFeatureNotImplemented,
   setMessageModalVisible,
-  handleLongPress,
-  handlePressOut,
-  handlePress,
-  setCurrentIndex,
   videoPlayersRef,
-  progressBarValue,
+  currentIndex,
+  onSingleTap,
 }) => {
   const videoSource = useMemo(() => {
     const source = createExpoVideoSource(item?.videoUrl, item?.mimeType);
-    if (source) {
-      return source;
-    }
-    return { uri: item?.videoUrl || '' };
+    if (source) return source;
+    return { uri: item?.videoUrl || "" };
   }, [item?.videoUrl, item?.mimeType]);
 
   const player = useVideoPlayer(videoSource, (playerInstance) => {
@@ -107,51 +102,66 @@ const ReelItem = memo(({
   }, [index, player, videoPlayersRef]);
 
   useEffect(() => {
-    if (player) {
-      player.muted = isMuted;
-    }
+    if (player) player.muted = isMuted;
   }, [isMuted, player]);
+
+  // gioca solo il Moment visibile; pausa gli altri
+  useEffect(() => {
+    if (index === currentIndex && player) {
+      playPlayer(player);
+    } else if (player) {
+      pausePlayer(player);
+    }
+  }, [currentIndex, index, player]);
 
   const handleUserProfile = () => {
     if (currentUser.email === item.owner_email) {
       navigation.navigate("Main Screen", { screen: "Account" });
     } else {
-      navigation.navigate("UserDetail", {
-        email: item.owner_email,
-      });
+      navigation.navigate("UserDetail", { email: item.owner_email });
     }
   };
 
+  // gesture refs
+  const doubleTapRef = useRef(null);
+  const singleTapRef = useRef(null);
+
   return (
     <View>
-      <TouchableWithoutFeedback
-        delayLongPress={200}
-        onLongPress={handleLongPress}
-        onPressOut={handlePressOut}
-        onPress={handlePress}
-      >
-        <View>
-          <VideoView
-            style={styles.video}
-            player={player}
-            contentFit="cover"
-            onLoad={() => {
-              if (index === 0) {
-                setCurrentIndex(0);
-                player.play();
-              }
-            }}
-          />
-        </View>
-      </TouchableWithoutFeedback>
+      <GestureHandlerRootView>
+        {/* Doppio tap = like */}
+        <TapGestureHandler
+          ref={doubleTapRef}
+          numberOfTaps={2}
+          maxDelayMs={220}
+          maxDist={15}
+          onActivated={() => handleLike(item)}
+        >
+          {/* Singolo tap = mute (attende l’esito del doppio tap) */}
+          <TapGestureHandler
+            ref={singleTapRef}
+            waitFor={doubleTapRef}
+            numberOfTaps={1}
+            maxDist={15} // se c'è drag per scroll, il tap fallisce → niente mute
+            onActivated={onSingleTap}
+          >
+            <View style={styles.videoContainer}>
+              <VideoView
+                style={styles.video}
+                player={player}
+                contentFit="cover"
+                nativeControls={false}
+                allowsFullscreen={false}
+              />
+            </View>
+          </TapGestureHandler>
+        </TapGestureHandler>
+      </GestureHandlerRootView>
 
       <View style={styles.bottomMetaContainer}>
         <View style={styles.userContainer}>
           <View style={styles.rowContainer}>
-            <TouchableOpacity
-              onPress={handleUserProfile}
-              style={styles.profileContainer}
-            >
+            <TouchableOpacity onPress={handleUserProfile} style={styles.profileContainer}>
               <LinearGradient
                 start={[0.9, 0.45]}
                 end={[0.07, 1.03]}
@@ -159,18 +169,12 @@ const ReelItem = memo(({
                 style={styles.rainbowBorder}
               >
                 <Image
-                  source={{
-                    uri: item.profile_picture,
-                  }}
+                  source={{ uri: item.profile_picture }}
                   style={styles.profilePicture}
                 />
               </LinearGradient>
               <Text style={styles.profileUsername}>{item.username}</Text>
-              <MaterialCommunityIcons
-                name="check-decagram"
-                size={12}
-                color="#fff"
-              />
+              <MaterialCommunityIcons name="check-decagram" size={12} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.touchableOpacity}>
               <View style={styles.followContainer}>
@@ -180,40 +184,25 @@ const ReelItem = memo(({
           </View>
           <Text style={styles.captionText}>{item.caption}</Text>
         </View>
+
         <View style={styles.actionsContainer}>
-          <TouchableOpacity
-            onPress={() => handleLike(item)}
-            style={styles.actionButton}
-          >
+          <TouchableOpacity onPress={() => handleLike(item)} style={styles.actionButton}>
             {item.likes_by_users.includes(currentUser.email) ? (
-              <MaterialCommunityIcons
-                name="cards-heart"
-                size={30}
-                color="#e33"
-                style={styles.heartIcon}
-              />
+              <MaterialCommunityIcons name="cards-heart" size={30} color="#e33" style={styles.heartIcon} />
             ) : (
-              <MaterialCommunityIcons
-                name="cards-heart-outline"
-                size={30}
-                color="#fff"
-                style={styles.heartIcon}
-              />
+              <MaterialCommunityIcons name="cards-heart-outline" size={30} color="#fff" style={styles.heartIcon} />
             )}
             <Text style={styles.actionLabel}>{item.likes_by_users.length}</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
             style={styles.actionButton}
           >
-            <MaterialCommunityIcons
-              name="chat-outline"
-              size={32}
-              color="#fff"
-              style={styles.chatIcon}
-            />
+            <MaterialCommunityIcons name="chat-outline" size={32} color="#fff" style={styles.chatIcon} />
             <Text style={styles.actionLabel}>{item.comments.length}</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             onPress={() => {
               const chatUser = {
@@ -230,13 +219,9 @@ const ReelItem = memo(({
             }}
             style={styles.actionButton}
           >
-            <Feather
-              name="send"
-              size={26}
-              color="#fff"
-              style={styles.sendIcon}
-            />
+            <Feather name="send" size={26} color="#fff" style={styles.sendIcon} />
           </TouchableOpacity>
+
           <TouchableOpacity
             onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
             style={styles.actionButton}
@@ -246,47 +231,53 @@ const ReelItem = memo(({
           </TouchableOpacity>
         </View>
       </View>
-      <View>
-        <Progress.Bar
-          progress={progressBarValue}
-          width={SIZES.Width}
-          height={1.2}
-          useNativeDriver={true}
-          color="#fff"
-          style={styles.progressBar}
-        />
-      </View>
     </View>
   );
 });
 
-const Reels = ({ navigation }) => {
+const Moments = ({ navigation }) => {
   const videoPlayersRef = useRef([]);
   const flatListRef = useRef(null);
-  const focusedScreen = useIsFocused();
   const [messageModalVisible, setMessageModalVisible] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [muteButtonVisible, setMuteButtonVisible] = useState(false);
 
   const { currentUser } = useUserContext();
-  const { videos } = useFetchReels();
-  const {
-    playingVideo,
-    setCurrentIndex,
-    progressBarValue,
-    muteButtonVisible,
-    isMuted,
-    handleLongPress,
-    handlePressOut,
-    handlePress,
-  } = usePlayReels({ videoRefs: videoPlayersRef, focusedScreen });
+  const { videos } = useFetchMoments();
 
+  // inizializza array dei player
   useEffect(() => {
     videoPlayersRef.current = new Array(videos.length).fill(null);
-    if (videos.length > 0) {
-      setCurrentIndex(0);
-    } else {
-      setCurrentIndex(null);
-    }
-  }, [videos.length, setCurrentIndex]);
+    if (videos.length > 0) setCurrentIndex(0);
+    else setCurrentIndex(null);
+  }, [videos.length]);
+
+  // Auto-play quando entri nella schermata (nessuno stop all’uscita)
+  const playCurrent = useCallback(() => {
+    const p = videoPlayersRef.current[currentIndex];
+    if (p) playPlayer(p);
+  }, [currentIndex]);
+
+  const pauseAll = useCallback(() => {
+    videoPlayersRef.current.forEach((p) => pausePlayer(p));
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      playCurrent();
+      return () => {
+        pauseAll();
+      };
+    }, [playCurrent, pauseAll])
+  );
+
+  const toggleMute = useCallback(() => {
+    setIsMuted((prev) => !prev);
+    setMuteButtonVisible(true);
+    // nasconde il toast dopo 1s
+    setTimeout(() => setMuteButtonVisible(false), 1000);
+  }, []);
 
   const handleLike = (item) => {
     firebase
@@ -304,7 +295,7 @@ const Reels = ({ navigation }) => {
 
   const renderItem = useCallback(
     ({ item, index }) => (
-      <ReelItem
+      <MomentItem
         item={item}
         index={index}
         currentUser={currentUser}
@@ -313,12 +304,9 @@ const Reels = ({ navigation }) => {
         handleLike={handleLike}
         handleFeatureNotImplemented={handleFeatureNotImplemented}
         setMessageModalVisible={setMessageModalVisible}
-        handleLongPress={handleLongPress}
-        handlePressOut={handlePressOut}
-        handlePress={handlePress}
-        setCurrentIndex={setCurrentIndex}
         videoPlayersRef={videoPlayersRef}
-        progressBarValue={progressBarValue}
+        currentIndex={currentIndex}
+        onSingleTap={toggleMute} // tap singolo = mute
       />
     ),
     [
@@ -326,13 +314,10 @@ const Reels = ({ navigation }) => {
       navigation,
       isMuted,
       handleLike,
-      handleLongPress,
-      handlePressOut,
-      handlePress,
-      setCurrentIndex,
       videoPlayersRef,
-      progressBarValue,
+      currentIndex,
       setMessageModalVisible,
+      toggleMute,
     ]
   );
 
@@ -343,41 +328,20 @@ const Reels = ({ navigation }) => {
           onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
           style={styles.titleContainer}
         >
-          <Text style={styles.titleText}>Reels</Text>
-          <MaterialIcons
-            name="keyboard-arrow-down"
-            size={22}
-            color="#fff"
-            style={{ marginTop: 6 }}
-          />
+          <Text style={styles.titleText}>Moments</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
-            navigation.navigate("MediaLibrary", {
-              initialSelectedType: "New reel",
-            });
+            navigation.navigate("MediaLibrary", { initialSelectedType: "New Moment" });
           }}
         >
-          <Ionicons
-            name="camera-outline"
-            size={32}
-            color="#fff"
-            style={{ marginTop: 6 }}
-          />
+          <Ionicons name="camera-outline" size={32} color="#fff" style={{ marginTop: 6 }} />
         </TouchableOpacity>
       </View>
 
       {muteButtonVisible && (
-        <Animated.View
-          style={styles.muteContainer}
-          entering={FadeIn}
-          exiting={FadeOut}
-        >
-          <Ionicons
-            name={isMuted ? "volume-mute" : "volume-high"}
-            size={24}
-            color="#fff"
-          />
+        <Animated.View style={styles.muteContainer} entering={FadeIn} exiting={FadeOut}>
+          <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={24} color="#fff" />
         </Animated.View>
       )}
 
@@ -390,23 +354,12 @@ const Reels = ({ navigation }) => {
           initialNumToRender={3}
           maxToRenderPerBatch={3}
           windowSize={5}
-          pagingEnabled={true}
+          pagingEnabled
           onMomentumScrollEnd={(event) => {
             const newIndex = Math.round(
-              event.nativeEvent.contentOffset.y /
-                event.nativeEvent.layoutMeasurement.height
+              event.nativeEvent.contentOffset.y / event.nativeEvent.layoutMeasurement.height
             );
-
-            const previousPlayer = videoPlayersRef.current[newIndex - 1];
-            const nextPlayer = videoPlayersRef.current[newIndex + 1];
-            pausePlayer(previousPlayer);
-            pausePlayer(nextPlayer);
-
-            const currentPlayer = videoPlayersRef.current[newIndex];
-            if (playingVideo && currentPlayer) {
-              playPlayer(currentPlayer);
-              setCurrentIndex(newIndex);
-            }
+            setCurrentIndex(newIndex);
           }}
         />
       ) : (
@@ -414,6 +367,7 @@ const Reels = ({ navigation }) => {
           <Skeleton />
         </View>
       )}
+
       <MessageModal
         messageModalVisible={messageModalVisible}
         message={"This feature is not yet implemented."}
@@ -423,11 +377,15 @@ const Reels = ({ navigation }) => {
   );
 };
 
-export default Reels;
+export default Moments;
 
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#000",
+    width: SIZES.Width,
+    height: Platform.OS === "ios" ? SIZES.Height * 0.913 : SIZES.Height * 0.987,
+  },
+  videoContainer: {
     width: SIZES.Width,
     height: Platform.OS === "ios" ? SIZES.Height * 0.913 : SIZES.Height * 0.987,
   },
@@ -564,11 +522,4 @@ const styles = StyleSheet.create({
     maxWidth: SIZES.Width * 0.8,
     marginBottom: 14,
   },
-  progressBar: {
-    position: "absolute",
-    bottom: Platform.OS === "ios" ? 22 : 16,
-    zIndex: 1,
-  },
 });
-
-

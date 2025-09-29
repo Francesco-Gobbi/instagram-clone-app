@@ -22,11 +22,11 @@ export default {
         orientation: "portrait",
         icon: "./assets/new-icon.png",
         userInterfaceStyle: "light",
-        splash: {
-            image: "./assets/new-splash.png",
-            resizeMode: "contain",
-            backgroundColor: "#1a1a2e"
-        },
+        // splash: {
+        //     image: "./assets/new-splash.png",
+        //     resizeMode: "contain", 
+        //     backgroundColor: "#1a1a2e"
+        // },
         extra: {
             myapp: "A.s.d. Shentao Scuola di Arti Marziali",
             eas: {

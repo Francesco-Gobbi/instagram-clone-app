@@ -51,7 +51,7 @@ const mutePlayer = (player, muted) => {
   }
 };
 
-const usePlayReels = ({ videoRefs, focusedScreen }) => {
+const usePlayMoments = ({ videoRefs, focusedScreen }) => {
   const [isMuted, setMuted] = useState(false);
   const [playingVideo, setPlayingVideo] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(null);
@@ -93,7 +93,7 @@ const usePlayReels = ({ videoRefs, focusedScreen }) => {
             const clampedValue = Math.min(1, Math.max(0, positionRatio));
             setProgressBarValue(Number(clampedValue.toFixed(3)));
           })
-          .catch(() => {});
+          .catch(() => { });
       }
     };
 
@@ -142,4 +142,4 @@ const usePlayReels = ({ videoRefs, focusedScreen }) => {
   };
 };
 
-export default usePlayReels;
+export default usePlayMoments;

@@ -1,20 +1,25 @@
 import {
+  FlatList,
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   StyleSheet,
   Text,
-  View,
-  Keyboard,
+  TouchableOpacity,
   TouchableWithoutFeedback,
-  Platform,
+  View,
+  Pressable,
 } from "react-native";
-import React, { useState, useEffect } from "react";
-import BottomSheet, {
-  BottomSheetFlatList,
-  BottomSheetFooter,
-} from "@gorhom/bottom-sheet";
+import React, {
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react";
 import Comments from "./Comments";
 import { SIZES } from "../../../constants";
 import FooterTextInput from "../../shared/bottomSheets/FooterTextInput";
-import CustomBackdrop from "../../shared/bottomSheets/CustomBackdrop";
 
 const BottomSheetComments = ({
   bottomSheetRef,
@@ -22,184 +27,203 @@ const BottomSheetComments = ({
   post,
   navigation,
 }) => {
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [focusSignal, setFocusSignal] = useState(0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useImperativeHandle(
+    bottomSheetRef,
+    () => ({
+      present: () => {
+        setIsVisible(true);
+        setFocusSignal((prev) => prev + 1);
+      },
+      dismiss: () => setIsVisible(false),
+      close: () => setIsVisible(false),
+      isVisible: () => isVisible,
+    }),
+    [isVisible]
+  );
 
   useEffect(() => {
     if (Platform.OS === "android") {
-      const keyboardDidShowListener = Keyboard.addListener(
-        "keyboardDidShow",
-        () => {
-          setKeyboardVisible(true);
-        }
-      );
-
-      const keyboardDidHideListener = Keyboard.addListener(
-        "keyboardDidHide",
-        () => {
-          setKeyboardVisible(false);
-        }
-      );
-
+      const showSub = Keyboard.addListener("keyboardDidShow", () => {
+        setIsKeyboardVisible(true);
+      });
+      const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+        setIsKeyboardVisible(false);
+      });
       return () => {
-        keyboardDidHideListener.remove();
-        keyboardDidShowListener.remove();
+        showSub.remove();
+        hideSub.remove();
       };
     }
   }, []);
 
-  const renderFooter = (props) => {
-    return (
-      <BottomSheetFooter
-        {...props}
-        bottomInset={20}
-        style={{ paddingBottom: keyboardVisible === true ? 50 : 0 }}
-      >
-        <FooterTextInput post={post} currentUser={currentUser} />
-      </BottomSheetFooter>
-    );
+  const close = () => {
+    setIsVisible(false);
+    Keyboard.dismiss();
   };
 
+  const sheetMaxHeight = useMemo(() => SIZES.Height * 0.9, []);
+  const sheetMinHeight = useMemo(
+    () => (isKeyboardVisible ? SIZES.Height * 0.45 : SIZES.Height * 0.6),
+    [isKeyboardVisible]
+  );
+
+  if (!isVisible) {
+    return null;
+  }
+
   return (
-    <BottomSheet
-      ref={bottomSheetRef}
-      index={-1}
-      snapPoints={Platform.OS == "ios" ? ["68", "94%"] : ["99%"]}
-      topInset={Platform.OS == "android" ? SIZES.Height * 0.05 : 0}
-      backgroundStyle={{ borderRadius: 25, backgroundColor: "#232325" }}
-      keyboardBehavior="extend"
-      keyboardBlurBehavior="restore"
-      footerComponent={Platform.OS == "ios" && renderFooter}
-      backdropComponent={CustomBackdrop}
-      enablePanDownToClose={true}
-      handleComponent={() => (
-        <View>
-          <View style={styles.closeLineContainer}>
-            <View style={styles.closeLine}></View>
-          </View>
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>Comments</Text>
+    <Modal transparent visible animationType="slide" onRequestClose={close}>
+      <View style={styles.overlay}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={close} />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
+          style={styles.avoider}
+        >
+          <View
+            style={[
+              styles.sheet,
+              { maxHeight: sheetMaxHeight, minHeight: sheetMinHeight },
+            ]}
+          >
+            <View style={styles.handleContainer}>
+              <View style={styles.handle} />
+            </View>
+            <View style={styles.header}>
+              <Text style={styles.title}>Comments</Text>
+              <TouchableOpacity
+                onPress={close}
+                hitSlop={{ top: 12, left: 12, bottom: 12, right: 12 }}
+              >
+                <Text style={styles.closeLabel}>Close</Text>
+              </TouchableOpacity>
+            </View>
             <View style={styles.divider} />
-          </View>
-        </View>
-      )}
-    >
-      <View style={styles.mainContainer}>
-        <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-          {post.comments.length > 0 ? (
-            <View
-              style={[
-                styles.iosVsAndroidContainer,
-                {
-                  minHeight: keyboardVisible
-                    ? SIZES.Height * 0.55
-                    : SIZES.Height * 0.9,
-                },
-              ]}
-            >
-              <BottomSheetFlatList
-                inverted
-                data={post.comments}
-                renderItem={({ item, index }) => (
-                  <Comments
-                    comment={item}
-                    key={index}
-                    index={index}
-                    postId={post.id}
-                    userId={post.owner_email}
-                    currentUser={currentUser}
-                    comments={post.comments}
-                    navigation={navigation}
-                    bottomSheetRef={bottomSheetRef}
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.listWrapper}>
+                {post.comments.length > 0 ? (
+                  <FlatList
+                    data={post.comments}
+                    inverted
+                    keyExtractor={(_, index) => String(index)}
+                    renderItem={({ item, index }) => (
+                      <Comments
+                        comment={item}
+                        index={index}
+                        postId={post.id}
+                        userId={post.owner_email}
+                        currentUser={currentUser}
+                        comments={post.comments}
+                        navigation={navigation}
+                        bottomSheetRef={bottomSheetRef}
+                      />
+                    )}
+                    contentContainerStyle={styles.flatListContent}
+                    style={styles.flatList}
                   />
+                ) : (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyTitle}>No comments yet</Text>
+                    <Text style={styles.emptySubtitle}>
+                      Start the conversation.
+                    </Text>
+                  </View>
                 )}
-                contentContainerStyle={{
-                  flexGrow: 1,
-                  justifyContent: "flex-end",
-                }}
-              />
-              {Platform.OS == "android" && (
-                <FooterTextInput post={post} currentUser={currentUser} />
-              )}
-            </View>
-          ) : (
-            <View
-              style={[
-                styles.iosVsAndroidContainer,
-                {
-                  minHeight: keyboardVisible
-                    ? SIZES.Height * 0.53
-                    : SIZES.Height * 0.9,
-                },
-              ]}
-            >
-              <View style={styles.noCommentsContainer}>
-                <Text style={styles.subTitle}>No comments yet</Text>
-                <Text style={styles.comments}>Start the conversation.</Text>
               </View>
-              {Platform.OS == "android" && (
-                <FooterTextInput post={post} currentUser={currentUser} />
-              )}
-            </View>
-          )}
-        </TouchableWithoutFeedback>
+            </TouchableWithoutFeedback>
+            <FooterTextInput
+              post={post}
+              currentUser={currentUser}
+              focusSignal={focusSignal}
+              onSubmitted={() => setFocusSignal((prev) => prev + 1)}
+            />
+          </View>
+        </KeyboardAvoidingView>
       </View>
-    </BottomSheet>
+    </Modal>
   );
 };
 
 export default BottomSheetComments;
 
 const styles = StyleSheet.create({
-  closeLineContainer: {
-    alignSelf: "center",
-  },
-  closeLine: {
-    width: 40,
-    height: 4,
-    borderRadius: 5,
-    backgroundColor: "#777",
-    marginTop: 9,
-  },
-  mainContainer: {
+  overlay: {
     flex: 1,
+    justifyContent: "flex-end",
   },
-  titleContainer: {
-    justifyContent: "center",
+  avoider: {
+    width: "100%",
+  },
+  sheet: {
+    width: "100%",
+    backgroundColor: "#232325",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingBottom: 8,
+    overflow: "hidden",
+  },
+  handleContainer: {
     alignItems: "center",
+    paddingTop: 10,
+  },
+  handle: {
+    width: 44,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#666",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   title: {
     fontSize: 19,
     fontWeight: "700",
     color: "#fff",
-    marginVertical: 15,
+  },
+  closeLabel: {
+    color: "#0af",
+    fontWeight: "600",
+    fontSize: 15,
   },
   divider: {
-    paddingTop: 1,
-    width: "100%",
-    backgroundColor: "#444",
+    height: 1,
+    backgroundColor: "#37373a",
   },
-  iosVsAndroidContainer: {
+  listWrapper: {
     flex: 1,
-    flexDirection: "column",
-    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    paddingTop: 12,
   },
-  commentsContainer: {
-    maxHeight: SIZES.Height * 0.7,
+  flatList: {
+    flex: 1,
   },
-  noCommentsContainer: {
-    marginTop: SIZES.Height * 0.16,
+  flatListContent: {
+    flexGrow: 1,
+    justifyContent: "flex-end",
+    paddingBottom: 16,
+  },
+  emptyState: {
+    flex: 1,
     alignItems: "center",
+    justifyContent: "center",
+    paddingBottom: 40,
   },
-  subTitle: {
-    fontSize: 23,
+  emptyTitle: {
+    color: "#fff",
+    fontSize: 20,
     fontWeight: "700",
-    color: "#fff",
-    marginVertical: 15,
+    marginBottom: 6,
   },
-  comments: {
+  emptySubtitle: {
+    color: "#888",
     fontSize: 15,
-    fontWeight: "300",
-    color: "#fff",
-    marginVertical: 15,
   },
 });

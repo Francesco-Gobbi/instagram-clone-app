@@ -5,6 +5,7 @@ import SubHeader from "./SubHeader";
 import { Divider } from "react-native-elements";
 import SkeletonDefaultPosts from "../search/Skeletons/SkeletonDefaultPosts";
 import RenderItem from "../shared/RenderItem";
+import AdminPendingApprovals from "./AdminPendingApprovals";
 
 const StoryHighlights = ({ navigation, currentUser }) => {
   const { posts, loader, fetchOlderPosts, refreshPosts } = useFetchUserPosts(
@@ -18,6 +19,7 @@ const StoryHighlights = ({ navigation, currentUser }) => {
         currentUser={currentUser}
         numberOfPosts={posts.length}
       />
+      <AdminPendingApprovals currentUser={currentUser} />
       <Text style={styles.title}>Story Highlights</Text>
       <Divider width={0.5} color="#222" />
       <View style={styles.gap} />

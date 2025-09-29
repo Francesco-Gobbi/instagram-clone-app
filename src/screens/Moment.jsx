@@ -21,10 +21,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { STORY_GRADIENT_COLORS } from "../utils/theme";
 import { createExpoVideoSource } from "../utils/videoSource";
 import { useUserContext } from "../contexts/UserContext";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import useFetchMoments from "../hooks/useFetchMoments";
 import firebase from "../services/firebase";
-import Skeleton from "../components/moment/Skeleton";
+import Skeleton from "../components/moments/Skeleton";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
@@ -137,12 +137,12 @@ const MomentItem = memo(({
           maxDist={15}
           onActivated={() => handleLike(item)}
         >
-          {/* Singolo tap = mute (attende l’esito del doppio tap) */}
+          {/* Singolo tap = mute (attende l'esito del doppio tap) */}
           <TapGestureHandler
             ref={singleTapRef}
             waitFor={doubleTapRef}
             numberOfTaps={1}
-            maxDist={15} // se c'è drag per scroll, il tap fallisce → niente mute
+            maxDist={15} // se c'e drag per scroll, il tap fallisce: niente mute
             onActivated={onSingleTap}
           >
             <View style={styles.videoContainer}>
@@ -242,6 +242,7 @@ const Moments = ({ navigation }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [muteButtonVisible, setMuteButtonVisible] = useState(false);
+  const isFocused = useIsFocused();
 
   const { currentUser } = useUserContext();
   const { videos } = useFetchMoments();
@@ -253,7 +254,7 @@ const Moments = ({ navigation }) => {
     else setCurrentIndex(null);
   }, [videos.length]);
 
-  // Auto-play quando entri nella schermata (nessuno stop all’uscita)
+  // Auto-play quando entri nella schermata
   const playCurrent = useCallback(() => {
     const p = videoPlayersRef.current[currentIndex];
     if (p) playPlayer(p);
@@ -271,6 +272,18 @@ const Moments = ({ navigation }) => {
       };
     }, [playCurrent, pauseAll])
   );
+
+  useEffect(() => {
+    if (!isFocused) {
+      pauseAll();
+      return;
+    }
+
+    return () => {
+      pauseAll();
+    };
+  }, [isFocused, pauseAll]);
+
 
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => !prev);

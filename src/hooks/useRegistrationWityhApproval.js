@@ -46,6 +46,9 @@ const buildUserDocument = (user, additionalData = {}, provider = 'email') => {
     verifiedAt: null,
     provider,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    acceptedTerms: false,
+    acceptedTermsVersion: null,
+    acceptedTermsAt: null,
   };
 
   const allowedOverrides = new Set([
@@ -92,6 +95,14 @@ const buildUserDocument = (user, additionalData = {}, provider = 'email') => {
     baseDocument.name = safeName;
   }
 
+  if (additionalData.acceptedTerms) {
+    baseDocument.acceptedTerms = true;
+    baseDocument.acceptedTermsVersion = additionalData.acceptedTermsVersion ?? baseDocument.acceptedTermsVersion ?? null;
+    baseDocument.acceptedTermsAt = firebase.firestore.FieldValue.serverTimestamp();
+  } else if (baseDocument.acceptedTerms !== true) {
+    baseDocument.acceptedTerms = false;
+  }
+
   return baseDocument;
 };
 
@@ -102,6 +113,13 @@ const useRegistrationWithApproval = () => {
   const registerUser = async (email, password, additionalData = {}) => {
     setIsRegistering(true);
     setRegistrationError(null);
+
+    if (!additionalData.acceptedTerms) {
+      setIsRegistering(false);
+      const errorMessage = 'Devi accettare i termini e la privacy policy.';
+      setRegistrationError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
 
     try {
       const userCredential = await firebase
@@ -162,9 +180,16 @@ const useRegistrationWithApproval = () => {
     }
   };
 
-  const registerWithGoogle = async () => {
+  const registerWithGoogle = async (additionalData = {}) => {
     setIsRegistering(true);
     setRegistrationError(null);
+
+    if (!additionalData.acceptedTerms) {
+      setIsRegistering(false);
+      const errorMessage = 'Devi accettare i termini e la privacy policy.';
+      setRegistrationError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
 
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
@@ -173,14 +198,15 @@ const useRegistrationWithApproval = () => {
 
       const result = await firebase.auth().signInWithPopup(provider);
       const user = result.user;
-      const userDocument = buildUserDocument(
-        user,
-        {
-          name: user.displayName || '',
-          profile_picture: user.photoURL || DEFAULT_PROFILE_PICTURE,
-        },
-        'google'
-      );
+
+      const mergedAdditionalData = {
+        name: user.displayName || '',
+        profile_picture: user.photoURL || DEFAULT_PROFILE_PICTURE,
+        ...additionalData,
+        acceptedTerms: true,
+      };
+
+      const userDocument = buildUserDocument(user, mergedAdditionalData, 'google');
 
       await firebase
         .firestore()

@@ -13,12 +13,12 @@ const APPWRITE_BUCKET_ID = process.env.APPWRITE_BUCKET_ID;
 const APPWRITE_KEY = process.env.APPWRITE_KEY;
 const PROXY_SERVER_URL = process.env.PROXY_SERVER_URL;
 const SIGNEDIMAGE_URI = process.env.SIGNEDIMAGE_URI;
-
+const TERMS_URL = process.env.TERMS_URL;
 export default {
     expo: {
         name: IS_DEV ? "ShentaoHub (Dev)" : IS_PREVIEW ? "ShentaoHub (Preview)" : "ShentaoHub",
         slug: "ShentaoHub",
-        version: "1.0.0",
+        version: "1.1.0",
         orientation: "portrait",
         icon: "./assets/new-icon.png",
         userInterfaceStyle: "light",
@@ -45,7 +45,8 @@ export default {
             appwriteBucketId: APPWRITE_BUCKET_ID,
             appwriteKey: APPWRITE_KEY,
             proxyServerUrl: PROXY_SERVER_URL,
-            signedImageUri: SIGNEDIMAGE_URI
+            signedImageUri: SIGNEDIMAGE_URI,
+            termsUrl: TERMS_URL
 
         },
 
@@ -69,6 +70,7 @@ export default {
         },
         ios: {
             jsEngine: "hermes",
+            buildNumber: "5",
             bundleIdentifier: IS_DEV
                 ? "com.ShentHub.dev"
                 : "com.ShentHub.shentao",

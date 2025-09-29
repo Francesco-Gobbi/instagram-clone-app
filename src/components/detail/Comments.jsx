@@ -18,15 +18,15 @@ const Comments = ({
 }) => {
   const handleShowComments = () => {
     setBottomSheetIndex(sharedIndex);
-    bottomSheetRef.current.snapToIndex(0);
+    bottomSheetRef.current?.present?.();
   };
 
   const handleWriteComment = () => {
     setBottomSheetIndex(sharedIndex);
     if (Platform.OS === "ios") {
-      bottomSheetRefComment.current.snapToIndex(0);
+      bottomSheetRefComment.current?.present?.();
     } else {
-      bottomSheetRef.current.snapToIndex(0);
+      bottomSheetRef.current?.present?.();
     }
   };
 
@@ -95,3 +95,4 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
 });
+

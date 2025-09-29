@@ -1,62 +1,73 @@
 import React from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
+import { StyleSheet,   Text,   View,   TextInput,   TouchableOpacity,   Alert,   ActivityIndicator,   Linking,   Switch } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import useRegistrationWithApproval from '../../hooks/useRegistrationWityhApproval.js';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
+const termsUrl = Constants.expoConfig?.extra?.termsUrl;
 
 const SignUpForm = ({ navigation }) => {
-  const { 
-    registerUser, 
-    registerWithGoogle, 
-    isRegistering, 
+  const {
+    registerUser,
+    registerWithGoogle,
+    isRegistering,
     registrationError,
-    clearError 
+    clearError,
   } = useRegistrationWithApproval();
 
   const SignUpSchema = Yup.object().shape({
     email: Yup.string()
-      .required('Email è richiesta')
+      .required('Email e richiesta')
       .email('Inserisci un indirizzo email valido'),
     password: Yup.string()
-      .required('Password è richiesta')
+      .required('Password e richiesta')
       .min(6, 'La password deve contenere almeno 6 caratteri'),
     confirmPassword: Yup.string()
-      .required('Conferma password è richiesta')
+      .required('Conferma password e richiesta')
       .oneOf([Yup.ref('password')], 'Le password non corrispondono'),
     displayName: Yup.string()
-      .required('Nome è richiesto')
+      .required('Nome e richiesto')
       .min(2, 'Il nome deve contenere almeno 2 caratteri'),
+    acceptedTerms: Yup.boolean()
+      .oneOf([true], 'Devi accettare i termini e la privacy policy'),
   });
+
+  const handleOpenTerms = async () => {
+    try {
+      const supported = await Linking.canOpenURL(termsUrl);
+      if (supported) {
+        await Linking.openURL(termsUrl);
+      } else {
+        Alert.alert('Termini e condizioni', 'Impossibile aprire il collegamento ai termini.');
+      }
+    } catch (error) {
+      Alert.alert('Termini e condizioni', 'Impossibile aprire il collegamento ai termini.');
+    }
+  };
 
   const handleEmailRegistration = async (values) => {
     clearError();
-    
+
     const result = await registerUser(
-      values.email, 
-      values.password, 
+      values.email,
+      values.password,
       {
-        displayName: values.displayName
+        displayName: values.displayName,
+        acceptedTerms: values.acceptedTerms,
+        acceptedTermsVersion: 1,
       }
     );
 
     if (result.success) {
       Alert.alert(
-        'Registrazione Completata! 🎉',
+        'Registrazione Completata!',
         result.message,
         [
           {
             text: 'OK',
-            onPress: () => navigation.navigate('PendingApproval')
-          }
+            onPress: () => navigation.navigate('PendingApproval'),
+          },
         ]
       );
     } else {
@@ -64,20 +75,24 @@ const SignUpForm = ({ navigation }) => {
     }
   };
 
-  const handleGoogleRegistration = async () => {
+  const handleGoogleRegistration = async ({ acceptedTerms, displayName }) => {
     clearError();
-    
-    const result = await registerWithGoogle();
+
+    const result = await registerWithGoogle({
+      acceptedTerms,
+      acceptedTermsVersion: 1,
+      displayName,
+    });
 
     if (result.success) {
       Alert.alert(
-        'Registrazione Google Completata! 🎉',
+        'Registrazione Google Completata!',
         result.message,
         [
           {
             text: 'OK',
-            onPress: () => navigation.navigate('PendingApproval')
-          }
+            onPress: () => navigation.navigate('PendingApproval'),
+          },
         ]
       );
     } else {
@@ -92,7 +107,8 @@ const SignUpForm = ({ navigation }) => {
           email: '',
           password: '',
           confirmPassword: '',
-          displayName: ''
+          displayName: '',
+          acceptedTerms: false,
         }}
         validationSchema={SignUpSchema}
         onSubmit={handleEmailRegistration}
@@ -101,13 +117,13 @@ const SignUpForm = ({ navigation }) => {
           handleChange,
           handleBlur,
           handleSubmit,
+          setFieldValue,
           values,
           errors,
           touched,
-          isValid
+          isValid,
         }) => (
           <View>
-            {/* Campo Nome */}
             <View style={styles.inputField}>
               <TextInput
                 style={styles.inputText}
@@ -123,7 +139,6 @@ const SignUpForm = ({ navigation }) => {
               <Text style={styles.errorText}>{errors.displayName}</Text>
             )}
 
-            {/* Campo Email */}
             <View style={styles.inputField}>
               <TextInput
                 style={styles.inputText}
@@ -141,7 +156,6 @@ const SignUpForm = ({ navigation }) => {
               <Text style={styles.errorText}>{errors.email}</Text>
             )}
 
-            {/* Campo Password */}
             <View style={styles.inputField}>
               <TextInput
                 style={styles.inputText}
@@ -158,7 +172,6 @@ const SignUpForm = ({ navigation }) => {
               <Text style={styles.errorText}>{errors.password}</Text>
             )}
 
-            {/* Campo Conferma Password */}
             <View style={styles.inputField}>
               <TextInput
                 style={styles.inputText}
@@ -175,12 +188,26 @@ const SignUpForm = ({ navigation }) => {
               <Text style={styles.errorText}>{errors.confirmPassword}</Text>
             )}
 
-            {/* Bottone Registrazione Email */}
+            <View style={styles.termsRow}>
+              <Switch
+                value={values.acceptedTerms}
+                onValueChange={(checked) => setFieldValue('acceptedTerms', checked)}
+                trackColor={{ false: '#444', true: '#07f' }}
+                thumbColor={values.acceptedTerms ? '#fff' : '#ccc'}
+              />
+              <Text style={styles.termsText}>
+                Dichiaro di aver letto e accettato i{' '}
+                <Text style={styles.termsLink} onPress={handleOpenTerms}>
+                  Termini e la Privacy Policy
+                </Text>
+              </Text>
+            </View>
+            {touched.acceptedTerms && errors.acceptedTerms && (
+              <Text style={styles.errorText}>{errors.acceptedTerms}</Text>
+            )}
+
             <TouchableOpacity
-              style={[
-                styles.btnContainer,
-                { opacity: !isValid || isRegistering ? 0.6 : 1 }
-              ]}
+              style={[styles.btnContainer, { opacity: !isValid || isRegistering ? 0.6 : 1 }]}
               onPress={handleSubmit}
               disabled={!isValid || isRegistering}
             >
@@ -196,18 +223,24 @@ const SignUpForm = ({ navigation }) => {
               </View>
             </TouchableOpacity>
 
-            {/* Separatore */}
             <View style={styles.separator}>
               <View style={styles.separatorLine} />
               <Text style={styles.separatorText}>oppure</Text>
               <View style={styles.separatorLine} />
             </View>
 
-            {/* Bottone Google */}
             <TouchableOpacity
-              style={styles.googleBtn}
-              onPress={handleGoogleRegistration}
-              disabled={isRegistering}
+              style={[
+                styles.googleBtn,
+                { opacity: !values.acceptedTerms || isRegistering ? 0.5 : 1 },
+              ]}
+              onPress={() =>
+                handleGoogleRegistration({
+                  acceptedTerms: values.acceptedTerms,
+                  displayName: values.displayName,
+                })
+              }
+              disabled={!values.acceptedTerms || isRegistering}
             >
               <View style={styles.btnContent}>
                 {isRegistering ? (
@@ -221,9 +254,8 @@ const SignUpForm = ({ navigation }) => {
               </View>
             </TouchableOpacity>
 
-            {/* Link al Login */}
             <View style={styles.loginLinkContainer}>
-              <Text style={styles.loginLinkText}>Hai già un account? </Text>
+              <Text style={styles.loginLinkText}>Hai gia un account? </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Login')}>
                 <Text style={styles.loginLink}>Accedi</Text>
               </TouchableOpacity>
@@ -261,6 +293,23 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginLeft: 20,
     marginBottom: 5,
+  },
+  termsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    marginHorizontal: 20,
+  },
+  termsText: {
+    color: '#ccc',
+    marginLeft: 12,
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  termsLink: {
+    color: '#1af',
+    fontWeight: '700',
   },
   btnContainer: {
     marginTop: 35,

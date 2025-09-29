@@ -23,6 +23,9 @@ const EMPTY_USER = {
   chat_notification: 0,
   event_notification: 0,
   status: "pending",
+  acceptedTerms: false,
+  acceptedTermsVersion: null,
+  acceptedTermsAt: null,
 };
 
 export const useCurrentUser = () => {

@@ -4,6 +4,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Signup from "../screens/Signup";
 import PendingApprovalScreen from "../components/login/PendingApproval";
+import TermsAndPrivacy from "../components/login/TermsAndPrivacy";
 
 const Stack = createNativeStackNavigator();
 
@@ -18,6 +19,13 @@ const SignedOutStack = () => (
           animation: "slide_from_right",
         }}
       />
+      {/* <Stack.Screen
+        name="Termini e condizioni"
+        component={TermsAndPrivacy}
+        options={{
+          animation: "slide_from_right",
+        }}
+      /> */}
       <Stack.Screen
         name="Forgot"
         component={Forgot}

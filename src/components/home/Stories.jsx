@@ -116,7 +116,7 @@ const Stories = ({ navigation, currentUser }) => {
                       style={styles.imageWithStory}
                     />
                   </LinearGradient>
-
+                  
                   <Text style={styles.seenUser}>{LIST.stories.video}</Text>
                 </View>
               )}
@@ -145,7 +145,7 @@ const Stories = ({ navigation, currentUser }) => {
                         />
                       </View>
                       <Text numberOfLines={1} style={styles.seenUser}>
-                        {LIST.stories.video}
+                        {story.name} Stroy
                       </Text>
                     </View>
                   ) : (

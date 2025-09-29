@@ -128,7 +128,7 @@ const Detail = ({ navigation, route }) => {
           navigation={navigation}
         />
         <BottomSheetComment
-          bottomSheetRefComment={bottomSheetRefComment}
+          bottomSheetRef={bottomSheetRefComment}
           post={posts[bottomSheetIndex]}
           currentUser={currentUser}
         />
@@ -199,3 +199,4 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
 });
+

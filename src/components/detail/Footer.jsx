@@ -18,7 +18,7 @@ const Footer = ({
 
   const handleCommentsSection = () => {
     setBottomSheetIndex(sharedIndex);
-    bottomSheetRef.current.snapToIndex(0);
+    bottomSheetRef.current?.present?.();
   };
 
   const handleSharePost = () => {
@@ -118,3 +118,4 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
 });
+

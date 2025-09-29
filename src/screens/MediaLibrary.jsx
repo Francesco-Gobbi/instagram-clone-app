@@ -261,11 +261,6 @@ const MediaLibrary = ({ navigation, route }) => {
           <View style={styles.albunButtonContainer}>
             <TouchableOpacity onPress={handleAlbumTitlePress}>
               <Text style={styles.albunButtonText}>{selectedAlbumTitle}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setAlbumModalVisible(true)}
-              style={styles.albunButtonIconWrapper}
-            >
               <MaterialIcons
                 name="keyboard-arrow-down"
                 size={20}

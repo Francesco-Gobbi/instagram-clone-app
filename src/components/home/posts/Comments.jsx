@@ -16,7 +16,7 @@ const Comments = ({ post, currentUser, navigation }) => {
   const bottomSheetRefComment = useRef(null);
   const handleViewComments = () => {
     if (bottomSheetRefComments.current) {
-      bottomSheetRefComments.current.present();
+      bottomSheetRefComments.current.present({ focus: false });
     }
   };
 
@@ -26,7 +26,7 @@ const Comments = ({ post, currentUser, navigation }) => {
         bottomSheetRefComment.current.present();
       }
     } else if (bottomSheetRefComments.current) {
-      bottomSheetRefComments.current.present();
+      bottomSheetRefComments.current.present({ focus: true });
     }
   };
 
@@ -85,9 +85,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   text: {
-    color: COLORS.textMuted,
-    fontSize: 14,
-    fontWeight: "400",
+    color: "#c5bcbcff",
+    fontSize: 15,
+    fontWeight: "400"
   },
   image: {
     width: 26,

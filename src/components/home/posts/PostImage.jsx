@@ -5,7 +5,7 @@ import { SIZES } from "../../../constants";
 import { Image } from "expo-image";
 import { GestureDetector } from "react-native-gesture-handler";
 import useLikeAnimation from "../../../utils/useLikeAnimation";
-import { Ionicons } from "@expo/vector-icons";
+import { Fontisto } from "@expo/vector-icons";
 
 const PostImage = ({ post, currentUser }) => {
   const { handleDoubleTap, animatedStyles } = useLikeAnimation(
@@ -18,7 +18,7 @@ const PostImage = ({ post, currentUser }) => {
       <View>
         <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
         <Animated.View style={[styles.likeContainer, animatedStyles]}>
-          <Ionicons name="heart" size={110} color="#f33" />
+          <Fontisto name="like" size={60} color="rgba(240, 39, 39, 1)" />
         </Animated.View>
       </View>
     </GestureDetector>

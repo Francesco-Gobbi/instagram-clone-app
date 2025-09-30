@@ -53,9 +53,11 @@ export default {
         jsEngine: "hermes",
         android: {
             jsEngine: "hermes",
+            versionCode: 5,
             package: IS_DEV
                 ? "com.ShentHub.dev"
                 : "com.ShentHub.shentao",
+            softwareKeyboardLayoutMode: "resize",
             adaptiveIcon: {
                 foregroundImage: "./assets/shentao-logo.png",
                 backgroundColor: "#ffffff"
@@ -70,7 +72,6 @@ export default {
         },
         ios: {
             jsEngine: "hermes",
-            buildNumber: "5",
             bundleIdentifier: IS_DEV
                 ? "com.ShentHub.dev"
                 : "com.ShentHub.shentao",

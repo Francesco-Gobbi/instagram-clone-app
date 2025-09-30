@@ -40,7 +40,6 @@ const Header = ({ navigation, headerOpacity, currentUser, post }) => {
     if (currentUser?.email && post?.owner_email && currentUser.email === post.owner_email) {
       navigation.navigate("Main Screen", { screen: "Account" });
     } else {
-      // TODO: correggi la navigate in modo che vada al post della persona
       navigation.navigate("UserDetail", { email: post?.owner_email });    }
   };
 

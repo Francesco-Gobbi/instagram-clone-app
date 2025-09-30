@@ -27,7 +27,7 @@ const BottomSheetComment = ({ bottomSheetRef, currentUser, post }) => {
         setIsVisible(true);
         setTimeout(() => {
           inputRef.current?.focus?.();
-        }, Platform.OS === "android" ? 160 : 60);
+        }, Platform.OS === "android" ? 20 : 20);
       },
       dismiss: close,
       close,

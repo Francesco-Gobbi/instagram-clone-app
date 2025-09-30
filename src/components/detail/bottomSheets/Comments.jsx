@@ -45,7 +45,7 @@ const Comments = ({
       clearTimeout(timerRef.current);
       setDeleteStatus(false);
       handleCommentDelete(index, comments, userId, postId);
-    }, 5000);
+    }, 2000);
   };
 
   const cancelCountDown = () => {

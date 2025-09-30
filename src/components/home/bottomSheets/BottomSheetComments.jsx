@@ -34,9 +34,12 @@ const BottomSheetComments = ({
   useImperativeHandle(
     bottomSheetRef,
     () => ({
-      present: () => {
+      // Optionally accept { focus: boolean } to control initial focus
+      present: (options) => {
         setIsVisible(true);
-        setFocusSignal((prev) => prev + 1);
+        if (!options || options.focus) {
+          setFocusSignal((prev) => prev + 1);
+        }
       },
       dismiss: () => setIsVisible(false),
       close: () => setIsVisible(false),
@@ -80,7 +83,7 @@ const BottomSheetComments = ({
       <View style={styles.overlay}>
         <Pressable style={StyleSheet.absoluteFill} onPress={close} />
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
           style={styles.avoider}
         >
@@ -168,7 +171,7 @@ const styles = StyleSheet.create({
   },
   handleContainer: {
     alignItems: "center",
-    paddingTop: 10,
+    paddingTop: 30,
   },
   handle: {
     width: 44,

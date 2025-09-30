@@ -18,7 +18,7 @@ const Comments = ({
 }) => {
   const handleShowComments = () => {
     setBottomSheetIndex(sharedIndex);
-    bottomSheetRef.current?.present?.();
+    bottomSheetRef.current?.present?.({ focus: false });
   };
 
   const handleWriteComment = () => {
@@ -26,7 +26,7 @@ const Comments = ({
     if (Platform.OS === "ios") {
       bottomSheetRefComment.current?.present?.();
     } else {
-      bottomSheetRef.current?.present?.();
+      bottomSheetRef.current?.present?.({ focus: true });
     }
   };
 
@@ -85,9 +85,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   text: {
-    color: "#aaa",
-    fontSize: 14,
-    fontWeight: "400",
+    color: "#c5bcbcff",
+    fontSize: 15,
+    fontWeight: "400"
   },
   image: {
     width: 26,

@@ -92,7 +92,7 @@ const BottomTabs = ({ navigation }) => {
             setIsAdmin(role === "admin");
           },
           async (error) => {
-            console.error("Errore onSnapshot(/users/...):", error);
+            console.error(error);
             setCurrentUser(null);
             setIsAdmin(false);
 

@@ -1,5 +1,5 @@
 import { Client, Storage, ID, Account } from 'react-native-appwrite';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system/legacy';;
 import { auth } from '../services/firebase';
 import Constants from 'expo-constants';
 

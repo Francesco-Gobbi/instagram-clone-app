@@ -81,14 +81,14 @@ const Header = ({ navigation, post, currentUser }) => {
               )}
             </TouchableOpacity>
           ) : null}
-          <TouchableOpacity onPress={() => handOptionsSheet()}>
+          {/* <TouchableOpacity onPress={() => handOptionsSheet()}>
             <Entypo
               name="dots-three-horizontal"
               size={15}
               color={"#fff"}
               style={styles.headerDots}
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
       <BottomSheetOptions

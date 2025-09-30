@@ -1,9 +1,10 @@
 import { StyleSheet, View, TouchableOpacity } from "react-native";
-import { MaterialCommunityIcons, Feather, Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, Feather, Ionicons, AntDesign, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import useSharePost from "../../hooks/useSharePost";
 import useSavePost from "../../hooks/useSavePost";
 import useHandleLike from "../../hooks/useHandleLike";
+import BottomSheetComments from "./bottomSheets/BottomSheetComments";
 
 const Footer = ({
   post,
@@ -11,6 +12,7 @@ const Footer = ({
   bottomSheetRef,
   setBottomSheetIndex,
   sharedIndex,
+  navigation
 }) => {
   const { handlePostLike } = useHandleLike();
   const { sharePost } = useSharePost();
@@ -29,60 +31,46 @@ const Footer = ({
     savePost(post, currentUser);
   };
 
+  const handleViewComments = () => {
+    if (bottomSheetRef.current) {
+      bottomSheetRef.current.present({ focus: false });
+    }
+  };
+
+
   return (
     <View style={styles.footerIconsContainer}>
       <View style={styles.footerIcons}>
-        <TouchableOpacity onPress={() => handlePostLike(post, currentUser)}>
+        <TouchableOpacity
+          onPress={() => handlePostLike(post, currentUser)}
+          activeOpacity={0.7}
+        >
           {post.likes_by_users.includes(currentUser.email) ? (
-            <MaterialCommunityIcons
-              name="cards-heart"
-              size={27}
-              color={"#f00"}
-              style={styles.heartIcon}
-            />
+            <AntDesign name="like" size={26} color="#ff3b30" style={styles.icon} />
           ) : (
-            <MaterialCommunityIcons
-              name="cards-heart-outline"
-              size={27}
-              color={"#fff"}
-              style={styles.heartIcon}
-            />
+            <AntDesign name="like" size={26} color="#fff" style={styles.icon} />
           )}
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleCommentsSection()}>
-          <MaterialCommunityIcons
-            name="chat-outline"
-            size={27}
-            color={"#fff"}
-            style={styles.chatIcon}
-          />
+        <TouchableOpacity onPress={handleViewComments} activeOpacity={0.7}>
+          <Ionicons name="chatbubble-ellipses-outline" size={25} color="#fff" style={styles.icon} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleSharePost()}>
-          <Feather
-            name="send"
-            size={24}
-            color={"#fff"}
-            style={styles.sendIcon}
-          />
+        <TouchableOpacity onPress={() => sharePost(post)} activeOpacity={0.7}>
+          <FontAwesome name="send-o" size={24} color="#fff" style={styles.icon} />
         </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={() => handleSavePost()}>
-        {currentUser.saved_posts.includes(post.id) ? (
-          <Ionicons
-            name="bookmark"
-            size={24}
-            color={"#fff"}
-            style={styles.bookmarkIcon}
-          />
+      <TouchableOpacity onPress={() => savePost(post, currentUser)} activeOpacity={0.7}>
+        {currentUser.saved_posts && currentUser.saved_posts.includes(post.id) ? (
+          <Feather name="bookmark" size={24} color="#fff" style={styles.icon} />
         ) : (
-          <Feather
-            name="bookmark"
-            size={24}
-            color={"#fff"}
-            style={styles.bookmarkIcon}
-          />
+          <MaterialIcons name="bookmark-added" size={27} color="#fff" style={styles.icon} />
         )}
       </TouchableOpacity>
+      <BottomSheetComments
+        bottomSheetRef={bottomSheetRef}
+        currentUser={currentUser}
+        post={post}
+        navigation={navigation}
+      />
     </View>
   );
 };
@@ -101,21 +89,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 13,
   },
-  heartIcon: {
-    transform: [{ scaleX: 1.05 }, { scaleY: 1.05 }],
-  },
-  sendIcon: {
-    transform: [{ rotate: "20deg" }, { scaleX: 0.95 }, { scaleY: 1.05 }],
-    marginTop: -2,
-  },
-  chatIcon: {
-    transform: [{ scaleX: -1 }, { scaleY: 1.15 }],
-  },
-  bookmarkIcon: {
-    transform: [{ scaleX: 1.15 }, { scaleY: 1.1 }],
+  icon: {
+    transform: [{ scaleX: 1.0 }, { scaleY: 1.0 }],
   },
   headerIcons: {
     marginRight: 15,
   },
 });
-

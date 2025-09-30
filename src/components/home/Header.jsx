@@ -13,6 +13,7 @@ import {
   MaterialCommunityIcons,
   MaterialIcons,
   Feather,
+  AntDesign
 } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { BlurView } from "expo-blur";
@@ -38,59 +39,58 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
   return (
     <Animated.View style={{ opacity: headerOpacity }}>
       <View style={styles.container}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.instagramContainer}
-          onPress={() => setFilterModalVisible(true)}
-        >
+          // onPress={() => setFilterModalVisible(true)}
+        > */}
           <Image
             style={styles.logo}
             source={require("../../../assets/images/header-logo.png")}
           />
-          <MaterialIcons
+          {/* <MaterialIcons
             name={"keyboard-arrow-down"}
             size={20}
             color={"#fff"}
-          />
-        </TouchableOpacity>
-
+          /> */}
+        {/* </TouchableOpacity> */}
         <View style={styles.iconsContainer}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate("Notifications", {
-                currentUser: currentUser,
-              });
-            }}
-          >
-            {currentUser && currentUser.event_notification > 0 && (
-              <View style={styles.unreadBadgeSmallContainer} />
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate("Notifications", {
+                  currentUser: currentUser,
+                });
+              }}
+            >
+              {currentUser && currentUser.event_notification > 0 && (
+                <View style={styles.unreadBadgeSmallContainer} />
+              )}
+                  <AntDesign 
+                    name={"like"}
+                    size={25}
+                    color={"#fff"}
+                  />;
+            </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate("Chat")}>
+            {currentUser && currentUser.chat_notification > 0 && (
+              <View style={styles.unreadBadgeContainer}>
+                <Text style={styles.unreadBadgeText}>
+                  {currentUser.chat_notification}
+                </Text>
+              </View>
             )}
             <View style={styles.iconsContainer}>
               <MaterialCommunityIcons
-                name="cards-heart-outline"
-                size={28}
-                color={"#fff"}
+                name="chat-processing-outline"
+                size={32}
+                color="#ffffffff" // blu stile iOS
               />
             </View>
           </TouchableOpacity>
-    <TouchableOpacity onPress={() => navigation.navigate("Chat")}>
-      {currentUser && currentUser.chat_notification > 0 && (
-        <View style={styles.unreadBadgeContainer}>
-          <Text style={styles.unreadBadgeText}>
-            {currentUser.chat_notification}
-          </Text>
-        </View>
-      )}
-      <View style={styles.iconsContainer}>
-        <MaterialCommunityIcons
-          name="chat-processing-outline"
-          size={32}
-          color="#ffffffff" // blu stile iOS
-        />
-      </View>
-    </TouchableOpacity>
         </View>
       </View>
+      
       <View style={styles.divider} />
+      {/* Modal che permette di vedere follow e favoriti */}
       <Modal
         visible={filterModalVisible}
         animationType="fade"
@@ -102,13 +102,20 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
               <TouchableOpacity
                 style={styles.modalRowContainer}
                 onPress={() => {
-                  navigation.navigate("Following");
+                  navigation.navigate("Notifications", {
+                    currentUser: currentUser,
+                  });
                   setFilterModalVisible(false);
                 }}
               >
-                <Text style={styles.modalText}>Following</Text>
-                <Feather name="users" size={26} color={"#fff"} />
+                {currentUser && currentUser.event_notification > 0 && (
+                  <View style={styles.unreadBadgeSmallContainer} />
+                )}
+                <View style={styles.iconsContainer}>
+                </View>
+                <Text style={styles.modalText}>Like ricevuti</Text>
               </TouchableOpacity>
+
               <View style={styles.modalDivider} />
               <TouchableOpacity
                 style={styles.modalRowContainer}

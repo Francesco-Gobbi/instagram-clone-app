@@ -60,7 +60,7 @@ export default {
             softwareKeyboardLayoutMode: "resize",
             adaptiveIcon: {
                 foregroundImage: "./assets/shentao-logo.png",
-                backgroundColor: "#ffffff"
+            backgroundColor: "#ffffff"
             },
             permissions: [
                 "android.permission.CAMERA",

@@ -1,5 +1,4 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
-
 buildscript {
   repositories {
     google()
@@ -22,3 +21,17 @@ allprojects {
 
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
+apply plugin: 'com.android.application'
+
+android {
+  compileSdkVersion 36
+
+  defaultConfig {
+    applicationId "com.shenthub.it"
+    minSdkVersion 21
+    targetSdkVersion 36
+    versionCode 6
+    versionName "6.0"
+  }
+}
+

@@ -2,8 +2,6 @@
 .env
 # dependencies
 node_modules/
-ios
-android
 *key.json
 # Expo
 .expo/

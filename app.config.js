@@ -69,6 +69,11 @@ export default {
                 "android.permission.READ_EXTERNAL_STORAGE",
                 "android.permission.WRITE_EXTERNAL_STORAGE"
             ]
+        ,
+            compileSdkVersion: 34,
+            targetSdkVersion: 34,
+            minSdkVersion: 24,
+            buildToolsVersion: "34.0.0"
         },
         ios: {
             jsEngine: "hermes",

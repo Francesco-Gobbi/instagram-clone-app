@@ -5,15 +5,13 @@ import "firebase/compat/firestore";
 import "firebase/compat/functions";
 import { Ionicons } from "@expo/vector-icons";
 import { darkTheme } from "../../utils/theme";
+import { db } from "../../services/firebase";
 
 const AdminPendingApprovals = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch realtime: tutti gli utenti con approvedAt == null
   useEffect(() => {
-    const db = firebase.firestore();
-
     const unsubscribe = db
       .collection("users")
       .where("approvedAt", "==", null)
@@ -34,7 +32,6 @@ const AdminPendingApprovals = () => {
     return () => unsubscribe();
   }, []);
 
-  // Approva: scrive approvedAt + approvedByUid
   const approveUser = useCallback(async (userDocId, userData) => {
     try {
       const adminUid = firebase.auth().currentUser?.uid;
@@ -43,7 +40,6 @@ const AdminPendingApprovals = () => {
         return;
       }
 
-      const db = firebase.firestore();
       await db.collection("users").doc(userDocId).set(
         {
           approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -58,7 +54,6 @@ const AdminPendingApprovals = () => {
     }
   }, []);
 
-  // Rifiuta + elimina account Auth (via Cloud Function) e doc Firestore
   const rejectAndDelete = useCallback((userDocId, userData) => {
     Alert.alert(
       "Rifiuta ed elimina account",

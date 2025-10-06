@@ -25,7 +25,6 @@
       "ios": { "simulator": false }
     },
     "production": {
-      "workflow": "generic",
       "distribution": "store",
       "channel": "production",
       "autoIncrement": true,

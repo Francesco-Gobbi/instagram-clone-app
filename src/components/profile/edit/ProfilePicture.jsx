@@ -16,7 +16,7 @@ const ProfilePicture = ({
   onClose,
   currentUser,
   onPropChange,
-  blankUserImageUri = "https://randomuser.me/api/portraits/women/53.jpg",
+  blankUserImageUri = '../../../../assets/images/blank-user.png',
 }) => {
   const [cameraModalVisible, setCameraModalVisible] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);

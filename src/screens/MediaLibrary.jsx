@@ -89,9 +89,9 @@ const MediaLibrary = ({ navigation, route }) => {
     if (selectedType === "New post") {
       setSelectedImage(uri);
     } else if (selectedType === "Add to story") {
-      navigation.navigate("New Story", { selectedImage: payload });
+      navigation.navigate("NewStory", { selectedImage: payload });
     } else if (selectedType === "New Moment") {
-      navigation.navigate("New Moment", { selectedImage: payload });
+      navigation.navigate("NewMoment", { selectedImage: payload });
     }
   };
 

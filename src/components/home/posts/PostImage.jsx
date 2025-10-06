@@ -10,7 +10,8 @@ import { Fontisto } from "@expo/vector-icons";
 const PostImage = ({ post, currentUser }) => {
   const { handleDoubleTap, animatedStyles } = useLikeAnimation(
     post,
-    currentUser
+    currentUser,
+    { iconSize: 60 }
   );
 
   return (
@@ -18,7 +19,7 @@ const PostImage = ({ post, currentUser }) => {
       <View>
         <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
         <Animated.View style={[styles.likeContainer, animatedStyles]}>
-          <Fontisto name="like" size={60} color="rgba(240, 39, 39, 1)" />
+          <Fontisto name="like" size={60} color="#f21818ff" />
         </Animated.View>
       </View>
     </GestureDetector>
@@ -37,8 +38,9 @@ const styles = StyleSheet.create({
   },
   likeContainer: {
     position: "absolute",
-    top: SIZES.Width * 0.35,
-    left: SIZES.Width * 0.35,
+    top: 0,
+    left: 0,
     opacity: 0,
+    pointerEvents: "none",
   },
 });

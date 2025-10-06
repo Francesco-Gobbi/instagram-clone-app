@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   itemContainer: {
-    width: 94,
+    width: 83,
     alignItems: "center",
   },
   image: {
@@ -213,8 +213,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   imageWithStory: {
-    height: 86,
-    width: 86,
+    height: 83,
+    width: 83,
     borderRadius: 100,
     borderWidth: 2,
     borderColor: "#000",

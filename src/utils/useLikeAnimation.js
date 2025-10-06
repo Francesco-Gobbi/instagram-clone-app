@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
     useSharedValue,
     useAnimatedStyle,
@@ -11,20 +10,28 @@ import {
 import { Gesture } from "react-native-gesture-handler";
 import useHandleLike from '../hooks/useHandleLike';
 
-const useLikeAnimation = (post, currentUser) => {
-    const { handlePostLike } = useHandleLike();
-    const opacityAnimation = useSharedValue(0);
-    const scaleAnimation = useSharedValue(0);
-    const rotationAnimation = useSharedValue(0);
-    const translateXAnimation = useSharedValue(0);
-    const translateYAnimation = useSharedValue(0);
-    const [randomNumber, setRandomNumber] = useState(1);
+const STAR_CONFIGS = [
+    { x: -18, y: -16 },
+    { x: 0, y: -30 },
+    { x: 18, y: -16 },
+];
 
-    const getRamdomNumber = () => {
-        let randomNumber = Math.random();
-        randomNumber = randomNumber < 0.5 ? 1 : -1;
-        setRandomNumber(randomNumber);
-    };
+const useLikeAnimation = (post, currentUser, options = {}) => {
+    const { handlePostLike } = useHandleLike();
+
+    const { iconSize = 72, starOffsets = STAR_CONFIGS } = options;
+
+    const thumbOpacity = useSharedValue(0);
+    const thumbScale = useSharedValue(0);
+    const thumbRotation = useSharedValue(0);
+    const thumbTranslateX = useSharedValue(0);
+    const thumbTranslateY = useSharedValue(0);
+    const thumbFlickTranslateY = useSharedValue(0);
+
+    const stars = starOffsets.map(() => ({
+        opacity: useSharedValue(0),
+        scale: useSharedValue(0),
+    }));
 
     const doubleTapHandleLike = () => {
         if (!post.likes_by_users.includes(currentUser.email)) {
@@ -36,47 +43,111 @@ const useLikeAnimation = (post, currentUser) => {
         .numberOfTaps(2)
         .onStart((event) => {
             runOnJS(doubleTapHandleLike)();
-            runOnJS(getRamdomNumber)();
 
-            opacityAnimation.value = withSequence(
-                withTiming(1, { duration: 300 }),
-                withDelay(800, withTiming(0, { duration: 0 }))
+            const halfIcon = iconSize / 2;
+
+            thumbTranslateX.value = withTiming(event.x - halfIcon, { duration: 0 });
+            thumbTranslateY.value = withTiming(event.y - halfIcon, { duration: 0 });
+            thumbFlickTranslateY.value = withTiming(0, { duration: 0 });
+
+            thumbOpacity.value = withSequence(
+                withTiming(1, { duration: 220 }),
+                withDelay(900, withTiming(0, { duration: 240 }))
             );
-            scaleAnimation.value = withSequence(
-                withTiming(1.3, { duration: 300 }),
-                withTiming(1, { duration: 300 })
-            );
-            rotationAnimation.value = withSequence(
-                withTiming(15 * randomNumber, {
-                    duration: 300,
-                    easing: Easing.elastic(1.5),
+
+            thumbScale.value = withSequence(
+                withTiming(1.18, {
+                    duration: 260,
+                    easing: Easing.out(Easing.back(1.4)),
                 }),
-                withTiming(5 * randomNumber, {
-                    duration: 300,
-                    easing: Easing.elastic(1.5),
+                withTiming(1, {
+                    duration: 200,
+                    easing: Easing.out(Easing.cubic),
                 }),
-                withDelay(800, withTiming(0, { duration: 0 }))
+                withDelay(520, withTiming(0.6, { duration: 180 })),
+                withTiming(0, { duration: 160 })
             );
-            translateXAnimation.value = withSequence(
-                withTiming(event.y - 200, { duration: 0 }),
-                withDelay(550, withTiming(event.y - 800, { duration: 550 }))
+
+            thumbRotation.value = withSequence(
+                withTiming(-18, {
+                    duration: 180,
+                    easing: Easing.out(Easing.cubic),
+                }),
+                withTiming(14, {
+                    duration: 180,
+                    easing: Easing.out(Easing.cubic),
+                }),
+                withTiming(-10, {
+                    duration: 180,
+                    easing: Easing.out(Easing.cubic),
+                }),
+                withTiming(6, { duration: 150 }),
+                withDelay(280, withTiming(0, { duration: 240 }))
             );
-            translateYAnimation.value = withSequence(
-                withTiming(event.x - 200, { duration: 0 })
+
+            thumbFlickTranslateY.value = withSequence(
+                withTiming(-26, {
+                    duration: 180,
+                    easing: Easing.out(Easing.cubic),
+                }),
+                withTiming(16, {
+                    duration: 180,
+                    easing: Easing.out(Easing.cubic),
+                }),
+                withTiming(-8, {
+                    duration: 180,
+                    easing: Easing.out(Easing.cubic),
+                }),
+                withDelay(320, withTiming(0, { duration: 260 }))
             );
+
+            stars.forEach((star, index) => {
+                const starDelay = 320 + index * 120;
+
+                star.opacity.value = withDelay(
+                    starDelay,
+                    withSequence(
+                        withTiming(1, { duration: 220 }),
+                        withDelay(240, withTiming(0, { duration: 280 }))
+                    )
+                );
+
+                star.scale.value = withDelay(
+                    starDelay,
+                    withSequence(
+                        withTiming(1.4, {
+                            duration: 260,
+                            easing: Easing.out(Easing.back(1.6)),
+                        }),
+                        withTiming(0.9, { duration: 200 }),
+                        withTiming(0, { duration: 200 })
+                    )
+                );
+            });
         });
 
     const animatedStyles = useAnimatedStyle(() => ({
-        opacity: opacityAnimation.value,
+        opacity: thumbOpacity.value,
         transform: [
-            { scale: scaleAnimation.value },
-            { rotateZ: `${rotationAnimation.value}deg` },
-            { translateY: translateXAnimation.value },
-            { translateX: translateYAnimation.value },
+            { scale: thumbScale.value },
+            { rotateZ: `${thumbRotation.value}deg` },
+            { translateY: thumbTranslateY.value + thumbFlickTranslateY.value },
+            { translateX: thumbTranslateX.value },
         ],
     }));
 
-    return { handleDoubleTap, animatedStyles };
+    const starStyles = stars.map((star, index) =>
+        useAnimatedStyle(() => ({
+            opacity: star.opacity.value,
+            transform: [
+                { scale: star.scale.value },
+                { translateY: thumbTranslateY.value + thumbFlickTranslateY.value + starOffsets[index].y },
+                { translateX: thumbTranslateX.value + starOffsets[index].x },
+            ],
+        }))
+    );
+
+    return { handleDoubleTap, animatedStyles, starStyles };
 }
 
 export default useLikeAnimation

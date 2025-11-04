@@ -270,7 +270,7 @@ const MediaLibrary = ({ navigation, route }) => {
             </View>
           </TouchableOpacity>
         </View>
-        {/* <FlatList
+        <FlatList
           key={selectedType}
           data={selectedType === "New Moment" ? videos : images}
           renderItem={renderItem}
@@ -296,7 +296,7 @@ const MediaLibrary = ({ navigation, route }) => {
               ? undefined
               : { paddingBottom: 40 }
           }
-        /> */}
+        />
 
         {selectorAvailable && selectorVisible && (
           <Animated.View style={animatedStyle}>
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
     bottom: 35,
     right: 15,
     height: 48,
-    width: 240,
+    width: 180,
     borderRadius: 30,
     overflow: "hidden",
     backgroundColor: "rgba(12, 18, 52, 0.88)",

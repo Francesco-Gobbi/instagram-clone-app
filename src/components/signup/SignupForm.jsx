@@ -18,7 +18,6 @@ import Constants from "expo-constants";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../../components/shared/modals/MessageModal";
-import { shouldShowComingSoonFeatures } from "../../utils/featureFlags";
 const termsUrl = Constants.expoConfig?.extra?.termsUrl;
 
 const SignUpForm = ({ navigation }) => {
@@ -112,7 +111,8 @@ const SignUpForm = ({ navigation }) => {
     }
   };
 
-  const showComingSoonFeatures = shouldShowComingSoonFeatures();
+  const showComingSoonFeatures =
+    Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
 
   useEffect(() => {
     if (!registrationError) {
@@ -270,7 +270,9 @@ const SignUpForm = ({ navigation }) => {
                     },
                   ]}
                   onPress={() => {
-                    setErrorMessage("Questa funzione sarà disponibile a breve.");
+                    setErrorMessage(
+                      "Questa funzione sarà disponibile a breve."
+                    );
                     handleFeatureNotImplemented(setMessageModalVisible);
                   }}
                   disabled={!values.acceptedTerms || isRegistering}

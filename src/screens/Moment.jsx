@@ -7,15 +7,18 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
-import React, { useState, useRef, useCallback, useEffect, memo, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  memo,
+  useMemo,
+} from "react";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { SIZES } from "../constants";
-import {
-  Ionicons,
-  MaterialCommunityIcons,
-  Feather,
-} from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { darkTheme } from "../utils/theme";
@@ -29,8 +32,8 @@ import Skeleton from "../components/moments/Skeleton";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
-import { shouldShowComingSoonFeatures } from "../utils/featureFlags";
-import BottomSheetOptionsReel from "../components/reels/BottomSheetOptionsReel";
+import MomentHeader from "../components/moments/MomentHeader";
+import Constants from "expo-constants";
 import {
   GestureHandlerRootView,
   TapGestureHandler,
@@ -47,9 +50,14 @@ const pausePlayer = (player) => {
     }
   }
   if (typeof player.pauseAsync === "function") {
-    player.pauseAsync().catch((error) =>
-      console.warn("Unable to pause Moment player async:", error?.message || error)
-    );
+    player
+      .pauseAsync()
+      .catch((error) =>
+        console.warn(
+          "Unable to pause Moment player async:",
+          error?.message || error
+        )
+      );
   }
 };
 
@@ -64,190 +72,228 @@ const playPlayer = (player) => {
     }
   }
   if (typeof player.playAsync === "function") {
-    player.playAsync().catch((error) =>
-      console.warn("Unable to play Moment player async:", error?.message || error)
-    );
+    player
+      .playAsync()
+      .catch((error) =>
+        console.warn(
+          "Unable to play Moment player async:",
+          error?.message || error
+        )
+      );
   }
 };
 
-const MomentItem = memo(({
-  item,
-  index,
-  currentUser,
-  navigation,
-  isMuted,
-  handleLike,
-  handleFeatureNotImplemented,
-  setMessageModalVisible,
-  videoPlayersRef,
-  currentIndex,
-  onSingleTap,
-  showComingSoonFeatures,
-}) => {
-  const bottomSheetRef = useRef(null);
+const MomentItem = memo(
+  ({
+    item,
+    index,
+    currentUser,
+    navigation,
+    isMuted,
+    handleLike,
+    handleFeatureNotImplemented,
+    setMessageModalVisible,
+    videoPlayersRef,
+    currentIndex,
+    onSingleTap,
+    refreshMoments,
+  }) => {
+    const bottomSheetRef = useRef(null);
 
-  const videoSource = useMemo(() => {
-    const source = createExpoVideoSource(item?.videoUrl, item?.mimeType);
-    if (source) return source;
-    return { uri: item?.videoUrl || "" };
-  }, [item?.videoUrl, item?.mimeType]);
+    const videoSource = useMemo(() => {
+      const source = createExpoVideoSource(item?.videoUrl, item?.mimeType);
+      if (source) return source;
+      return { uri: item?.videoUrl || "" };
+    }, [item?.videoUrl, item?.mimeType]);
 
-  const player = useVideoPlayer(videoSource, (playerInstance) => {
-    playerInstance.loop = true;
-    playerInstance.muted = isMuted;
-  });
+    const player = useVideoPlayer(videoSource, (playerInstance) => {
+      playerInstance.loop = true;
+      playerInstance.muted = isMuted;
+    });
 
-  useEffect(() => {
-    videoPlayersRef.current[index] = player;
-    return () => {
-      if (videoPlayersRef.current[index] === player) {
-        videoPlayersRef.current[index] = null;
+    useEffect(() => {
+      videoPlayersRef.current[index] = player;
+      return () => {
+        if (videoPlayersRef.current[index] === player) {
+          videoPlayersRef.current[index] = null;
+        }
+        pausePlayer(player);
+      };
+    }, [index, player, videoPlayersRef]);
+
+    useEffect(() => {
+      if (player) player.muted = isMuted;
+    }, [isMuted, player]);
+
+    // gioca solo il Moment visibile; pausa gli altri
+    useEffect(() => {
+      if (index === currentIndex && player) {
+        playPlayer(player);
+      } else if (player) {
+        pausePlayer(player);
       }
-      pausePlayer(player);
+    }, [currentIndex, index, player]);
+
+    // derive showComingSoonFeatures from expo config android.hideComingSoonFeatures
+    const showComingSoonFeatures =
+      Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
+
+    const handleUserProfile = () => {
+      if (currentUser.email === item.owner_email) {
+        navigation.navigate("Main Screen", { screen: "Account" });
+      } else {
+        navigation.navigate("UserDetail", { email: item.owner_email });
+      }
     };
-  }, [index, player, videoPlayersRef]);
 
-  useEffect(() => {
-    if (player) player.muted = isMuted;
-  }, [isMuted, player]);
+    // gesture refs
+    const doubleTapRef = useRef(null);
+    const singleTapRef = useRef(null);
 
-  // gioca solo il Moment visibile; pausa gli altri
-  useEffect(() => {
-    if (index === currentIndex && player) {
-      playPlayer(player);
-    } else if (player) {
-      pausePlayer(player);
-    }
-  }, [currentIndex, index, player]);
-
-  const handleUserProfile = () => {
-    if (currentUser.email === item.owner_email) {
-      navigation.navigate("Main Screen", { screen: "Account" });
-    } else {
-      navigation.navigate("UserDetail", { email: item.owner_email });
-    }
-  };
-
-  // gesture refs
-  const doubleTapRef = useRef(null);
-  const singleTapRef = useRef(null);
-
-  return (
-    <View>
-      <GestureHandlerRootView>
-        {/* Doppio tap = like */}
-        <TapGestureHandler
-          ref={doubleTapRef}
-          numberOfTaps={2}
-          maxDelayMs={220}
-          maxDist={15}
-          onActivated={() => handleLike(item)}
-        >
-          {/* Singolo tap = mute (attende l'esito del doppio tap) */}
+    return (
+      <View>
+        <GestureHandlerRootView>
+          {/* Doppio tap = like */}
           <TapGestureHandler
-            ref={singleTapRef}
-            waitFor={doubleTapRef}
-            numberOfTaps={1}
-            maxDist={15} // se c'e drag per scroll, il tap fallisce: niente mute
-            onActivated={onSingleTap}
+            ref={doubleTapRef}
+            numberOfTaps={2}
+            maxDelayMs={220}
+            maxDist={15}
+            onActivated={() => handleLike(item)}
           >
-            <View style={styles.videoContainer}>
-              <VideoView
-                style={styles.video}
-                player={player}
-                contentFit="cover"
-                nativeControls={false}
-                allowsFullscreen={false}
-              />
-            </View>
-          </TapGestureHandler>
-        </TapGestureHandler>
-      </GestureHandlerRootView>
-
-      <View style={styles.bottomMetaContainer}>
-        <View style={styles.userContainer}>
-          <View style={styles.rowContainer}>
-            <TouchableOpacity onPress={handleUserProfile} style={styles.profileContainer}>
-              <LinearGradient
-                start={[0.9, 0.45]}
-                end={[0.07, 1.03]}
-                colors={STORY_GRADIENT_COLORS}
-                style={styles.rainbowBorder}
-              >
-                <Image
-                  source={{ uri: item.profile_picture }}
-                  style={styles.profilePicture}
+            {/* Singolo tap = mute (attende l'esito del doppio tap) */}
+            <TapGestureHandler
+              ref={singleTapRef}
+              waitFor={doubleTapRef}
+              numberOfTaps={1}
+              maxDist={15} // se c'e drag per scroll, il tap fallisce: niente mute
+              onActivated={onSingleTap}
+            >
+              <View style={styles.videoContainer}>
+                <VideoView
+                  style={styles.video}
+                  player={player}
+                  contentFit="cover"
+                  nativeControls={false}
+                  allowsFullscreen={false}
                 />
-              </LinearGradient>
-              <Text style={styles.profileUsername}>{item.username}</Text>
-              <MaterialCommunityIcons name="check-decagram" size={12} color={darkTheme.colors.textPrimary} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.touchableOpacity}>
-              <View style={styles.followContainer}>
-                <Text style={styles.followText}>Follow</Text>
               </View>
-            </TouchableOpacity>
+            </TapGestureHandler>
+          </TapGestureHandler>
+        </GestureHandlerRootView>
+
+        <View style={styles.bottomMetaContainer}>
+          <View style={styles.userContainer}>
+            <View style={styles.rowContainer}>
+              <TouchableOpacity
+                onPress={handleUserProfile}
+                style={styles.profileContainer}
+              >
+                <LinearGradient
+                  start={[0.9, 0.45]}
+                  end={[0.07, 1.03]}
+                  colors={STORY_GRADIENT_COLORS}
+                  style={styles.rainbowBorder}
+                >
+                  <Image
+                    source={{ uri: item.profile_picture }}
+                    style={styles.profilePicture}
+                  />
+                </LinearGradient>
+                <Text style={styles.profileUsername}>{item.username}</Text>
+                <MaterialCommunityIcons
+                  name="check-decagram"
+                  size={12}
+                  color={darkTheme.colors.textPrimary}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.touchableOpacity}>
+                <View style={styles.followContainer}>
+                  <Text style={styles.followText}>Follow</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.captionText}>{item.caption}</Text>
           </View>
-          <Text style={styles.captionText}>{item.caption}</Text>
-        </View>
 
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity onPress={() => handleLike(item)} style={styles.actionButton}>
-            {item.likes_by_users.includes(currentUser.email) ? (
-              <MaterialCommunityIcons name="cards-heart" size={30} color={darkTheme.colors.like} style={styles.heartIcon} />
-            ) : (
-              <MaterialCommunityIcons name="cards-heart-outline" size={30} color={darkTheme.colors.textPrimary} style={styles.heartIcon} />
-            )}
-            <Text style={styles.actionLabel}>{item.likes_by_users.length}</Text>
-          </TouchableOpacity>
-
-          {showComingSoonFeatures && (
+          <View style={styles.actionsContainer}>
             <TouchableOpacity
-              onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+              onPress={() => handleLike(item)}
               style={styles.actionButton}
             >
-              <MaterialCommunityIcons name="chat-outline" size={32} color={darkTheme.colors.textPrimary} style={styles.chatIcon} />
-              <Text style={styles.actionLabel}>{item.comments.length}</Text>
+              {item.likes_by_users.includes(currentUser.email) ? (
+                <MaterialCommunityIcons
+                  name="cards-heart"
+                  size={30}
+                  color={darkTheme.colors.like}
+                  style={styles.heartIcon}
+                />
+              ) : (
+                <MaterialCommunityIcons
+                  name="cards-heart-outline"
+                  size={30}
+                  color={darkTheme.colors.textPrimary}
+                  style={styles.heartIcon}
+                />
+              )}
+              <Text style={styles.actionLabel}>
+                {item.likes_by_users.length}
+              </Text>
             </TouchableOpacity>
-          )}
 
-          <TouchableOpacity
-            onPress={() => {
-              const chatUser = {
-                email: item.owner_email,
-                username: item.username,
-                name: item.name || item.username,
-                profile_picture: item.profile_picture,
-              };
-              if (chatUser.email === currentUser.email) {
-                navigation.navigate("Chat");
-              } else {
-                navigation.navigate("Chating", { user: chatUser });
-              }
-            }}
-            style={styles.actionButton}
-          >
-            <Feather name="send" size={26} color={darkTheme.colors.textPrimary} style={styles.sendIcon} />
-          </TouchableOpacity>
+            {showComingSoonFeatures && (
+              <TouchableOpacity
+                onPress={() =>
+                  handleFeatureNotImplemented(setMessageModalVisible)
+                }
+                style={styles.actionButton}
+              >
+                <MaterialCommunityIcons
+                  name="chat-outline"
+                  size={32}
+                  color={darkTheme.colors.textPrimary}
+                  style={styles.chatIcon}
+                />
+                <Text style={styles.actionLabel}>{item.comments.length}</Text>
+              </TouchableOpacity>
+            )}
 
-          <TouchableOpacity
-            onPress={() => bottomSheetRef.current?.present()}
-            style={styles.actionButton}
-          >
-            <Ionicons name="ellipsis-horizontal" size={26} color={darkTheme.colors.textPrimary} />
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                const chatUser = {
+                  email: item.owner_email,
+                  username: item.username,
+                  name: item.name || item.username,
+                  profile_picture: item.profile_picture,
+                };
+                if (chatUser.email === currentUser.email) {
+                  navigation.navigate("Chat");
+                } else {
+                  navigation.navigate("Chating", { user: chatUser });
+                }
+              }}
+              style={styles.actionButton}
+            >
+              <Feather
+                name="send"
+                size={26}
+                color={darkTheme.colors.textPrimary}
+                style={styles.sendIcon}
+              />
+            </TouchableOpacity>
 
-          <BottomSheetOptionsReel
-            bottomSheetRef={bottomSheetRef}
-            currentUser={currentUser}
-            reel={item}
-            navigation={navigation}
-          />
+            <MomentHeader
+              moment={item}
+              currentUser={currentUser}
+              navigation={navigation}
+              refreshMoments={refreshMoments}
+            />
+          </View>
         </View>
       </View>
-    </View>
-  );
-});
+    );
+  }
+);
 
 const Moments = ({ navigation }) => {
   const videoPlayersRef = useRef([]);
@@ -257,10 +303,11 @@ const Moments = ({ navigation }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [muteButtonVisible, setMuteButtonVisible] = useState(false);
   const isFocused = useIsFocused();
-  const showComingSoonFeatures = shouldShowComingSoonFeatures();
+  const showComingSoonFeatures =
+    Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
 
   const { currentUser } = useUserContext();
-  const { videos } = useFetchMoments();
+  const { videos, loading, refreshMoments } = useFetchMoments();
 
   // inizializza array dei player
   useEffect(() => {
@@ -299,7 +346,6 @@ const Moments = ({ navigation }) => {
     };
   }, [isFocused, pauseAll]);
 
-
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => !prev);
     setMuteButtonVisible(true);
@@ -336,6 +382,7 @@ const Moments = ({ navigation }) => {
         currentIndex={currentIndex}
         onSingleTap={toggleMute} // tap singolo = mute
         showComingSoonFeatures={showComingSoonFeatures}
+        refreshMoments={refreshMoments}
       />
     ),
     [
@@ -368,16 +415,31 @@ const Moments = ({ navigation }) => {
         )}
         <TouchableOpacity
           onPress={() => {
-            navigation.navigate("MediaLibrary", { initialSelectedType: "New moment" });
+            navigation.navigate("MediaLibrary", {
+              initialSelectedType: "New moment",
+            });
           }}
         >
-          <Ionicons name="camera-outline" size={32} color={darkTheme.colors.textPrimary} style={{ marginTop: 6 }} />
+          <Ionicons
+            name="camera-outline"
+            size={32}
+            color={darkTheme.colors.textPrimary}
+            style={{ marginTop: 6 }}
+          />
         </TouchableOpacity>
       </View>
 
       {muteButtonVisible && (
-        <Animated.View style={styles.muteContainer} entering={FadeIn} exiting={FadeOut}>
-          <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={24} color={darkTheme.colors.textPrimary} />
+        <Animated.View
+          style={styles.muteContainer}
+          entering={FadeIn}
+          exiting={FadeOut}
+        >
+          <Ionicons
+            name={isMuted ? "volume-mute" : "volume-high"}
+            size={24}
+            color={darkTheme.colors.textPrimary}
+          />
         </Animated.View>
       )}
 
@@ -393,7 +455,8 @@ const Moments = ({ navigation }) => {
           pagingEnabled
           onMomentumScrollEnd={(event) => {
             const newIndex = Math.round(
-              event.nativeEvent.contentOffset.y / event.nativeEvent.layoutMeasurement.height
+              event.nativeEvent.contentOffset.y /
+                event.nativeEvent.layoutMeasurement.height
             );
             setCurrentIndex(newIndex);
           }}

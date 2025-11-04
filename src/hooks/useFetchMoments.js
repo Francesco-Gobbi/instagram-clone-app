@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import firebase from "../services/firebase";
+import { useUserContext } from "../contexts/UserContext";
 
 const toMillis = (timestamp) => {
   if (!timestamp) return 0;
@@ -28,28 +29,77 @@ const normalizeVideo = (doc) => {
 };
 
 const useFetchMoments = () => {
+  const { currentUser } = useUserContext();
   const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [blockedUsers, setBlockedUsers] = useState([]);
+  const refreshKeyRef = useRef(0);
+
+  // listen to current user doc for blocked/hidden lists
+  useEffect(() => {
+    if (!currentUser?.email) return;
+    const userRef = firebase.firestore().collection('users').doc(currentUser.email);
+    const unsubUser = userRef.onSnapshot((doc) => {
+      const data = doc.data() || {};
+      setBlockedUsers(data.blockedUsers || []);
+    }, (err) => {
+      console.error('Error listening user doc for moments:', err);
+    });
+
+    return () => unsubUser && unsubUser();
+  }, [currentUser?.email]);
 
   useEffect(() => {
+    if (!currentUser?.email) return;
+    setLoading(true);
+
     const unsubscribe = firebase
       .firestore()
       .collectionGroup('reels')
       .onSnapshot(
         (snapshot) => {
-          const vids = snapshot.docs.map(normalizeVideo);
-          vids.sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
-          setVideos(vids);
+          try {
+            const vids = snapshot.docs
+              .map(normalizeVideo)
+              .filter(video => {
+                // filter blocked users
+                if (blockedUsers && blockedUsers.includes(video.owner_email)) return false;
+                // filter hidden moments if user has hiddenMoments
+                if (currentUser && currentUser.hiddenMoments && currentUser.hiddenMoments.includes(video.id)) return false;
+                if (video.blockedBy && Array.isArray(video.blockedBy) && video.blockedBy.includes(currentUser?.owner_uid)) return false;
+                return true;
+              })
+              .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
+
+            setVideos(vids);
+          } catch (error) {
+            console.error('Error processing reels:', error);
+            setVideos([]);
+          } finally {
+            setLoading(false);
+          }
         },
         (error) => {
           console.error('Error fetching reels:', error);
           setVideos([]);
+          setLoading(false);
         }
       );
-    return unsubscribe;
-  }, []);
+
+    return () => unsubscribe && unsubscribe();
+  }, [currentUser?.email, blockedUsers, refreshKeyRef.current]);
+
+  const refreshMoments = () => {
+    // bump key to re-run effect
+    refreshKeyRef.current = (refreshKeyRef.current || 0) + 1;
+    // also set loading to true briefly
+    setLoading(true);
+  };
 
   return {
     videos,
+    loading,
+    refreshMoments,
   };
 };
 

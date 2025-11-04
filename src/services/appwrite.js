@@ -138,16 +138,24 @@ class AppwriteService {
 
             console.log(`Caricamento ${fileType} su Appwrite Storage...`);
             // Upload diretto tramite SDK Appwrite
-            const uploadedFile = await this.storage.createFile({
-                bucketId: this.bucketId,
+            console.log(`Data ==>`, fileId, file);
+            // Prepara l'oggetto file per Appwrite
+            const fileContents = await FileSystem.readAsStringAsync(file.uri, {
+                encoding: 'base64'
+            });
+
+            const uploadedFile = await this.storage.createFile(
+                this.bucketId,
                 fileId,
-                file: {
+                {
+                    path: file.uri,
                     name: file.name,
                     type: file.type,
+                    mimeType: file.type,
                     size: file.size,
-                    uri: file.uri
+                    contents: fileContents
                 }
-            })
+            );
             console.log(`${fileType} caricato con successo:`, uploadedFile);
 
             if (onProgress) onProgress(90);

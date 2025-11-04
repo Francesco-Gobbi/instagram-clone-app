@@ -11,7 +11,7 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useState } from "react";
 import { useUserContext } from "../contexts/UserContext";
 import useResizePictures from "../hooks/useResizePictures";
@@ -22,7 +22,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
-import { shouldShowComingSoonFeatures } from "../utils/featureFlags";
+import Constants from "expo-constants";
 
 const NewPost = ({ navigation, route }) => {
   const { selectedImage } = route.params || {};
@@ -32,7 +32,8 @@ const NewPost = ({ navigation, route }) => {
   const [caption, setCaption] = useState("");
   const [focusedBar, setFocusedBar] = useState(false);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
-  const showComingSoonFeatures = shouldShowComingSoonFeatures();
+  const showComingSoonFeatures =
+    Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
 
   const handleFocus = () => {
     setFocusedBar(true);

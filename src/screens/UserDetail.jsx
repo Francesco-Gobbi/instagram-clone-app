@@ -105,7 +105,10 @@ const User = ({ route, navigation }) => {
             Alert.alert(
               'Utente bloccato',
               'Non vedrai più i contenuti di questo utente',
-              [{ text: 'OK' }]
+              [{ 
+                text: 'OK',
+                onPress: () => navigation.navigate('Main Screen', { screen: 'Feed' })
+              }]
             );
 
             Alert.alert('Utente bloccato', 'Non vedrai più i post di questo utente.');

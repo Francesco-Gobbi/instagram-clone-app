@@ -11,7 +11,7 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useState, useRef } from "react";
 import { SIZES } from "../constants";
 import { MaterialIcons, Ionicons, Feather } from "@expo/vector-icons";
@@ -27,7 +27,7 @@ import { ScrollView } from "react-native-gesture-handler";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
-import { shouldShowComingSoonFeatures } from "../utils/featureFlags";
+import Constants from "expo-constants";
 
 const Chating = ({ navigation, route }) => {
   const { user } = route.params;
@@ -37,7 +37,8 @@ const Chating = ({ navigation, route }) => {
     useChatSendMessage({ user, currentUser });
   const scrollViewRef = useRef();
   const [messageModalVisible, setMessageModalVisible] = useState(false);
-  const showComingSoonFeatures = shouldShowComingSoonFeatures();
+  const showComingSoonFeatures =
+    Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
 
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>

@@ -84,7 +84,9 @@ export const createExpoVideoSource = (uri, mimeType) => {
     return null;
   }
 
-  const source = { uri };
+  // Normalize uri: strip query and fragment parts which can break native players
+  const normalizedUri = typeof uri === 'string' ? uri.split('?')[0].split('#')[0] : uri;
+  const source = { uri: normalizedUri };
 
   if (Platform.OS === 'android') {
     const extension = deriveFromMimeType(mimeType) || deriveFromUri(uri);

@@ -10,7 +10,7 @@ import {
   Keyboard,
   Animated,
 } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useEffect, useState } from "react";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useUserContext } from "../contexts/UserContext";
@@ -23,7 +23,7 @@ import firebase from "../services/firebase";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
-import { shouldShowComingSoonFeatures } from "../utils/featureFlags";
+import Constants from "expo-constants";
 
 const Chat = ({ navigation }) => {
   const [searchKey, setSearchKey] = useState("");
@@ -42,7 +42,8 @@ const Chat = ({ navigation }) => {
   const [focusedBar, setFocusedBar] = useState(false);
   const [searching, setSearching] = useState(false);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
-  const showComingSoonFeatures = shouldShowComingSoonFeatures();
+  const showComingSoonFeatures =
+    Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
 
   useEffect(() => {
     beginSearch();
@@ -147,7 +148,9 @@ const Chat = ({ navigation }) => {
                   navigation={navigation}
                   user={item}
                   currentUser={currentUser}
-                  handleCamera={showComingSoonFeatures ? handleCamera : undefined}
+                  handleCamera={
+                    showComingSoonFeatures ? handleCamera : undefined
+                  }
                 />
               )}
               initialNumToRender={20}

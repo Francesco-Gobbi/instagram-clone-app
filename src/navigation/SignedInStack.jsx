@@ -30,8 +30,8 @@ const Stack = createNativeStackNavigator();
 
 const SignedInStack = () => {
   return (
-    <StoriesProvider>
-      <UserProvider>
+    <UserProvider>
+      <StoriesProvider>
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               <Stack.Screen name="Main Screen" component={BottomTabs} />
@@ -184,8 +184,8 @@ const SignedInStack = () => {
               />
             </Stack.Navigator>
           </NavigationContainer>
+        </StoriesProvider>
       </UserProvider>
-    </StoriesProvider>
   );
 };
 

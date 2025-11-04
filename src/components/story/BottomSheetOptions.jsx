@@ -1,5 +1,7 @@
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 import React from "react";
+import useReportAction from "../../hooks/useReportAction";
+import useBlockUser from "../../hooks/useBlockUser";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import CustomBackdrop from "../shared/bottomSheets/CustomBackdrop";
 import useSharePost from "../../hooks/useSharePost";
@@ -10,9 +12,18 @@ const BottomSheetOptions = ({
   story,
   handleResume,
   navigation,
+  currentUser,
 }) => {
   const { shareStory } = useSharePost();
   const { deleteStory } = useDeletePost();
+  const { handleReportPost, ReportModalComponent } = useReportAction();
+  const { handleBlockUser } = useBlockUser();
+
+  const openBottomSheet = () => {
+    if (bottomSheetRef?.current) {
+      bottomSheetRef.current.present();
+    }
+  };
 
   const handleDeleteStory = () => {
     Alert.alert("Delete Story", "Are you sure you want to delete this story?", [
@@ -46,11 +57,51 @@ const BottomSheetOptions = ({
       detached={true}
       bottomInset={24}
       index={0}
-      onChange={(index) => index === -1 && handleResume()}
-      snapPoints={[162]}
+      onChange={(index) => {
+        if (index === -1) handleResume();
+      }}
+      snapPoints={["40%"]}
       style={styles.sheetContainer}
+      presentationStyle="pageSheet"
     >
       <View style={styles.container}>
+        <ReportModalComponent />
+        <View style={styles.divider} />
+        <TouchableOpacity
+          onPress={() => handleReportPost(story, currentUser)}
+          style={styles.rowContainer}
+        >
+          <Text style={styles.redText}>Report</Text>
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity
+          onPress={() => {
+            Alert.alert(
+              "Blocca utente",
+              "Sei sicuro di voler bloccare questo utente? Non vedrai più i suoi contenuti.",
+              [
+                { text: "Annulla", style: "cancel" },
+                {
+                  text: "Blocca",
+                  style: "destructive",
+                  onPress: async () => {
+                    try {
+                      await handleBlockUser(story.owner_email);
+                      bottomSheetRef.current.close();
+                      navigation.navigate("Main Screen", { screen: "Feed" });
+                    } catch (e) {
+                      console.error("Error blocking user from story:", e);
+                      Alert.alert("Errore", "Impossibile bloccare l'utente.");
+                    }
+                  },
+                },
+              ]
+            );
+          }}
+          style={styles.rowContainer}
+        >
+          <Text style={styles.redText}>Block</Text>
+        </TouchableOpacity>
         <View style={styles.divider} />
         <TouchableOpacity
           onPress={() => handleDeleteStory()}
@@ -58,7 +109,6 @@ const BottomSheetOptions = ({
         >
           <Text style={styles.redText}>Delete</Text>
         </TouchableOpacity>
-        <View style={styles.divider} />
         <View style={styles.divider} />
         <TouchableOpacity
           onPress={() => handleShareStory()}

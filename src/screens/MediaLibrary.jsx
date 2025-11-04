@@ -26,6 +26,7 @@ import blankPhoto from "../../assets/images/blank-image.png";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
+import { darkTheme } from "../utils/theme";
 
 const MediaLibrary = ({ navigation, route }) => {
   const { initialSelectedType, selectorAvailable = true } = route.params || {};
@@ -90,9 +91,10 @@ const MediaLibrary = ({ navigation, route }) => {
       setSelectedImage(uri);
     } else if (selectedType === "Add to story") {
       navigation.navigate("NewStory", { selectedImage: payload });
-    } else if (selectedType === "New Moment") {
-      navigation.navigate("NewMoment", { selectedImage: payload });
-    }
+    } 
+    // else if (selectedType === "New Moment") {
+    //   navigation.navigate("NewMoment", { selectedImage: payload });
+    // }
   };
 
   const {
@@ -224,7 +226,7 @@ const MediaLibrary = ({ navigation, route }) => {
           <MaterialIcons
             name="close"
             size={32}
-            color={"#fff"}
+            color={darkTheme.colors.textPrimary}
             style={styles.iconCorrection}
           />
         </TouchableOpacity>
@@ -236,7 +238,7 @@ const MediaLibrary = ({ navigation, route }) => {
                 <Text style={styles.nextButton}>Next</Text>
               </TouchableOpacity>
             ) : (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={darkTheme.colors.textSecondary} size="small" />
             )
           ) : (<></>)}
         </View>
@@ -257,18 +259,18 @@ const MediaLibrary = ({ navigation, route }) => {
               <MaterialIcons
                 name="keyboard-arrow-down"
                 size={20}
-                color={"#fff"}
+                color={darkTheme.colors.textPrimary}
                 style={styles.albunButtonIcon}
               />
             </TouchableOpacity>
           </View>
           <TouchableOpacity onPress={() => setCameraModalVisible(true)}>
             <View style={styles.cameraButtonContainer}>
-              <Feather name="camera" size={17} color={"#fff"} />
+              <Feather name="camera" size={17} color={darkTheme.colors.textPrimary} />
             </View>
           </TouchableOpacity>
         </View>
-        <FlatList
+        {/* <FlatList
           key={selectedType}
           data={selectedType === "New Moment" ? videos : images}
           renderItem={renderItem}
@@ -294,7 +296,7 @@ const MediaLibrary = ({ navigation, route }) => {
               ? undefined
               : { paddingBottom: 40 }
           }
-        />
+        /> */}
 
         {selectorAvailable && selectorVisible && (
           <Animated.View style={animatedStyle}>
@@ -307,7 +309,7 @@ const MediaLibrary = ({ navigation, route }) => {
                 <Text
                   style={[
                     styles.selectorButton,
-                    { color: selectedType === "New post" ? "#fff" : "#999" },
+                    { color: selectedType === "New post" ? darkTheme.colors.textPrimary : darkTheme.colors.textSecondary },
                   ]}
                 >
                   POST
@@ -320,23 +322,23 @@ const MediaLibrary = ({ navigation, route }) => {
                   style={[
                     styles.selectorButton,
                     {
-                      color: selectedType === "Add to story" ? "#fff" : "#999",
+                      color: selectedType === "Add to story" ? darkTheme.colors.textPrimary : darkTheme.colors.textSecondary,
                     },
                   ]}
                 >
                   STORY
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleTypeSelector("New Moment")}>
+              {/* <TouchableOpacity onPress={() => handleTypeSelector("New Moment")}>
                 <Text
                   style={[
                     styles.selectorButton,
-                    { color: selectedType === "New Moment" ? "#fff" : "#999" },
+                    { color: selectedType === "New Moment" ? darkTheme.colors.textPrimary : darkTheme.colors.textSecondary },
                   ]}
                 >
                   MOMENT
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </BlurView>
           </Animated.View>
         )}
@@ -378,7 +380,7 @@ export default MediaLibrary;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: darkTheme.colors.background,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 40,
   },
   headerContainer: {
@@ -389,13 +391,13 @@ const styles = StyleSheet.create({
     height: 45,
   },
   headerText: {
-    color: "#fff",
+    color: darkTheme.colors.textPrimary,
     fontWeight: "800",
     fontSize: 17,
     marginBottom: 2,
   },
   nextButton: {
-    color: "#08f",
+    color: darkTheme.colors.accent,
     fontWeight: "800",
     fontSize: 16,
     marginBottom: 2,
@@ -425,7 +427,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   albunButtonText: {
-    color: "#fff",
+    color: darkTheme.colors.textPrimary,
     fontSize: 16,
     fontWeight: "800",
   },
@@ -440,9 +442,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 100,
-    backgroundColor: "#222",
+    backgroundColor: darkTheme.colors.surface,
     borderWidth: 0.5,
-    borderColor: "#333",
+    borderColor: darkTheme.colors.outline,
     height: 30,
     width: 30,
   },
@@ -470,7 +472,7 @@ const styles = StyleSheet.create({
     width: 240,
     borderRadius: 30,
     overflow: "hidden",
-    backgroundColor: "rgba(0,0,0,0.8)",
+    backgroundColor: "rgba(12, 18, 52, 0.88)",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -488,7 +490,7 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   emptyStateText: {
-    color: "#999",
+    color: darkTheme.colors.textSecondary,
     fontSize: 14,
   },
 });

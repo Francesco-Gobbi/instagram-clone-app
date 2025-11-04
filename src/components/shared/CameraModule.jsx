@@ -7,9 +7,13 @@ import {
   StatusBar,
   Alert,
 } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useEffect, useRef, useState } from "react";
-import { CameraView, useCameraPermissions, useMicrophonePermissions } from "expo-camera";
+import {
+  CameraView,
+  useCameraPermissions,
+  useMicrophonePermissions,
+} from "expo-camera";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { SIZES } from "../../constants";
 import CameraNoPermission from "./CameraNoPermission";
@@ -17,14 +21,14 @@ import useImageGallery from "../../hooks/useImageGallery";
 
 // Costanti sicure per la camera
 const CAMERA_TYPE = {
-  BACK: 'back',
-  FRONT: 'front'
+  BACK: "back",
+  FRONT: "front",
 };
 
 const FLASH_MODE = {
-  OFF: 'off',
-  ON: 'on',
-  AUTO: 'auto'
+  OFF: "off",
+  ON: "on",
+  AUTO: "auto",
 };
 
 const CameraModule = ({
@@ -39,13 +43,16 @@ const CameraModule = ({
   const [flashMode, setFlashMode] = useState(FLASH_MODE.OFF);
   const [isRecording, setIsRecording] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
-  const [microphonePermission, requestMicrophonePermission] = useMicrophonePermissions();
+  const [microphonePermission, requestMicrophonePermission] =
+    useMicrophonePermissions();
 
   const normalizedSelectedType = (selectedType || "").toLowerCase();
   const allowVideoMode =
-    normalizedSelectedType === "new moment" || normalizedSelectedType === "add to story";
+    normalizedSelectedType === "new moment" ||
+    normalizedSelectedType === "add to story";
   const allowPhotoMode = normalizedSelectedType !== "new moment";
-  const defaultCaptureMode = allowVideoMode && !allowPhotoMode ? "video" : "photo";
+  const defaultCaptureMode =
+    allowVideoMode && !allowPhotoMode ? "video" : "photo";
   const [captureMode, setCaptureMode] = useState(defaultCaptureMode);
 
   useEffect(() => {
@@ -70,7 +77,8 @@ const CameraModule = ({
     if (normalizedSelectedType === "new moment") {
       const normalized = {
         uri: asset.uri,
-        filename: asset.fileName || asset.filename || asset.uri?.split("/").pop(),
+        filename:
+          asset.fileName || asset.filename || asset.uri?.split("/").pop(),
         duration: asset.duration ?? 0,
         mediaType: asset.type || asset.mediaType || "video",
         id: asset.assetId || asset.id || Date.now().toString(),
@@ -82,13 +90,9 @@ const CameraModule = ({
     }
   };
 
-  const {
-    ChooseImageFromGallery,
-    ChooseVideoFromGallery,
-  } = useImageGallery({
+  const { ChooseImageFromGallery, ChooseVideoFromGallery } = useImageGallery({
     setSelectedImage: handleSelectedAsset,
   });
-
 
   useEffect(() => {
     if (!permission) {
@@ -109,7 +113,12 @@ const CameraModule = ({
     if (isVideoMode && !microphonePermission.granted) {
       requestMicrophonePermission();
     }
-  }, [allowVideoMode, isVideoMode, microphonePermission, requestMicrophonePermission]);
+  }, [
+    allowVideoMode,
+    isVideoMode,
+    microphonePermission,
+    requestMicrophonePermission,
+  ]);
 
   if (!permission) {
     return (
@@ -137,7 +146,6 @@ const CameraModule = ({
     try {
       const data = await camRef.current.takePictureAsync({
         quality: 0.85,
-        base64: false,
       });
 
       if (data?.uri) {
@@ -157,7 +165,7 @@ const CameraModule = ({
   };
 
   const toggleFlash = () => {
-    setFlashMode(current =>
+    setFlashMode((current) =>
       current === FLASH_MODE.OFF ? FLASH_MODE.ON : FLASH_MODE.OFF
     );
   };
@@ -171,7 +179,7 @@ const CameraModule = ({
       const permissionResponse = await requestMicrophonePermission();
       if (!permissionResponse?.granted) {
         Alert.alert(
-          'Permesso richiesto',
+          "Permesso richiesto",
           "Per registrare un video devi consentire l'uso del microfono."
         );
         return;
@@ -182,29 +190,29 @@ const CameraModule = ({
 
     try {
       const recording = await camRef.current.recordAsync({
-        quality: '1080p',
+        quality: "1080p",
         mute: false,
         maxDuration: maxVideoDuration,
       });
 
-      if (recording?.uri && typeof setCapturedPhoto === 'function') {
+      if (recording?.uri && typeof setCapturedPhoto === "function") {
         const videoId = Date.now().toString();
 
         setCapturedPhoto({
           uri: recording.uri,
-          id: 'camera_' + videoId,
+          id: "camera_" + videoId,
           duration: recording.duration ?? 0,
-          filename: recording.uri.split('/').pop(),
-          mediaType: 'video',
+          filename: recording.uri.split("/").pop(),
+          mediaType: "video",
           fromCamera: true,
         });
         setCameraModalVisible(false);
       }
     } catch (error) {
-      console.error('Error recording video:', error);
+      console.error("Error recording video:", error);
       Alert.alert(
-        'Registrazione non riuscita',
-        error?.message || 'Impossibile avviare la registrazione del video.'
+        "Registrazione non riuscita",
+        error?.message || "Impossibile avviare la registrazione del video."
       );
     } finally {
       setIsRecording(false);
@@ -219,12 +227,12 @@ const CameraModule = ({
     try {
       await camRef.current.stopRecording();
     } catch (error) {
-      const message = String(error || '').toLowerCase();
-      if (!message.includes('not recording')) {
-        console.error('Error stopping video recording:', error);
+      const message = String(error || "").toLowerCase();
+      if (!message.includes("not recording")) {
+        console.error("Error stopping video recording:", error);
         Alert.alert(
-          'Interruzione non riuscita',
-          error?.message || 'Impossibile fermare la registrazione.'
+          "Interruzione non riuscita",
+          error?.message || "Impossibile fermare la registrazione."
         );
       }
     }
@@ -283,10 +291,7 @@ const CameraModule = ({
             isRecording && styles.shotButtonOutsideRecording,
           ]}
         >
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleCapturePress}
-          >
+          <TouchableOpacity activeOpacity={0.8} onPress={handleCapturePress}>
             <View
               style={[
                 styles.shotButtonInside,
@@ -350,7 +355,9 @@ const CameraModule = ({
           </View>
         )}
       </View>
-      <View style={[styles.mainContainer, options && styles.mainContainerCompact]}>
+      <View
+        style={[styles.mainContainer, options && styles.mainContainerCompact]}
+      >
         <View
           style={[
             styles.titleContainer,
@@ -381,9 +388,10 @@ const CameraModule = ({
               hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
               disabled={isRecording}
               onPress={async () => {
-                const asset = normalizedSelectedType === "new moment"
-                  ? await ChooseVideoFromGallery()
-                  : await ChooseImageFromGallery();
+                const asset =
+                  normalizedSelectedType === "new moment"
+                    ? await ChooseVideoFromGallery()
+                    : await ChooseImageFromGallery();
 
                 if (asset) {
                   setCameraModalVisible(false);

@@ -66,7 +66,7 @@ const NewReel = ({ navigation, route }) => {
     if (selectedImage?.uri) {
       return { uri: selectedImage.uri };
     }
-    return { uri: '' };
+    return { uri: "" };
   }, [selectedImage?.uri, selectedImage?.mimeType, selectedImage?.type]);
 
   const handlePlaybackStatusUpdate = (status) => {
@@ -83,7 +83,10 @@ const NewReel = ({ navigation, route }) => {
   const handleVideoReady = async () => {
     try {
       if (videoRef.current) {
-        await videoRef.current.setStatusAsync({ shouldPlay: true, isLooping: true });
+        await videoRef.current.setStatusAsync({
+          shouldPlay: true,
+          isLooping: true,
+        });
       }
       setIsVideoReady(true);
     } catch (error) {
@@ -110,10 +113,7 @@ const NewReel = ({ navigation, route }) => {
     }
 
     if (!selectedImage?.uri) {
-      Alert.alert(
-        "Missing video",
-        "Select a valid video before uploading."
-      );
+      Alert.alert("Missing video", "Select a valid video before uploading.");
       return;
     }
 
@@ -159,10 +159,7 @@ const NewReel = ({ navigation, route }) => {
         "video",
         (progress) => {
           if (typeof progress === "number") {
-            const normalized = Math.max(
-              0,
-              Math.min(100, Math.round(progress))
-            );
+            const normalized = Math.max(0, Math.min(100, Math.round(progress)));
             setUploadProgress(normalized);
           }
         }
@@ -267,7 +264,11 @@ const NewReel = ({ navigation, route }) => {
                 }
                 style={styles.modButtonContainer}
               >
-                <Feather name="volume-2" size={28} color={darkTheme.colors.textPrimary} />
+                <Feather
+                  name="volume-2"
+                  size={28}
+                  color={darkTheme.colors.textPrimary}
+                />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() =>
@@ -309,7 +310,9 @@ const NewReel = ({ navigation, route }) => {
           <Animated.Image
             source={{ uri: selectedImage.uri }}
             style={[styles.image, isVideoReady && styles.imageHidden]}
-            sharedTransitionTag={selectedImage?.id ? selectedImage.id.toString() : undefined}
+            sharedTransitionTag={
+              selectedImage?.id ? selectedImage.id.toString() : undefined
+            }
           />
         ) : (
           <Animated.Image
@@ -323,9 +326,13 @@ const NewReel = ({ navigation, route }) => {
           style={styles.video}
           source={videoSource}
           resizeMode={ResizeMode.COVER}
-          shouldPlay={false}           isLooping           isMuted={false}
+          shouldPlay={false}
+          isLooping
+          isMuted={false}
           onLoadStart={() => setIsVideoReady(false)}
-          onLoad={handleVideoReady}           onPlaybackStatusUpdate={handlePlaybackStatusUpdate}           onError={(error) => console.error("Video preview error:", error)}
+          onLoad={handleVideoReady}
+          onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
+          onError={(error) => console.error("Video preview error:", error)}
         />
 
         <TouchableOpacity
@@ -349,7 +356,9 @@ const NewReel = ({ navigation, route }) => {
         {showComingSoonFeatures ? (
           <>
             <TouchableOpacity
-              onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+              onPress={() =>
+                handleFeatureNotImplemented(setMessageModalVisible)
+              }
               style={styles.userContainer}
             >
               <Image
@@ -359,11 +368,17 @@ const NewReel = ({ navigation, route }) => {
               <Text style={styles.userText}>{LIST.stories.video}</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+              onPress={() =>
+                handleFeatureNotImplemented(setMessageModalVisible)
+              }
               style={styles.userContainer}
             >
               <View style={styles.iconBorder}>
-                <MaterialIcons name="stars" size={23} color={darkTheme.colors.accentVariant} />
+                <MaterialIcons
+                  name="stars"
+                  size={23}
+                  color={darkTheme.colors.accentVariant}
+                />
               </View>
               <Text style={styles.userText}>Close Friends</Text>
             </TouchableOpacity>
@@ -381,7 +396,10 @@ const NewReel = ({ navigation, route }) => {
         >
           {isUploading ? (
             <View style={styles.uploadStatus}>
-              <ActivityIndicator color={darkTheme.colors.onPrimary} size="small" />
+              <ActivityIndicator
+                color={darkTheme.colors.onPrimary}
+                size="small"
+              />
               {uploadProgress > 0 && (
                 <Text style={styles.uploadStatusText}>
                   {`${uploadProgress}%`}
@@ -389,7 +407,11 @@ const NewReel = ({ navigation, route }) => {
               )}
             </View>
           ) : (
-            <Ionicons name="arrow-forward" size={30} color={darkTheme.colors.onPrimary} />
+            <Ionicons
+              name="arrow-forward"
+              size={30}
+              color={darkTheme.colors.onPrimary}
+            />
           )}
         </TouchableOpacity>
       </Animated.View>
@@ -545,4 +567,3 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
-

@@ -7,8 +7,9 @@ import {
   ActivityIndicator,
   StatusBar,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Animated, { FadeIn, ZoomInDown } from "react-native-reanimated";
+import { Video } from "expo-av";
 import { SIZES } from "../constants";
 import {
   MaterialIcons,
@@ -23,7 +24,7 @@ import { Image } from "expo-image";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
-import { shouldShowComingSoonFeatures } from "../utils/featureFlags";
+import Constants from "expo-constants";
 
 const NewStory = ({ navigation, route }) => {
   const { selectedImage } = route.params || {};
@@ -32,13 +33,19 @@ const NewStory = ({ navigation, route }) => {
   const { currentUser } = useUserContext();
   const [opacity, setOpacity] = useState(0);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
-  const showComingSoonFeatures = shouldShowComingSoonFeatures();
+  const showComingSoonFeatures =
+    Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
 
   useEffect(() => {
     setTimeout(() => {
       setOpacity(1);
     }, 400);
   }, []);
+
+  // Normalize uri for preview (strip any iOS fragment like '#...')
+  const previewUri = selectedImage?.uri?.split
+    ? selectedImage.uri.split("#")[0]
+    : selectedImage?.uri;
 
   const handleSubmitButton = async () => {
     const resizedImage = await resizeStoryPicture(selectedImage.uri);
@@ -110,7 +117,17 @@ const NewStory = ({ navigation, route }) => {
           )}
         </Animated.View>
 
-        {Platform.OS === "ios" ? (
+        {selectedImage.type?.startsWith("video/") ? (
+          <Video
+            source={{ uri: previewUri }}
+            style={styles.image}
+            useNativeControls={false}
+            resizeMode="cover"
+            isLooping
+            shouldPlay
+            isMuted={false}
+          />
+        ) : Platform.OS === "ios" ? (
           <Animated.Image
             source={{ uri: selectedImage.uri }}
             style={styles.image}
@@ -212,6 +229,7 @@ const styles = StyleSheet.create({
     height:
       Platform.OS === "android" ? SIZES.Height * 0.925 : SIZES.Height * 0.85,
     borderRadius: 25,
+    backgroundColor: "#000",
   },
   backButtonContainer: {
     height: 45,

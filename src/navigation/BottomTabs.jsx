@@ -174,7 +174,7 @@ const BottomTabs = ({ navigation }) => {
         }}
       />
 
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Videos"
         component={Moments}
         options={{
@@ -186,7 +186,7 @@ const BottomTabs = ({ navigation }) => {
             />
           ),
         }}
-      />
+      /> */}
 
       <Tab.Screen
         name="Account"

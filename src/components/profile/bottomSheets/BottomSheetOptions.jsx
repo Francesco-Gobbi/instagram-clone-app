@@ -14,12 +14,13 @@ import {
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../../shared/modals/MessageModal";
-import { shouldShowComingSoonFeatures } from "../../../utils/featureFlags";
+import Constants from "expo-constants";
 
 const BottomSheetOptions = ({ bottomSheetRef, navigation, currentUser }) => {
   const snapPoints = useMemo(() => [708], []);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
-  const showComingSoonFeatures = shouldShowComingSoonFeatures();
+  const showComingSoonFeatures =
+    Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
 
   return (
     <BottomSheetModal

@@ -14,8 +14,8 @@ const APPWRITE_KEY = process.env.APPWRITE_KEY;
 const PROXY_SERVER_URL = process.env.PROXY_SERVER_URL;
 const SIGNEDIMAGE_URI = process.env.SIGNEDIMAGE_URI;
 const TERMS_URL = process.env.TERMS_URL;
-const HIDE_COMING_SOON_FEATURES = String(process.env.HIDE_COMING_SOON_FEATURES ?? "").toLowerCase();
-const SHOULD_HIDE_COMING_SOON_FEATURES = ["true", "1", "yes", "y"].includes(HIDE_COMING_SOON_FEATURES);
+const SHOULD_HIDE_COMING_SOON_FEATURES = String(process.env.HIDE_COMING_SOON_FEATURES ?? "").toLowerCase();
+
 export default {
     expo: {
         name: IS_DEV ? "ShentaoHub (Dev)" : IS_PREVIEW ? "ShentaoHub (Preview)" : "ShentaoHub",
@@ -24,6 +24,23 @@ export default {
         orientation: "portrait",
         icon: "./assets/new-icon.png",
         userInterfaceStyle: "light",
+        plugins: [
+            [
+                "expo-av",
+                {
+                    "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+                    "videoCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera",
+                }
+            ],
+            [
+                "expo-media-library",
+                {
+                    "photosPermission": "Allow $(PRODUCT_NAME) to access your photos",
+                    "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos",
+                    "isAccessMediaLocationEnabled": true
+                }
+            ]
+        ],
         // splash: {
         //     image: "./assets/new-splash.png",
         //     resizeMode: "contain", 
@@ -46,8 +63,31 @@ export default {
             appwriteProjectId: APPWRITE_PROJECT_ID,
             appwriteBucketId: APPWRITE_BUCKET_ID,
             appwriteKey: APPWRITE_KEY,
+            appwriteBundleId: IS_DEV ? "com.ShentHub.dev" : "com.ShentHub.shentao",
             proxyServerUrl: PROXY_SERVER_URL,
             signedImageUri: SIGNEDIMAGE_URI,
+        },
+        ios: {
+            supportsTablet: true,
+            infoPlist: {
+                NSCameraUsageDescription: "This app needs access to the camera to take photos and videos",
+                NSPhotoLibraryUsageDescription: "This app needs access to photos for sharing images and videos",
+                NSPhotoLibraryAddUsageDescription: "This app needs access to photos to save images and videos",
+                NSMicrophoneUsageDescription: "This app needs access to microphone for videos"
+            }
+        },
+        android: {
+            adaptiveIcon: {
+                foregroundImage: "./assets/adaptive-icon.png",
+                backgroundColor: "#FFFFFF"
+            },
+            permissions: [
+                "CAMERA",
+                "RECORD_AUDIO",
+                "READ_EXTERNAL_STORAGE",
+                "WRITE_EXTERNAL_STORAGE",
+                "MEDIA_LIBRARY"
+            ],
             termsUrl: TERMS_URL,
             hideComingSoonFeatures: SHOULD_HIDE_COMING_SOON_FEATURES
 

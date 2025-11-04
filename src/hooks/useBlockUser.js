@@ -1,5 +1,6 @@
-import firebase from "../services/firebase";
-import { useUserContext } from "../contexts/UserContext";
+import { databases } from '../services/appwrite';
+import { ID, Query } from 'appwrite';
+import { useUserContext } from '../contexts/UserContext';
 
 const useBlockUser = () => {
   const { currentUser } = useUserContext();
@@ -10,57 +11,59 @@ const useBlockUser = () => {
     }
 
     try {
-      const currentUserId = currentUser.email;
-      const batch = firebase.firestore().batch();
+      // Get the current user's document
+      const currentUserDoc = await databases.listDocuments(
+        process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID,
+        process.env.EXPO_PUBLIC_USERS_COLLECTION_ID,
+        [Query.equal('email', currentUser.email)]
+      );
 
-      // Add userToBlockEmail to the current user's blockedUsers list
-      const currentUserRef = firebase
-        .firestore()
-        .collection("users")
-        .doc(currentUserId);
-      batch.update(currentUserRef, {
-        blockedUsers:
-          firebase.firestore.FieldValue.arrayUnion(userToBlockEmail),
-      });
+      // Get the blocked user's document
+      const blockedUserDoc = await databases.listDocuments(
+        process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID,
+        process.env.EXPO_PUBLIC_USERS_COLLECTION_ID,
+        [Query.equal('email', userToBlockEmail)]
+      );
 
-      // Add currentUserId to the blocked user's blockedBy list
-      const userToBlockRef = firebase
-        .firestore()
-        .collection("users")
-        .doc(userToBlockEmail);
-      batch.update(userToBlockRef, {
-        blockedBy: firebase.firestore.FieldValue.arrayUnion(currentUserId),
-      });
+      if (currentUserDoc.documents.length === 0 || blockedUserDoc.documents.length === 0) {
+        throw new Error('User not found');
+      }
 
-      // Remove userToBlockEmail from the current user's following list
-      batch.update(currentUserRef, {
-        following: firebase.firestore.FieldValue.arrayRemove(userToBlockEmail),
-      });
+      const currentUserData = currentUserDoc.documents[0];
+      const blockedUserData = blockedUserDoc.documents[0];
 
-      // Remove currentUserId from the userToBlock's following list
-      batch.update(userToBlockRef, {
-        following: firebase.firestore.FieldValue.arrayRemove(currentUserId),
-      });
+      // Update current user's blockedUsers array
+      await databases.updateDocument(
+        process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID,
+        process.env.EXPO_PUBLIC_USERS_COLLECTION_ID,
+        currentUserData.$id,
+        {
+          blockedUsers: [...(currentUserData.blockedUsers || []), userToBlockEmail],
+          following: (currentUserData.following || []).filter(email => email !== userToBlockEmail),
+          followers: (currentUserData.followers || []).filter(email => email !== userToBlockEmail),
+        }
+      );
 
-      // Remove userToBlockEmail from the current user's followers list
-      batch.update(currentUserRef, {
-        followers: firebase.firestore.FieldValue.arrayRemove(userToBlockEmail),
-      });
+      // Update blocked user's blockedBy array
+      await databases.updateDocument(
+        process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID,
+        process.env.EXPO_PUBLIC_USERS_COLLECTION_ID,
+        blockedUserData.$id,
+        {
+          blockedBy: [...(blockedUserData.blockedBy || []), currentUser.email],
+          following: (blockedUserData.following || []).filter(email => email !== currentUser.email),
+          followers: (blockedUserData.followers || []).filter(email => email !== currentUser.email),
+        }
+      );
 
-      // Remove currentUserId from the userToBlock's followers list
-      batch.update(userToBlockRef, {
-        followers: firebase.firestore.FieldValue.arrayRemove(currentUserId),
-      });
-
-      await batch.commit();
+      return true;
     } catch (error) {
-      console.log("Error blocking user:", error);
+      console.error('Error blocking user:', error);
+      throw error;
     }
   };
 
-  return {
-    handleBlockUser,
-  };
+  return { handleBlockUser };
 };
 
 export default useBlockUser;

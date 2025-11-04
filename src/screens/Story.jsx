@@ -23,7 +23,7 @@ import useSharePost from "../hooks/useSharePost";
 import useHandleLike from "../hooks/useHandleLike";
 import Animated, { ZoomIn } from "react-native-reanimated";
 import useChatSendMessage from "../hooks/useChatSendMessage";
-import BottomSheetOptions from "../components/story/BottomSheetOptions";
+import BottomSheetOptions from "../components/story/BottomSheetOptions_new";
 import { Alert } from "react-native";
 
 const Story = ({ navigation, route }) => {
@@ -31,11 +31,18 @@ const Story = ({ navigation, route }) => {
   const progressWidth = SIZES.Width * 0.95;
   const segmentGap = 4;
   const progressSegmentWidth = stories?.length
-    ? (progressWidth - segmentGap * Math.max(stories.length - 1, 0)) / stories.length
+    ? (progressWidth - segmentGap * Math.max(stories.length - 1, 0)) /
+      stories.length
     : progressWidth;
   const loadingRowStyle = [styles.loadingBarRow, { width: progressWidth }];
-  const { handleResume, handlePause, nextStory, prevStory, currentStoryIndex, progressBar } =
-    useProgressBarTimer({ stories, navigation });
+  const {
+    handleResume,
+    handlePause,
+    nextStory,
+    prevStory,
+    currentStoryIndex,
+    progressBar,
+  } = useProgressBarTimer({ stories, navigation });
   useSeenStory({ stories, currentUser, currentStoryIndex });
   const activeStory = stories[currentStoryIndex] || {};
   const [sentFlag, setSentFlag] = useState(false);
@@ -65,8 +72,13 @@ const Story = ({ navigation, route }) => {
     name: activeStory.name,
     profile_picture: activeStory.profile_picture,
   };
-  const { chatSendMessage, sendPostComment, loading, textMessage, setTextMessage } =
-    useChatSendMessage({ user, currentUser });
+  const {
+    chatSendMessage,
+    sendPostComment,
+    loading,
+    textMessage,
+    setTextMessage,
+  } = useChatSendMessage({ user, currentUser });
   const bottomSheetRef = useRef(null);
 
   const handleToggleLike = () => {
@@ -78,28 +90,34 @@ const Story = ({ navigation, route }) => {
     setKeyboardVisible(false);
     setFocusedBar(false);
     handleResume();
-  }
+  };
 
- const handleOnSubmit = async () => {
-  const postId = activeStory.id || activeStory.postId;
-  const postOwnerEmail = activeStory.owner_email;
-
-  const res = await sendPostComment({
-    postId,
-    postOwnerEmail,
-    message: textMessage
-  });
-
-  if (res?.ok) {
-    setSentFlag(true);
-    setTimeout(() => setSentFlag(false), 1200);
-
-    if (keyboardVisible) {
-      Keyboard.dismiss();
-      handleOffFocus();
+  const handleOptionsSheet = () => {
+    handlePause();
+    if (bottomSheetRef?.current) {
+      bottomSheetRef.current.present();
     }
-  }
-};
+  };
+
+  const handleOnSubmit = async () => {
+    const postId = activeStory.id || activeStory.postId;
+    const postOwnerEmail = activeStory.owner_email;
+
+    const res = await sendPostComment({
+      postId,
+      postOwnerEmail,
+      message: textMessage,
+    });
+    if (res?.ok) {
+      setSentFlag(true);
+      setTimeout(() => setSentFlag(false), 1200);
+
+      if (keyboardVisible) {
+        Keyboard.dismiss();
+        handleOffFocus();
+      }
+    }
+  };
 
   const handleSkipForward = () => {
     handlePause();
@@ -114,21 +132,16 @@ const Story = ({ navigation, route }) => {
   const handleStoryShare = async () => {
     handlePause();
     await shareStory(activeStory);
-    setSentFlag(true)
+    setSentFlag(true);
     handleResume();
-  };
-
-  const handleOptionsSheet = () => {
-    handlePause();
-    bottomSheetRef.current.present();
   };
 
   const handleViewProfile = () => {
     handlePause();
     if (activeStory.owner_email === currentUser.email) {
-      navigation.navigate('Main Screen', { screen: 'Account' });
+      navigation.navigate("Main Screen", { screen: "Account" });
     } else {
-      navigation.navigate('UserDetail', { email: activeStory.owner_email });
+      navigation.navigate("UserDetail", { email: activeStory.owner_email });
     }
   };
 
@@ -146,19 +159,36 @@ const Story = ({ navigation, route }) => {
   return (
     <Animated.View entering={ZoomIn.duration(150)} style={styles.container}>
       {sentFlag && (
-        <View style={{ position: 'absolute', bottom: (Platform.OS === 'ios' ? 80 : 64), alignSelf: 'center', backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16 }}>
-          <Text style={{ color: '#fff', fontWeight: '700' }}>Inviato ✓</Text>
+        <View
+          style={{
+            position: "absolute",
+            bottom: Platform.OS === "ios" ? 80 : 64,
+            alignSelf: "center",
+            backgroundColor: "rgba(0,0,0,0.6)",
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            borderRadius: 16,
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "700" }}>Inviato ✓</Text>
         </View>
       )}
-      
+
       <Image
-        source={activeStory.imageUrl ? { uri: activeStory.imageUrl } : undefined}
+        source={
+          activeStory.imageUrl ? { uri: activeStory.imageUrl } : undefined
+        }
         style={styles.image}
       />
       <View pointerEvents="box-none" style={styles.topOverlay}>
         <View style={loadingRowStyle}>
           {stories.map((_, index) => {
-            const progress = index < currentStoryIndex ? 1 : index === currentStoryIndex ? progressBar : 0;
+            const progress =
+              index < currentStoryIndex
+                ? 1
+                : index === currentStoryIndex
+                ? progressBar
+                : 0;
             return (
               <View key={index.toString()} style={styles.loadingBarSegment}>
                 <Progress.Bar
@@ -187,7 +217,7 @@ const Story = ({ navigation, route }) => {
 
             <Text style={styles.usernameText}>
               {activeStory.owner_email === currentUser.email
-                ? 'Your story'
+                ? "Your story"
                 : activeStory.username}
             </Text>
           </TouchableOpacity>
@@ -197,14 +227,23 @@ const Story = ({ navigation, route }) => {
               style={styles.headerActionButton}
               onPress={handleStoryShare}
             >
-              <Feather name="send" size={22} color="#fff" style={styles.headerActionSendIcon} />
+              <Feather
+                name="send"
+                size={22}
+                color="#fff"
+                style={styles.headerActionSendIcon}
+              />
               <Text style={styles.headerActionText}>Send</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.headerActionButton}
               onPress={handleOptionsSheet}
             >
-              <MaterialCommunityIcons name="dots-horizontal" size={24} color="#fff" />
+              <MaterialCommunityIcons
+                name="dots-horizontal"
+                size={24}
+                color="#fff"
+              />
               <Text style={styles.headerActionText}>More</Text>
             </TouchableOpacity>
           </View>
@@ -252,7 +291,12 @@ const Story = ({ navigation, route }) => {
           </View>
           {activeStory.owner_email !== currentUser.email ? (
             <View style={styles.bottomActionContainer}>
-              <View style={[styles.bottomActionBar, focusedBar && styles.bottomActionBarFocused]}>
+              <View
+                style={[
+                  styles.bottomActionBar,
+                  focusedBar && styles.bottomActionBarFocused,
+                ]}
+              >
                 <View style={styles.bottomInputWrapper}>
                   <TextInput
                     placeholder="Send message"
@@ -267,13 +311,15 @@ const Story = ({ navigation, route }) => {
                     maxLength={255}
                     multiline
                   />
-                  {focusedBar && textMessage !== "" && (loading ? (
-                    <ActivityIndicator />
-                  ) : (
-                    <TouchableOpacity onPress={handleOnSubmit}>
-                      <Text style={styles.sendBtn}>Send</Text>
-                    </TouchableOpacity>
-                  ))}
+                  {focusedBar &&
+                    textMessage !== "" &&
+                    (loading ? (
+                      <ActivityIndicator />
+                    ) : (
+                      <TouchableOpacity onPress={handleOnSubmit}>
+                        <Text style={styles.sendBtn}>Send</Text>
+                      </TouchableOpacity>
+                    ))}
                 </View>
 
                 {!focusedBar && (
@@ -290,10 +336,7 @@ const Story = ({ navigation, route }) => {
                 )}
               </View>
             </View>
-          ) : (
-            null
-          )}
-
+          ) : null}
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
       <BottomSheetOptions
@@ -301,6 +344,7 @@ const Story = ({ navigation, route }) => {
         story={activeStory}
         handleResume={handleResume}
         navigation={navigation}
+        currentUser={currentUser}
       />
     </Animated.View>
   );
@@ -321,10 +365,8 @@ const styles = StyleSheet.create({
   navigationZone: {
     flex: 1,
   },
-  navigationZoneLeft: {
-  },
-  navigationZoneRight: {
-  },
+  navigationZoneLeft: {},
+  navigationZoneRight: {},
   topOverlay: {
     position: "absolute",
     top: Platform.OS === "ios" ? 50 : (StatusBar.currentHeight || 0) + 24,
@@ -389,29 +431,29 @@ const styles = StyleSheet.create({
     margin: -11,
   },
   headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 14,
   },
   headerActionButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   headerActionText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 2,
   },
   headerActionSendIcon: {
-    transform: [{ rotate: '20deg' }],
+    transform: [{ rotate: "20deg" }],
     marginTop: -2,
   },
   bottomActionContainer: {
-    width: '100%',
+    width: "100%",
     paddingHorizontal: 8,
     paddingBottom: Platform.OS === "ios" ? 24 : 18,
-    marginTop: 'auto',
+    marginTop: "auto",
   },
   bottomActionBar: {
     flexDirection: "row",
@@ -463,9 +505,3 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.35)",
   },
 });
-
-
-
-
-
-

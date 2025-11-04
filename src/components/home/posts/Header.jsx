@@ -135,7 +135,10 @@ const Header = ({ navigation, post, currentUser }) => {
             Alert.alert(
               'Utente bloccato',
               'Non vedrai più i contenuti di questo utente',
-              [{ text: 'OK' }]
+              [{ 
+                text: 'OK',
+                onPress: () => navigation.navigate('Main Screen', { screen: 'Feed' })
+              }]
             );
 
             if (post.ref) {

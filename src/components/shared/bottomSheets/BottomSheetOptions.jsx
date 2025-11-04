@@ -1,8 +1,7 @@
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo } from "react";
 import { Ionicons, Feather, MaterialIcons, Octicons } from "@expo/vector-icons";
-import CustomBottomSheet from "../../shared/bottomSheets/CustomBottomSheet";
-import { Divider } from "react-native-elements";
+import BottomSheet from "../../shared/bottomSheets/BottomSheet";
 import useReportAction from "../../../hooks/useReportAction";
 import useDeletePost from "../../../hooks/useDeletePost";
 import useSharePost from "../../../hooks/useSharePost";
@@ -19,79 +18,66 @@ const BottomSheetOptions = ({
   const { sharePost } = useSharePost();
   const { savePost } = useSavePost();
 
-  const snapPoints = useMemo(() => [275], []);
+  const snapPoints = useMemo(() => ["50%"], []);
 
   const handleSavePost = async () => {
     await savePost(post, currentUser);
+    bottomSheetRef.current?.dismiss();
   };
 
   const handleSharePost = async () => {
-    if (bottomSheetRef.current?.dismiss) {
-      bottomSheetRef.current.dismiss();
-    }
+    bottomSheetRef.current?.dismiss();
     await sharePost(post);
   };
 
   const handleEditPost = () => {
-    if (bottomSheetRef.current?.dismiss) {
-      bottomSheetRef.current.dismiss();
-    }
-    navigation.navigate("EditPost", {
-      post: post,
-    });
+    bottomSheetRef.current?.dismiss();
+    navigation.navigate("EditPost", { post });
   };
 
   const handleDeletePost = () => {
-    Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
-      {
-        text: "No",
-        style: "cancel",
-      },
-      {
-        text: "Yes",
-        onPress: () => {
-          if (bottomSheetRef.current?.dismiss) {
-            bottomSheetRef.current.dismiss();
-          }
-          deletePost(post);
+    Alert.alert(
+      "Delete Post",
+      "Are you sure you want to delete this post?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          onPress: () => {
+            bottomSheetRef.current?.dismiss();
+            deletePost(post);
+          },
+          style: "destructive",
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleAboutAccount = () => {
-    bottomSheetRef.current.close();
+    bottomSheetRef.current?.dismiss();
     if (currentUser.email === post.owner_email) {
-      navigation.navigate('Main Screen', { screen: 'Account' });
+      navigation.navigate("Main Screen", { screen: "Account" });
     } else {
-      navigation.navigate('UserDetail', { email: post.owner_email });
+      navigation.navigate("UserDetail", { email: post.owner_email });
     }
   };
-
-  const handleSheetChanges = useCallback((index) => {
-    if (index === -1) {
-      // Bottom sheet è stato chiuso
-      bottomSheetRef.current?.dismiss();
-    }
-  }, []);
 
   return (
     <>
       <ReportModalComponent />
-      <CustomBottomSheet
+      <BottomSheet
         bottomSheetRef={bottomSheetRef}
         snapPoints={snapPoints}
-        onChange={handleSheetChanges}
+        onDismiss={() => {}}
       >
         <View style={styles.container}>
           <View style={styles.topContainer}>
             <TouchableOpacity
-              onPress={() => handleSavePost()}
+              onPress={handleSavePost}
               style={styles.opacityContainer}
             >
               <View style={styles.buttonContainer}>
-                {currentUser.saved_posts &&
-                currentUser.saved_posts.includes(post.id) ? (
+                {currentUser.saved_posts?.includes(post.id) ? (
                   <Ionicons name="bookmark" size={24} color="#fff" />
                 ) : (
                   <Feather name="bookmark" size={24} color="#fff" />
@@ -99,8 +85,9 @@ const BottomSheetOptions = ({
                 <Text style={styles.buttonText}>Save</Text>
               </View>
             </TouchableOpacity>
+
             <TouchableOpacity
-              onPress={() => handleSharePost()}
+              onPress={handleSharePost}
               style={styles.opacityContainer}
             >
               <View style={styles.buttonContainer}>
@@ -110,10 +97,10 @@ const BottomSheetOptions = ({
             </TouchableOpacity>
           </View>
 
-          {post.owner_email === currentUser.email && (
+          {post.owner_email === currentUser.email ? (
             <View style={styles.verticalGroup}>
               <TouchableOpacity
-                onPress={() => handleEditPost()}
+                onPress={handleEditPost}
                 style={styles.columnContainer}
               >
                 <View style={styles.optionContainer}>
@@ -121,9 +108,11 @@ const BottomSheetOptions = ({
                   <Text style={styles.optionText}>Edit</Text>
                 </View>
               </TouchableOpacity>
+
               <View style={styles.divider} />
+
               <TouchableOpacity
-                onPress={() => handleDeletePost()}
+                onPress={handleDeletePost}
                 style={styles.columnContainer}
               >
                 <View style={styles.optionContainer}>
@@ -132,11 +121,10 @@ const BottomSheetOptions = ({
                 </View>
               </TouchableOpacity>
             </View>
-          )}
-          {post.owner_email !== currentUser.email && (
+          ) : (
             <View style={styles.verticalGroup}>
               <TouchableOpacity
-                onPress={() => handleAboutAccount()}
+                onPress={handleAboutAccount}
                 style={styles.columnContainer}
               >
                 <View style={styles.optionContainer}>
@@ -148,9 +136,14 @@ const BottomSheetOptions = ({
                   <Text style={styles.optionText}>About this account</Text>
                 </View>
               </TouchableOpacity>
+
               <View style={styles.divider} />
+
               <TouchableOpacity
-                onPress={() => handleReportPost(post, currentUser)}
+                onPress={() => {
+                  bottomSheetRef.current?.dismiss();
+                  handleReportPost(post, currentUser);
+                }}
                 style={styles.columnContainer}
               >
                 <View style={styles.optionContainer}>
@@ -161,34 +154,23 @@ const BottomSheetOptions = ({
             </View>
           )}
         </View>
-      </CustomBottomSheet>
+      </BottomSheet>
     </>
   );
 };
 
-export default BottomSheetOptions;
-
 const styles = StyleSheet.create({
-  closeLineContainer: {
-    alignSelf: "center",
-  },
-  closeLine: {
-    width: 40,
-    height: 4,
-    borderRadius: 5,
-    backgroundColor: "#777",
-    marginTop: 9,
-    marginBottom: 30,
-  },
   container: {
     flex: 1,
-    marginHorizontal: 15,
+    paddingHorizontal: 15,
+    paddingBottom: 20,
   },
   topContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     gap: 15,
+    marginBottom: 15,
   },
   opacityContainer: {
     flexDirection: "row",
@@ -199,51 +181,45 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 12,
-    paddingBottom: 4,
+    paddingVertical: 12,
     flex: 1,
   },
   buttonText: {
     color: "#fff",
-    fontWeight: "400",
+    fontWeight: "500",
     fontSize: 14,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    marginTop: 4,
   },
   verticalGroup: {
-    marginTop: 15,
     borderRadius: 15,
     overflow: "hidden",
   },
   columnContainer: {
     flexDirection: "row",
   },
-  divider: {
-    height: 1,
-    backgroundColor: "#444",
-  },
   optionContainer: {
     backgroundColor: "#444",
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 12,
+    paddingHorizontal: 16,
     height: 58,
     flex: 1,
-    gap: 15,
+    gap: 12,
   },
   optionText: {
     color: "#fff",
     fontWeight: "500",
     fontSize: 16,
-    marginBottom: 4,
   },
   optionRedText: {
     color: "#f00",
     fontWeight: "500",
     fontSize: 16,
-    marginBottom: 4,
   },
-  unfollowIcon: {
-    transform: [{ scaleX: -1 }],
+  divider: {
+    height: 1,
+    backgroundColor: "#333",
   },
 });
+
+export default BottomSheetOptions;

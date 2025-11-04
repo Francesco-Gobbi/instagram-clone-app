@@ -15,7 +15,7 @@ const BottomSheetOptions = ({
   post,
   currentUser,
 }) => {
-  const { handleReportPost } = useReportAction();
+  const { handleReportPost, ReportModalComponent } = useReportAction();
   const { deletePost } = useDeletePost();
   const { sharePost } = useSharePost();
   const { savePost } = useSavePost();
@@ -64,6 +64,8 @@ const BottomSheetOptions = ({
   };
 
   return (
+    <>
+    <ReportModalComponent />
     <BottomSheet
       ref={bottomSheetRef}
       index={-1}
@@ -155,6 +157,7 @@ const BottomSheetOptions = ({
         )}
       </View>
     </BottomSheet>
+    </>
   );
 };
 

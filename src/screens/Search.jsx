@@ -10,6 +10,7 @@ import {
   StatusBar,
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { darkTheme } from "../utils/theme";
 import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { SIZES } from "../constants";
@@ -83,7 +84,7 @@ const Search = ({ navigation }) => {
             <Ionicons
               name="search"
               size={20}
-              color={"#999"}
+              color={darkTheme.colors.textSecondary}
               style={styles.searchIcon}
             />
 
@@ -94,7 +95,7 @@ const Search = ({ navigation }) => {
               autoCapitalize="none"
               autoCorrect={false}
               placeholder="Search"
-              placeholderTextColor={"#999"}
+              placeholderTextColor={darkTheme.colors.textSecondary}
               style={[styles.searchInput, { width: inputWidth }]}
               enterKeyHint="search"
               onFocus={() => handleFocus()}
@@ -136,7 +137,7 @@ export default Search;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: darkTheme.colors.background,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   header: (ContainerHeight) => ({
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
     top: 35,
     height: ContainerHeight,
     zIndex: 1,
-    backgroundColor: "#000",
+    backgroundColor: darkTheme.colors.background,
   }),
   searchBar: {
     flexDirection: "row",
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
   },
   searchWrapper: {
     marginLeft: SIZES.Width * 0.03,
-    backgroundColor: "#252525",
+    backgroundColor: darkTheme.colors.surfaceVariant,
     height: 38,
     borderRadius: 12,
     flexDirection: "row",
@@ -165,12 +166,12 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   searchInput: {
-    color: "#fff",
+    color: darkTheme.colors.textPrimary,
     height: "100%",
     marginLeft: 5,
   },
   cancelBtn: {
-    color: "#fff",
+    color: darkTheme.colors.textPrimary,
     fontWeight: "500",
     fontSize: 16,
     marginLeft: 15,
@@ -180,6 +181,6 @@ const styles = StyleSheet.create({
   },
   searchingContainer: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#000",
+    backgroundColor: darkTheme.colors.background,
   },
 });

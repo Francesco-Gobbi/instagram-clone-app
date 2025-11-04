@@ -15,6 +15,7 @@ import Header from "../components/home/Header";
 import Stories from "../components/home/Stories";
 import Posts from "../components/home/Posts";
 import PostsSkeleton from "../components/home/skeletons/PostsSkeleton";
+import { darkTheme } from "../utils/theme";
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AnimatedSafeAreaView = createAnimatedComponent(SafeAreaView);
@@ -86,7 +87,7 @@ export default Home;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#000",
+    backgroundColor: darkTheme.colors.background,
     flex: 1,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
     top: 36,
     height: ContainerHeight,
     zIndex: 1,
-    backgroundColor: "#000",
+    backgroundColor: darkTheme.colors.surface,
   }),
   contentContainer: (ContainerHeight) => ({
     paddingTop: ContainerHeight,

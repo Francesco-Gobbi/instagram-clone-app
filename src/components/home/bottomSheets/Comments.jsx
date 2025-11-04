@@ -6,6 +6,7 @@ import { Image } from "expo-image";
 import useTimeAgo from "../../../utils/useTimeAgo";
 import useHandleCommentLike from "../../../hooks/useHandleCommentLike";
 import useHandleCommentDelete from "../../../hooks/useHandleCommentDelete";
+import useProfanityFilter from "../../../hooks/useProfanityFilter";
 
 const Comments = ({
   comment,
@@ -20,8 +21,11 @@ const Comments = ({
   const { timeAgo } = useTimeAgo();
   const { handleCommentLike } = useHandleCommentLike();
   const { handleCommentDelete } = useHandleCommentDelete();
+  const { filterText } = useProfanityFilter();
   const [deleteStatus, setDeleteStatus] = useState(false);
   const timerRef = useRef(null);
+
+  const filteredComment = filterText(comment.comment);
 
   const deleteCountDown = () => {
     setDeleteStatus(true);
@@ -73,7 +77,7 @@ const Comments = ({
             </Text>
           </View>
           <View style={styles.commentContainer}>
-            <Text style={styles.comment}>{comment.comment}</Text>
+            <Text style={styles.comment}>{filteredComment}</Text>
           </View>
           {comment.likes_by_users.split(",").length - 1 > 0 && (
             <TouchableOpacity

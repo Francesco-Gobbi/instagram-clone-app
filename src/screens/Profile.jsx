@@ -4,6 +4,7 @@ import React from "react";
 import { useUserContext } from "../contexts/UserContext";
 import StoryHighlights from "../components/profile/StoryHighlights";
 import Header from "../components/profile/Header";
+import { darkTheme } from "../utils/theme";
 
 const Profile = ({ navigation }) => {
   const { currentUser } = useUserContext();
@@ -21,7 +22,7 @@ export default Profile;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: darkTheme.colors.background,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
 });

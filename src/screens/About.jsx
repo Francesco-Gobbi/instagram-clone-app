@@ -60,6 +60,12 @@ const About = ({ navigation, route }) => {
           <Text style={styles.textSubtitle}>{user.country}</Text>
         </View>
       </View>
+      <View style={styles.guidelinesContainer}>
+        <Text style={styles.guidelinesTitle}>Community Guidelines</Text>
+        <Text style={styles.guidelinesText}>
+          We are committed to ensuring that our community is safe and respectful. We will review all reports of objectionable content within 24 hours and take appropriate action, including removing the content and ejecting the user who provided it.
+        </Text>
+      </View>
     </SafeAreaView>
   );
 };
@@ -120,5 +126,23 @@ const styles = StyleSheet.create({
     color: "#bbb",
     fontSize: 15,
     fontWeight: "400",
+  },
+  guidelinesContainer: {
+    marginHorizontal: 15,
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: "#232325",
+    borderRadius: 10,
+  },
+  guidelinesTitle: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "700",
+    marginBottom: 10,
+  },
+  guidelinesText: {
+    color: "#fff",
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

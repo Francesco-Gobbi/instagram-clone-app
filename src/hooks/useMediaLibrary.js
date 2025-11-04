@@ -24,7 +24,7 @@ const useMediaLibrary = (selectedAlbum, selectedType) => {
         throw new Error("Permesso negato per accedere alla libreria media");
       }
 
-      const isMomentSelection = selectedType === "New moment";
+      const isMomentSelection = (selectedType || "").toLowerCase() === "new moment";
 
       const mediaOptions = {
         first: MEDIA_FETCH_LIMIT,
@@ -129,4 +129,3 @@ const useMediaLibrary = (selectedAlbum, selectedType) => {
 };
 
 export default useMediaLibrary;
-

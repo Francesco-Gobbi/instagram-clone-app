@@ -6,21 +6,22 @@ import {
   ActivityIndicator,
   Platform,
   StatusBar,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import StoryHightlights from "../components/user/StoryHighlights";
 import firebase from "../services/firebase";
 import { useUserContext } from "../contexts/UserContext";
-import BottomSheetOptions from "../components/user/bottomSheets/BottomSheetOptions";
+import BottomMenu from "../components/shared/BottomMenu";
 import CopyClipboardModal from "../components/shared/modals/CopyClipboardModal";
 
 const User = ({ route, navigation }) => {
   const { email } = route.params || {};
   const [user, setUser] = useState({});
   const { currentUser } = useUserContext();
-  const bottomSheetRefOptions = useRef(null);
+  const [menuVisible, setMenuVisible] = useState(false);
   const [copyModalVisible, setCopyModalVisible] = useState(false);
 
   useEffect(() => {
@@ -47,9 +48,7 @@ const User = ({ route, navigation }) => {
         </TouchableOpacity>
         <Text style={styles.textTitle}>{user.username}</Text>
         {user.username ? (
-          <TouchableOpacity
-            onPress={() => bottomSheetRefOptions.current.present()}
-          >
+          <TouchableOpacity onPress={() => setMenuVisible(true)}>
             <MaterialCommunityIcons
               name="dots-horizontal"
               size={24}
@@ -65,13 +64,56 @@ const User = ({ route, navigation }) => {
       <StoryHightlights navigation={navigation} user={user} />
 
       <CopyClipboardModal copyModalVisible={copyModalVisible} />
+      <BottomMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        showEdit={user.email === currentUser.email}
+        onReport={() => {
+          setMenuVisible(false);
+          // navigate to a report flow for user (optional)
+          navigation.navigate('ReportUser', { userEmail: user.email });
+        }}
+        onEdit={() => {
+          setMenuVisible(false);
+          navigation.navigate('EditProfile');
+        }}
+        onBlock={async () => {
+          try {
+            setMenuVisible(false);
+            const safeUpdate = async (ref, data) => {
+              try {
+                await ref.update(data);
+              } catch (err) {
+                try {
+                  await ref.set(data, { merge: true });
+                } catch (error) {
+                  console.error('Error in safeUpdate:', error);
+                  throw error;
+                }
+              }
+            };
 
-      <BottomSheetOptions
-        bottomSheetRef={bottomSheetRefOptions}
-        user={user}
-        currentUser={currentUser}
-        navigation={navigation}
-        setCopyModalVisible={setCopyModalVisible}
+            const currentUserRef = firebase.firestore().collection('users').doc(currentUser.email);
+            const blockedUserRef = firebase.firestore().collection('users').doc(user.email);
+
+            await Promise.all([
+              safeUpdate(currentUserRef, { blockedUsers: firebase.firestore.FieldValue.arrayUnion(user.email) }),
+              safeUpdate(blockedUserRef, { blockedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.owner_uid || null) })
+            ]);
+
+            // Show success message
+            Alert.alert(
+              'Utente bloccato',
+              'Non vedrai più i contenuti di questo utente',
+              [{ text: 'OK' }]
+            );
+
+            Alert.alert('Utente bloccato', 'Non vedrai più i post di questo utente.');
+          } catch (e) {
+            console.error('Block user error:', e);
+            Alert.alert('Errore', "Impossibile bloccare l'utente.");
+          }
+        }}
       />
     </SafeAreaView>
   );

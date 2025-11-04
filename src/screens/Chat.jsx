@@ -23,6 +23,7 @@ import firebase from "../services/firebase";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
+import { shouldShowComingSoonFeatures } from "../utils/featureFlags";
 
 const Chat = ({ navigation }) => {
   const [searchKey, setSearchKey] = useState("");
@@ -41,6 +42,7 @@ const Chat = ({ navigation }) => {
   const [focusedBar, setFocusedBar] = useState(false);
   const [searching, setSearching] = useState(false);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
+  const showComingSoonFeatures = shouldShowComingSoonFeatures();
 
   useEffect(() => {
     beginSearch();
@@ -145,7 +147,7 @@ const Chat = ({ navigation }) => {
                   navigation={navigation}
                   user={item}
                   currentUser={currentUser}
-                  handleCamera={handleCamera}
+                  handleCamera={showComingSoonFeatures ? handleCamera : undefined}
                 />
               )}
               initialNumToRender={20}

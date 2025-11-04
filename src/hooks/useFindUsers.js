@@ -11,7 +11,16 @@ const useFindUsers = ({currentUser, searchKey}) => {
             .collection("users")
             .where("username", "!=", currentUser.username)
             .onSnapshot((snapshot) => {
-                const data = snapshot.docs.map((doc, index) => ({id: index, ...doc.data()}));
+                const data = snapshot.docs.map((doc, index) => ({id: index, ...doc.data()}))
+                .filter(user => {
+                    if (currentUser && currentUser.blockedUsers && currentUser.blockedUsers.includes(user.email)) {
+                        return false;
+                    }
+                    if (user.blockedBy && user.blockedBy.includes(currentUser.email)) {
+                        return false;
+                    }
+                    return true;
+                });
                 setUsers(data);
             });
 
@@ -25,7 +34,7 @@ const useFindUsers = ({currentUser, searchKey}) => {
             user.name.toLowerCase().includes(searchKey.toLowerCase());
         });
         setSearchResult(data);
-    }, [searchKey])
+    }, [searchKey, users])
 
     return {
         beginSearch,

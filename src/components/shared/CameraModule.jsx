@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useRef, useState } from "react";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { CameraView, useCameraPermissions, useMicrophonePermissions } from "expo-camera";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { SIZES } from "../../constants";
 import CameraNoPermission from "./CameraNoPermission";
@@ -39,10 +39,14 @@ const CameraModule = ({
   const [flashMode, setFlashMode] = useState(FLASH_MODE.OFF);
   const [isRecording, setIsRecording] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
+  const [microphonePermission, requestMicrophonePermission] = useMicrophonePermissions();
 
-  const allowPhotoMode = selectedType !== "New moment";
-  const allowVideoMode = selectedType === "New moment" || selectedType === "Add to story";
-  const [captureMode, setCaptureMode] = useState(allowPhotoMode ? "photo" : "video");
+  const normalizedSelectedType = (selectedType || "").toLowerCase();
+  const allowVideoMode =
+    normalizedSelectedType === "new moment" || normalizedSelectedType === "add to story";
+  const allowPhotoMode = normalizedSelectedType !== "new moment";
+  const defaultCaptureMode = allowVideoMode && !allowPhotoMode ? "video" : "photo";
+  const [captureMode, setCaptureMode] = useState(defaultCaptureMode);
 
   useEffect(() => {
     setCaptureMode((previousMode) => {
@@ -54,16 +58,16 @@ const CameraModule = ({
       }
       return previousMode;
     });
-  }, [allowPhotoMode, allowVideoMode, selectedType]);
+  }, [allowPhotoMode, allowVideoMode, normalizedSelectedType]);
 
   const isVideoMode = captureMode === "video" && allowVideoMode;
-  const maxVideoDuration = selectedType === "New moment" ? 60 : 30;
+  const maxVideoDuration = normalizedSelectedType === "new moment" ? 60 : 30;
   const handleSelectedAsset = (asset) => {
     if (!asset) {
       return;
     }
 
-    if (selectedType === "New moment") {
+    if (normalizedSelectedType === "new moment") {
       const normalized = {
         uri: asset.uri,
         filename: asset.fileName || asset.filename || asset.uri?.split("/").pop(),
@@ -91,6 +95,21 @@ const CameraModule = ({
       requestPermission();
     }
   }, [permission, requestPermission]);
+
+  useEffect(() => {
+    if (!allowVideoMode) {
+      return;
+    }
+
+    if (!microphonePermission) {
+      requestMicrophonePermission();
+      return;
+    }
+
+    if (isVideoMode && !microphonePermission.granted) {
+      requestMicrophonePermission();
+    }
+  }, [allowVideoMode, isVideoMode, microphonePermission, requestMicrophonePermission]);
 
   if (!permission) {
     return (
@@ -146,6 +165,17 @@ const CameraModule = ({
   const startVideoRecording = async () => {
     if (!isVideoMode || !camRef.current || isRecording) {
       return;
+    }
+
+    if (!microphonePermission?.granted) {
+      const permissionResponse = await requestMicrophonePermission();
+      if (!permissionResponse?.granted) {
+        Alert.alert(
+          'Permesso richiesto',
+          "Per registrare un video devi consentire l'uso del microfono."
+        );
+        return;
+      }
     }
 
     setIsRecording(true);
@@ -351,7 +381,7 @@ const CameraModule = ({
               hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
               disabled={isRecording}
               onPress={async () => {
-                const asset = selectedType === "New moment"
+                const asset = normalizedSelectedType === "new moment"
                   ? await ChooseVideoFromGallery()
                   : await ChooseImageFromGallery();
 
@@ -532,23 +562,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

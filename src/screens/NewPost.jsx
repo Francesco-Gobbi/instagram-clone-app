@@ -22,6 +22,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
+import { shouldShowComingSoonFeatures } from "../utils/featureFlags";
 
 const NewPost = ({ navigation, route }) => {
   const { selectedImage } = route.params || {};
@@ -31,6 +32,7 @@ const NewPost = ({ navigation, route }) => {
   const [caption, setCaption] = useState("");
   const [focusedBar, setFocusedBar] = useState(false);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
+  const showComingSoonFeatures = shouldShowComingSoonFeatures();
 
   const handleFocus = () => {
     setFocusedBar(true);
@@ -88,40 +90,42 @@ const NewPost = ({ navigation, route }) => {
               />
             </View>
           </View>
-          <View style={styles.secondContainer}>
-            <Divider width={0.4} color="#333" />
+          {showComingSoonFeatures && (
+            <View style={styles.secondContainer}>
+              <Divider width={0.4} color="#333" />
 
-            <TouchableOpacity
-              onPress={() =>
-                handleFeatureNotImplemented(setMessageModalVisible)
-              }
-              style={styles.optionsContainer}
-            >
-              <Text style={styles.optionText}>Tag people</Text>
-              <MaterialIcons
-                name="keyboard-arrow-right"
-                size={26}
-                color={"#999"}
-                style={styles.optionIcon}
-              />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  handleFeatureNotImplemented(setMessageModalVisible)
+                }
+                style={styles.optionsContainer}
+              >
+                <Text style={styles.optionText}>Tag people</Text>
+                <MaterialIcons
+                  name="keyboard-arrow-right"
+                  size={26}
+                  color={"#999"}
+                  style={styles.optionIcon}
+                />
+              </TouchableOpacity>
 
-            <Divider width={0.3} color="#333" />
-            <TouchableOpacity
-              onPress={() =>
-                handleFeatureNotImplemented(setMessageModalVisible)
-              }
-              style={styles.optionsContainer}
-            >
-              <Text style={styles.optionText}>Advanced settings</Text>
-              <MaterialIcons
-                name="keyboard-arrow-right"
-                size={26}
-                color={"#999"}
-                style={styles.optionIcon}
-              />
-            </TouchableOpacity>
-          </View>
+              <Divider width={0.3} color="#333" />
+              <TouchableOpacity
+                onPress={() =>
+                  handleFeatureNotImplemented(setMessageModalVisible)
+                }
+                style={styles.optionsContainer}
+              >
+                <Text style={styles.optionText}>Advanced settings</Text>
+                <MaterialIcons
+                  name="keyboard-arrow-right"
+                  size={26}
+                  color={"#999"}
+                  style={styles.optionIcon}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </TouchableWithoutFeedback>
       <MessageModal

@@ -20,6 +20,7 @@ const EMPTY_USER = {
   close_friends: [],
   muted_users: [],
   saved_posts: [],
+  blockedUsers: [],
   chat_notification: 0,
   event_notification: 0,
   status: "pending",

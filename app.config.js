@@ -14,6 +14,8 @@ const APPWRITE_KEY = process.env.APPWRITE_KEY;
 const PROXY_SERVER_URL = process.env.PROXY_SERVER_URL;
 const SIGNEDIMAGE_URI = process.env.SIGNEDIMAGE_URI;
 const TERMS_URL = process.env.TERMS_URL;
+const HIDE_COMING_SOON_FEATURES = String(process.env.HIDE_COMING_SOON_FEATURES ?? "").toLowerCase();
+const SHOULD_HIDE_COMING_SOON_FEATURES = ["true", "1", "yes", "y"].includes(HIDE_COMING_SOON_FEATURES);
 export default {
     expo: {
         name: IS_DEV ? "ShentaoHub (Dev)" : IS_PREVIEW ? "ShentaoHub (Preview)" : "ShentaoHub",
@@ -46,7 +48,8 @@ export default {
             appwriteKey: APPWRITE_KEY,
             proxyServerUrl: PROXY_SERVER_URL,
             signedImageUri: SIGNEDIMAGE_URI,
-            termsUrl: TERMS_URL
+            termsUrl: TERMS_URL,
+            hideComingSoonFeatures: SHOULD_HIDE_COMING_SOON_FEATURES
 
         },
 
@@ -60,7 +63,7 @@ export default {
             softwareKeyboardLayoutMode: "resize",
             adaptiveIcon: {
                 foregroundImage: "./assets/shentao-logo.png",
-            backgroundColor: "#ffffff"
+                backgroundColor: "#ffffff"
             },
             permissions: [
                 "android.permission.CAMERA",
@@ -68,8 +71,15 @@ export default {
                 "android.permission.READ_MEDIA_IMAGES",
                 "android.permission.READ_EXTERNAL_STORAGE",
                 "android.permission.WRITE_EXTERNAL_STORAGE"
-            ]
-        ,
+            ],
+            permissionsInfoPlist: {
+                "android.permission.CAMERA": "ShentaoHub richiede l'accesso alla fotocamera per permetterti di creare contenuti multimediali da condividere. Potrai scattare foto e registrare video per i tuoi post, le tue storie o aggiornare la tua immagine del profilo.",
+                "android.permission.RECORD_AUDIO": "ShentaoHub richiede l'accesso al microfono per consentirti di registrare l'audio durante la creazione di video per i tuoi post e storie. Il microfono verrà utilizzato solo durante le registrazioni video.",
+                "android.permission.READ_MEDIA_IMAGES": "ShentaoHub richiede l'accesso alla tua libreria foto per permetterti di selezionare e condividere i tuoi contenuti multimediali. Potrai scegliere foto e video da pubblicare nei post, nelle storie o come immagine del profilo.",
+                "android.permission.READ_EXTERNAL_STORAGE": "ShentaoHub richiede l'accesso allo storage per permetterti di selezionare e condividere i tuoi contenuti multimediali.",
+                "android.permission.WRITE_EXTERNAL_STORAGE": "ShentaoHub richiede l'accesso allo storage per salvare foto e video catturati nell'app."
+            }
+            ,
             compileSdkVersion: 34,
             targetSdkVersion: 34,
             minSdkVersion: 24,
@@ -82,9 +92,10 @@ export default {
                 : "com.ShentHub.shentao",
             supportsTablet: true,
             infoPlist: {
-                NSCameraUsageDescription: "Questa app ha bisogno di accedere alla fotocamera per scattare foto e video.",
-                NSMicrophoneUsageDescription: "Questa app ha bisogno di accedere al microfono per registrare audio nei video.",
-                NSPhotoLibraryUsageDescription: "Questa app ha bisogno di accedere alla libreria foto per selezionare immagini e video."
+                NSCameraUsageDescription: "ShentaoHub richiede l'accesso alla fotocamera per permetterti di creare contenuti multimediali da condividere. Potrai scattare foto e registrare video per i tuoi post, le tue storie o aggiornare la tua immagine del profilo.",
+                NSMicrophoneUsageDescription: "ShentaoHub richiede l'accesso al microfono per consentirti di registrare l'audio durante la creazione di video per i tuoi post e storie. Il microfono verrà utilizzato solo durante le registrazioni video.",
+                NSPhotoLibraryUsageDescription: "ShentaoHub richiede l'accesso alla tua libreria foto per permetterti di selezionare e condividere i tuoi contenuti multimediali. Potrai scegliere foto e video da pubblicare nei post, nelle storie o come immagine del profilo.",
+                NSPhotoLibraryAddUsageDescription: "ShentaoHub necessita di salvare foto e video nel tuo rullino dopo la registrazione o il download dei contenuti."
             }
         },
 
@@ -92,7 +103,7 @@ export default {
             [
                 "expo-camera",
                 {
-                    cameraPermission: "Allow access to your camera"
+                    cameraPermission: "ShentaoHub needs access to your camera to let you capture photos and videos for sharing posts, stories, and updating your profile. The camera will only be used when you choose to take pictures or record videos."
                 }
             ],
             [
@@ -100,8 +111,8 @@ export default {
                 [
                     "expo-image-picker",
                     {
-                        photosPermission: "L'app accede alle tue foto per permetterti di condividere immagini.",
-                        cameraPermission: "L'app accede alla fotocamera per permetterti di scattare foto."
+                        photosPermission: "ShentaoHub richiede l'accesso alla tua libreria foto per consentirti di selezionare e condividere foto/video nei post, storie e per personalizzare il tuo profilo. I tuoi contenuti saranno accessibili solo quando scegli di condividerli.",
+                        cameraPermission: "ShentaoHub richiede l'accesso alla fotocamera per permetterti di catturare foto e video da condividere nei post, storie o come immagine del profilo. La fotocamera verrà utilizzata solo quando decidi di scattare."
                     }
                 ]
             ],

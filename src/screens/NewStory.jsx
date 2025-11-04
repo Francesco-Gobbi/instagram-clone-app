@@ -23,6 +23,7 @@ import { Image } from "expo-image";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
+import { shouldShowComingSoonFeatures } from "../utils/featureFlags";
 
 const NewStory = ({ navigation, route }) => {
   const { selectedImage } = route.params || {};
@@ -31,6 +32,7 @@ const NewStory = ({ navigation, route }) => {
   const { currentUser } = useUserContext();
   const [opacity, setOpacity] = useState(0);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
+  const showComingSoonFeatures = shouldShowComingSoonFeatures();
 
   useEffect(() => {
     setTimeout(() => {
@@ -62,48 +64,50 @@ const NewStory = ({ navigation, route }) => {
               style={styles.buttonIcon}
             />
           </TouchableOpacity>
-          <View style={styles.modButtonsContainer}>
-            <TouchableOpacity
-              onPress={() =>
-                handleFeatureNotImplemented(setMessageModalVisible)
-              }
-              style={styles.modButtonContainer}
-            >
-              <Feather name="volume-2" size={28} color={"#fff"} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                handleFeatureNotImplemented(setMessageModalVisible)
-              }
-              style={styles.modButtonContainer}
-            >
-              <Text style={styles.modButtonText}>Aa</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                handleFeatureNotImplemented(setMessageModalVisible)
-              }
-              style={styles.modButtonContainer}
-            >
-              <MaterialCommunityIcons
-                name="sticker-emoji"
-                size={27}
-                color={"#fff"}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                handleFeatureNotImplemented(setMessageModalVisible)
-              }
-              style={styles.modButtonContainer}
-            >
-              <MaterialCommunityIcons
-                name="dots-horizontal"
-                size={27}
-                color={"#fff"}
-              />
-            </TouchableOpacity>
-          </View>
+          {showComingSoonFeatures && (
+            <View style={styles.modButtonsContainer}>
+              <TouchableOpacity
+                onPress={() =>
+                  handleFeatureNotImplemented(setMessageModalVisible)
+                }
+                style={styles.modButtonContainer}
+              >
+                <Feather name="volume-2" size={28} color={"#fff"} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  handleFeatureNotImplemented(setMessageModalVisible)
+                }
+                style={styles.modButtonContainer}
+              >
+                <Text style={styles.modButtonText}>Aa</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  handleFeatureNotImplemented(setMessageModalVisible)
+                }
+                style={styles.modButtonContainer}
+              >
+                <MaterialCommunityIcons
+                  name="sticker-emoji"
+                  size={27}
+                  color={"#fff"}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  handleFeatureNotImplemented(setMessageModalVisible)
+                }
+                style={styles.modButtonContainer}
+              >
+                <MaterialCommunityIcons
+                  name="dots-horizontal"
+                  size={27}
+                  color={"#fff"}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
         </Animated.View>
 
         {Platform.OS === "ios" ? (
@@ -120,25 +124,31 @@ const NewStory = ({ navigation, route }) => {
         style={styles.bottomButtonsContainer}
         entering={FadeIn.duration(1000)}
       >
-        <TouchableOpacity
-          onPress={() => !isLoading && handleSubmitButton()}
-          style={styles.userContainer}
-        >
-          <Image
-            source={{ uri: currentUser.profile_picture }}
-            style={styles.userImage}
-          />
-          <Text style={styles.userText}>Your story</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => !isLoading && handleSubmitButton()}
-          style={styles.userContainer}
-        >
-          <View style={styles.iconBorder}>
-            <MaterialIcons name="stars" size={23} color={"#3b3"} />
-          </View>
-          <Text style={styles.userText}>Close Friends</Text>
-        </TouchableOpacity>
+        {showComingSoonFeatures ? (
+          <>
+            <TouchableOpacity
+              onPress={() => !isLoading && handleSubmitButton()}
+              style={styles.userContainer}
+            >
+              <Image
+                source={{ uri: currentUser.profile_picture }}
+                style={styles.userImage}
+              />
+              <Text style={styles.userText}>Your story</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => !isLoading && handleSubmitButton()}
+              style={styles.userContainer}
+            >
+              <View style={styles.iconBorder}>
+                <MaterialIcons name="stars" size={23} color={"#3b3"} />
+              </View>
+              <Text style={styles.userText}>Close Friends</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <View style={{ flex: 1 }} />
+        )}
         <TouchableOpacity
           onPress={() => !isLoading && handleSubmitButton()}
           style={styles.nextButtonContainer}

@@ -3,40 +3,35 @@ import firebase from "../services/firebase";
 
 const useFetchStories = () => {
     const [stories, setStories] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [updatedStories, setUpdatedStories] = useState(0);
 
     useEffect(() => {
-        if(!isLoading){
-            setIsLoading(true);
-            try {
-                const unsubscribe = firebase
-                    .firestore()
-                    .collectionGroup("stories")
-                    .onSnapshot((snapshot) => {
-                        setStories(
-                            snapshot.docs.map((doc) => ({
-                            id: doc.id,
-                            ...doc.data(),
-                            }))
-                        );
-                        setUpdatedStories((prev) => prev + 1);
-                });
-
-                return () => unsubscribe();
-
-            } catch (error) {
-                console.log(error);
-            } finally {
+        const unsubscribe = firebase
+            .firestore()
+            .collectionGroup("stories")
+            .onSnapshot((snapshot) => {
+                const allStories = snapshot.docs
+                    .map((doc) => ({
+                        id: doc.id,
+                        ...doc.data(),
+                    }));
+                setStories(allStories);
+                setUpdatedStories((prev) => prev + 1);
                 setIsLoading(false);
-            }
-        }
+            }, (error) => {
+                console.error("Error fetching stories: ", error);
+                setIsLoading(false);
+            });
+
+        return () => unsubscribe();
     }, []);
 
-    return { 
+    return {
         stories,
+        isLoading,
         updatedStories
     }
 }
 
-export default useFetchStories
+export default useFetchStories;

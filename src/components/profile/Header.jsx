@@ -1,11 +1,21 @@
-import { StyleSheet, Text, View, TouchableOpacity, Modal, TouchableWithoutFeedback, Platform, StatusBar } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Modal,
+  TouchableWithoutFeedback,
+  Platform,
+  StatusBar,
+  Alert
+} from "react-native";
 import React, { useRef, useState } from "react";
 import { MaterialIcons, FontAwesome5, Octicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import BottomSheetAddNew from "./bottomSheets/BottomSheetAddNew";
 import BottomSheetLogout from "./bottomSheets/BottomSheetLogout";
 import BottomSheetOptions from "./bottomSheets/BottomSheetOptions";
-import useAuthPersistence from '../../utils/useAuthPersistence';
+import useAuthPersistence from "../../utils/useAuthPersistence";
 
 const Header = ({ currentUser, navigation }) => {
   const bottomSheetRefAddNew = useRef(null);
@@ -22,18 +32,15 @@ const Header = ({ currentUser, navigation }) => {
     bottomSheetRefOptions.current?.present();
   };
 
- 
-const handleLogoutPress = async () => {
-  try {
-    closeSettingsMenu();           
-    await clearUserData();           
-    navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
-
-  } catch (err) {
-    console.error('Errore durante il logout:', err);
-  }
-};
-
+  const handleLogoutPress = async () => {
+    try {
+      closeSettingsMenu();
+      await clearUserData();
+      navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+    } catch (err) {
+      console.error("Errore durante il logout:", err);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -56,27 +63,24 @@ const handleLogoutPress = async () => {
         >
           <FontAwesome5 name="plus-square" size={23} color={"#fff"} />
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={openSettingsMenu}
-        >
+        <TouchableOpacity onPress={openSettingsMenu}>
           <Octicons name="gear" size={20} color={"#fff"} />
         </TouchableOpacity>
       </View>
-      <Modal
-        visible={settingsMenuVisible}
-        transparent
-        animationType="fade"
-      >
+      <Modal visible={settingsMenuVisible} transparent animationType="fade">
         <TouchableWithoutFeedback onPress={closeSettingsMenu}>
           <View style={styles.settingsBackdrop}>
             <TouchableWithoutFeedback onPress={() => {}}>
               <BlurView intensity={70} tint="dark" style={styles.settingsMenu}>
-                <TouchableOpacity style={styles.settingsRow} onPress={handleOpenSettings}>
+                {/* <TouchableOpacity style={styles.settingsRow} onPress={handleOpenSettings}>
                   <MaterialIcons name="settings" size={20} color="#fff" />
                   <Text style={styles.settingsText}>Settings & privacy</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 <View style={styles.settingsDivider} />
-                <TouchableOpacity style={styles.settingsRow} onPress={handleLogoutPress}>
+                <TouchableOpacity
+                  style={styles.settingsRow}
+                  onPress={handleLogoutPress}
+                >
                   <MaterialIcons name="logout" size={20} color="#fff" />
                   <Text style={styles.settingsText}>Log out</Text>
                 </TouchableOpacity>
@@ -164,7 +168,3 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.12)",
   },
 });
-
-
-
-

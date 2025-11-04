@@ -18,6 +18,7 @@ import {
 } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { darkTheme } from "../utils/theme";
 import { STORY_GRADIENT_COLORS } from "../utils/theme";
 import { createExpoVideoSource } from "../utils/videoSource";
 import { useUserContext } from "../contexts/UserContext";
@@ -28,6 +29,8 @@ import Skeleton from "../components/moments/Skeleton";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
+import { shouldShowComingSoonFeatures } from "../utils/featureFlags";
+import BottomSheetOptionsReel from "../components/reels/BottomSheetOptionsReel";
 import {
   GestureHandlerRootView,
   TapGestureHandler,
@@ -79,7 +82,10 @@ const MomentItem = memo(({
   videoPlayersRef,
   currentIndex,
   onSingleTap,
+  showComingSoonFeatures,
 }) => {
+  const bottomSheetRef = useRef(null);
+
   const videoSource = useMemo(() => {
     const source = createExpoVideoSource(item?.videoUrl, item?.mimeType);
     if (source) return source;
@@ -174,7 +180,7 @@ const MomentItem = memo(({
                 />
               </LinearGradient>
               <Text style={styles.profileUsername}>{item.username}</Text>
-              <MaterialCommunityIcons name="check-decagram" size={12} color="#fff" />
+              <MaterialCommunityIcons name="check-decagram" size={12} color={darkTheme.colors.textPrimary} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.touchableOpacity}>
               <View style={styles.followContainer}>
@@ -188,20 +194,22 @@ const MomentItem = memo(({
         <View style={styles.actionsContainer}>
           <TouchableOpacity onPress={() => handleLike(item)} style={styles.actionButton}>
             {item.likes_by_users.includes(currentUser.email) ? (
-              <MaterialCommunityIcons name="cards-heart" size={30} color="#e33" style={styles.heartIcon} />
+              <MaterialCommunityIcons name="cards-heart" size={30} color={darkTheme.colors.like} style={styles.heartIcon} />
             ) : (
-              <MaterialCommunityIcons name="cards-heart-outline" size={30} color="#fff" style={styles.heartIcon} />
+              <MaterialCommunityIcons name="cards-heart-outline" size={30} color={darkTheme.colors.textPrimary} style={styles.heartIcon} />
             )}
             <Text style={styles.actionLabel}>{item.likes_by_users.length}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
-            style={styles.actionButton}
-          >
-            <MaterialCommunityIcons name="chat-outline" size={32} color="#fff" style={styles.chatIcon} />
-            <Text style={styles.actionLabel}>{item.comments.length}</Text>
-          </TouchableOpacity>
+          {showComingSoonFeatures && (
+            <TouchableOpacity
+              onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+              style={styles.actionButton}
+            >
+              <MaterialCommunityIcons name="chat-outline" size={32} color={darkTheme.colors.textPrimary} style={styles.chatIcon} />
+              <Text style={styles.actionLabel}>{item.comments.length}</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             onPress={() => {
@@ -219,16 +227,22 @@ const MomentItem = memo(({
             }}
             style={styles.actionButton}
           >
-            <Feather name="send" size={26} color="#fff" style={styles.sendIcon} />
+            <Feather name="send" size={26} color={darkTheme.colors.textPrimary} style={styles.sendIcon} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+            onPress={() => bottomSheetRef.current?.present()}
             style={styles.actionButton}
           >
-            <Ionicons name="ellipsis-horizontal" size={26} color="#fff" />
-            <Text style={styles.actionLabel}>{item.shared}</Text>
+            <Ionicons name="ellipsis-horizontal" size={26} color={darkTheme.colors.textPrimary} />
           </TouchableOpacity>
+
+          <BottomSheetOptionsReel
+            bottomSheetRef={bottomSheetRef}
+            currentUser={currentUser}
+            reel={item}
+            navigation={navigation}
+          />
         </View>
       </View>
     </View>
@@ -243,6 +257,7 @@ const Moments = ({ navigation }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [muteButtonVisible, setMuteButtonVisible] = useState(false);
   const isFocused = useIsFocused();
+  const showComingSoonFeatures = shouldShowComingSoonFeatures();
 
   const { currentUser } = useUserContext();
   const { videos } = useFetchMoments();
@@ -320,6 +335,7 @@ const Moments = ({ navigation }) => {
         videoPlayersRef={videoPlayersRef}
         currentIndex={currentIndex}
         onSingleTap={toggleMute} // tap singolo = mute
+        showComingSoonFeatures={showComingSoonFeatures}
       />
     ),
     [
@@ -331,30 +347,37 @@ const Moments = ({ navigation }) => {
       currentIndex,
       setMessageModalVisible,
       toggleMute,
+      showComingSoonFeatures,
     ]
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <TouchableOpacity
-          onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
-          style={styles.titleContainer}
-        >
-          <Text style={styles.titleText}>Moments</Text>
-        </TouchableOpacity>
+        {showComingSoonFeatures ? (
+          <TouchableOpacity
+            onPress={() => handleFeatureNotImplemented(setMessageModalVisible)}
+            style={styles.titleContainer}
+          >
+            <Text style={styles.titleText}>Moments</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.titleContainer}>
+            <Text style={styles.titleText}>Moments</Text>
+          </View>
+        )}
         <TouchableOpacity
           onPress={() => {
             navigation.navigate("MediaLibrary", { initialSelectedType: "New moment" });
           }}
         >
-          <Ionicons name="camera-outline" size={32} color="#fff" style={{ marginTop: 6 }} />
+          <Ionicons name="camera-outline" size={32} color={darkTheme.colors.textPrimary} style={{ marginTop: 6 }} />
         </TouchableOpacity>
       </View>
 
       {muteButtonVisible && (
         <Animated.View style={styles.muteContainer} entering={FadeIn} exiting={FadeOut}>
-          <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={24} color="#fff" />
+          <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={24} color={darkTheme.colors.textPrimary} />
         </Animated.View>
       )}
 
@@ -394,7 +417,7 @@ export default Moments;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#000",
+    backgroundColor: darkTheme.colors.background,
     width: SIZES.Width,
     height: Platform.OS === "ios" ? SIZES.Height * 0.913 : SIZES.Height * 0.987,
   },
@@ -412,7 +435,7 @@ const styles = StyleSheet.create({
     left: SIZES.Width * 0.42,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#666",
+    backgroundColor: darkTheme.colors.surfaceVariant,
     borderRadius: 100,
     padding: 20,
     zIndex: 3,
@@ -434,7 +457,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   titleText: {
-    color: "#fff",
+    color: darkTheme.colors.textPrimary,
     fontWeight: "700",
     fontSize: 23,
   },
@@ -460,7 +483,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   actionLabel: {
-    color: "#fff",
+    color: darkTheme.colors.textPrimary,
     fontWeight: "600",
     fontSize: 12,
     marginTop: 4,
@@ -504,11 +527,11 @@ const styles = StyleSheet.create({
     height: 39,
     width: 39,
     borderWidth: 2,
-    borderColor: "#666",
+    borderColor: darkTheme.colors.outline,
     borderRadius: 100,
   },
   profileUsername: {
-    color: "#fff",
+    color: darkTheme.colors.textPrimary,
     fontWeight: "700",
     fontSize: 14,
     marginLeft: 3,
@@ -516,7 +539,7 @@ const styles = StyleSheet.create({
   },
   followContainer: {
     borderWidth: 0.7,
-    borderColor: "#bbb",
+    borderColor: darkTheme.colors.outlineVariant,
     backgroundColor: "transparent",
     paddingHorizontal: 6,
     paddingVertical: 3,
@@ -524,11 +547,11 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   followText: {
-    color: "#fff",
+    color: darkTheme.colors.textPrimary,
     fontWeight: "700",
   },
   captionText: {
-    color: "#fff",
+    color: darkTheme.colors.textPrimary,
     fontWeight: "400",
     fontSize: 14,
     marginTop: 4,

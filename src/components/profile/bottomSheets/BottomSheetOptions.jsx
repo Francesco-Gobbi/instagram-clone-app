@@ -14,10 +14,12 @@ import {
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../../shared/modals/MessageModal";
+import { shouldShowComingSoonFeatures } from "../../../utils/featureFlags";
 
 const BottomSheetOptions = ({ bottomSheetRef, navigation, currentUser }) => {
   const snapPoints = useMemo(() => [708], []);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
+  const showComingSoonFeatures = shouldShowComingSoonFeatures();
 
   return (
     <BottomSheetModal
@@ -34,42 +36,54 @@ const BottomSheetOptions = ({ bottomSheetRef, navigation, currentUser }) => {
       snapPoints={snapPoints}
     >
       <View style={styles.container}>
-        <TouchableOpacity
-          onPress={() => {
-            handleFeatureNotImplemented(setMessageModalVisible);
-          }}
-          style={styles.rowContainer}
-        >
-          <View style={styles.iconContainer}>
-            <Ionicons name="settings-sharp" size={27} color="#fff" />
-          </View>
-          <Text style={styles.text}>Settings and privacy</Text>
-        </TouchableOpacity>
-        <View style={styles.divider} />
-        <TouchableOpacity
-          onPress={() => {
-            handleFeatureNotImplemented(setMessageModalVisible);
-          }}
-          style={styles.rowContainer}
-        >
-          <View style={styles.iconContainer}>
-            <Ionicons name="timer-outline" size={28} color="#fff" />
-          </View>
-          <Text style={styles.text}>Your activity</Text>
-        </TouchableOpacity>
-        <View style={styles.divider} />
-        <TouchableOpacity
-          onPress={() => {
-            handleFeatureNotImplemented(setMessageModalVisible);
-          }}
-          style={styles.rowContainer}
-        >
-          <View style={styles.iconContainer}>
-            <Entypo name="back-in-time" size={27} color="#fff" />
-          </View>
-          <Text style={styles.text}>Archive</Text>
-        </TouchableOpacity>
-        <View style={styles.divider} />
+        {showComingSoonFeatures && (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                handleFeatureNotImplemented(setMessageModalVisible);
+              }}
+              style={styles.rowContainer}
+            >
+              <View style={styles.iconContainer}>
+                <Ionicons name="settings-sharp" size={27} color="#fff" />
+              </View>
+              <Text style={styles.text}>Settings and privacy</Text>
+            </TouchableOpacity>
+            <View style={styles.divider} />
+          </>
+        )}
+        {showComingSoonFeatures && (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                handleFeatureNotImplemented(setMessageModalVisible);
+              }}
+              style={styles.rowContainer}
+            >
+              <View style={styles.iconContainer}>
+                <Ionicons name="timer-outline" size={28} color="#fff" />
+              </View>
+              <Text style={styles.text}>Your activity</Text>
+            </TouchableOpacity>
+            <View style={styles.divider} />
+          </>
+        )}
+        {showComingSoonFeatures && (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                handleFeatureNotImplemented(setMessageModalVisible);
+              }}
+              style={styles.rowContainer}
+            >
+              <View style={styles.iconContainer}>
+                <Entypo name="back-in-time" size={27} color="#fff" />
+              </View>
+              <Text style={styles.text}>Archive</Text>
+            </TouchableOpacity>
+            <View style={styles.divider} />
+          </>
+        )}
         <TouchableOpacity
           onPress={() => {
             navigation.navigate("ShareQR", { user: currentUser });
@@ -83,70 +97,90 @@ const BottomSheetOptions = ({ bottomSheetRef, navigation, currentUser }) => {
           <Text style={styles.text}>QR code</Text>
         </TouchableOpacity>
         <View style={styles.divider} />
-        <TouchableOpacity
-          onPress={() => {
-            handleFeatureNotImplemented(setMessageModalVisible);
-          }}
-          style={styles.rowContainer}
-        >
-          <View style={styles.iconContainer}>
-            <Feather name="bookmark" size={29} color="#fff" />
-          </View>
-          <Text style={styles.text}>Saved</Text>
-        </TouchableOpacity>
-        <View style={styles.divider} />
-        <TouchableOpacity
-          onPress={() => {
-            handleFeatureNotImplemented(setMessageModalVisible);
-          }}
-          style={styles.rowContainer}
-        >
-          <View style={styles.iconContainer}>
-            <MaterialCommunityIcons
-              name="account-supervisor-outline"
-              size={30}
-              color="#fff"
-            />
-          </View>
-          <Text style={styles.text}>Supervision</Text>
-        </TouchableOpacity>
-        <View style={styles.divider} />
-        <TouchableOpacity
-          onPress={() => {
-            handleFeatureNotImplemented(setMessageModalVisible);
-          }}
-          style={styles.rowContainer}
-        >
-          <View style={styles.iconContainer}>
-            <FontAwesome name="credit-card" size={24} color="#fff" />
-          </View>
-          <Text style={styles.text}>Orders and payments</Text>
-        </TouchableOpacity>
-        <View style={styles.divider} />
-        <TouchableOpacity
-          onPress={() => {
-            handleFeatureNotImplemented(setMessageModalVisible);
-          }}
-          style={styles.rowContainer}
-        >
-          <View style={styles.iconContainer}>
-            <Octicons name="verified" size={27} color="#fff" />
-          </View>
-          <Text style={styles.text}>Meta Verified</Text>
-        </TouchableOpacity>
-        <View style={styles.divider} />
-        <TouchableOpacity
-          onPress={() => {
-            handleFeatureNotImplemented(setMessageModalVisible);
-          }}
-          style={styles.rowContainer}
-        >
-          <View style={styles.iconContainer}>
-            <Feather name="list" size={29} color="#fff" />
-          </View>
-          <Text style={styles.text}>Close Friends</Text>
-        </TouchableOpacity>
-        <View style={styles.divider} />
+        {showComingSoonFeatures && (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                handleFeatureNotImplemented(setMessageModalVisible);
+              }}
+              style={styles.rowContainer}
+            >
+              <View style={styles.iconContainer}>
+                <Feather name="bookmark" size={29} color="#fff" />
+              </View>
+              <Text style={styles.text}>Saved</Text>
+            </TouchableOpacity>
+            <View style={styles.divider} />
+          </>
+        )}
+        {showComingSoonFeatures && (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                handleFeatureNotImplemented(setMessageModalVisible);
+              }}
+              style={styles.rowContainer}
+            >
+              <View style={styles.iconContainer}>
+                <MaterialCommunityIcons
+                  name="account-supervisor-outline"
+                  size={30}
+                  color="#fff"
+                />
+              </View>
+              <Text style={styles.text}>Supervision</Text>
+            </TouchableOpacity>
+            <View style={styles.divider} />
+          </>
+        )}
+        {showComingSoonFeatures && (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                handleFeatureNotImplemented(setMessageModalVisible);
+              }}
+              style={styles.rowContainer}
+            >
+              <View style={styles.iconContainer}>
+                <FontAwesome name="credit-card" size={24} color="#fff" />
+              </View>
+              <Text style={styles.text}>Orders and payments</Text>
+            </TouchableOpacity>
+            <View style={styles.divider} />
+          </>
+        )}
+        {showComingSoonFeatures && (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                handleFeatureNotImplemented(setMessageModalVisible);
+              }}
+              style={styles.rowContainer}
+            >
+              <View style={styles.iconContainer}>
+                <Octicons name="verified" size={27} color="#fff" />
+              </View>
+              <Text style={styles.text}>Meta Verified</Text>
+            </TouchableOpacity>
+            <View style={styles.divider} />
+          </>
+        )}
+        {showComingSoonFeatures && (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                handleFeatureNotImplemented(setMessageModalVisible);
+              }}
+              style={styles.rowContainer}
+            >
+              <View style={styles.iconContainer}>
+                <Feather name="list" size={29} color="#fff" />
+              </View>
+              <Text style={styles.text}>Close Friends</Text>
+            </TouchableOpacity>
+            <View style={styles.divider} />
+          </>
+        )}
         <TouchableOpacity
           onPress={() => {
             bottomSheetRef.current.close();
@@ -159,30 +193,34 @@ const BottomSheetOptions = ({ bottomSheetRef, navigation, currentUser }) => {
           </View>
           <Text style={styles.text}>Favorites</Text>
         </TouchableOpacity>
-        <View style={styles.divider} />
-        <TouchableOpacity
-          onPress={() => {
-            handleFeatureNotImplemented(setMessageModalVisible);
-          }}
-          style={styles.rowContainer}
-        >
-          <View style={styles.iconContainer}>
-            <AntDesign name="adduser" size={29} color="#fff" />
-          </View>
-          <Text style={styles.text}>Discover people</Text>
-        </TouchableOpacity>
-        <View style={styles.divider} />
-        <TouchableOpacity
-          onPress={() => {
-            handleFeatureNotImplemented(setMessageModalVisible);
-          }}
-          style={styles.rowContainer}
-        >
-          <View style={styles.iconContainer}>
-            <Feather name="users" size={28} color="#fff" />
-          </View>
-          <Text style={styles.text}>Group profiles</Text>
-        </TouchableOpacity>
+        {showComingSoonFeatures && (
+          <>
+            <View style={styles.divider} />
+            <TouchableOpacity
+              onPress={() => {
+                handleFeatureNotImplemented(setMessageModalVisible);
+              }}
+              style={styles.rowContainer}
+            >
+              <View style={styles.iconContainer}>
+                <AntDesign name="adduser" size={29} color="#fff" />
+              </View>
+              <Text style={styles.text}>Discover people</Text>
+            </TouchableOpacity>
+            <View style={styles.divider} />
+            <TouchableOpacity
+              onPress={() => {
+                handleFeatureNotImplemented(setMessageModalVisible);
+              }}
+              style={styles.rowContainer}
+            >
+              <View style={styles.iconContainer}>
+                <Feather name="users" size={28} color="#fff" />
+              </View>
+              <Text style={styles.text}>Group profiles</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
       <MessageModal
         messageModalVisible={messageModalVisible}

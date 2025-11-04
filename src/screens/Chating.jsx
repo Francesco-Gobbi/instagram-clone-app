@@ -27,6 +27,7 @@ import { ScrollView } from "react-native-gesture-handler";
 import MessageModal, {
   handleFeatureNotImplemented,
 } from "../components/shared/modals/MessageModal";
+import { shouldShowComingSoonFeatures } from "../utils/featureFlags";
 
 const Chating = ({ navigation, route }) => {
   const { user } = route.params;
@@ -36,6 +37,7 @@ const Chating = ({ navigation, route }) => {
     useChatSendMessage({ user, currentUser });
   const scrollViewRef = useRef();
   const [messageModalVisible, setMessageModalVisible] = useState(false);
+  const showComingSoonFeatures = shouldShowComingSoonFeatures();
 
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -59,27 +61,29 @@ const Chating = ({ navigation, route }) => {
                 <Text style={styles.subtitle}>{user.username}</Text>
               </View>
             </TouchableOpacity>
-            <View style={[styles.rowContainer, { gap: 20 }]}>
-              <TouchableOpacity
-                onPress={() =>
-                  handleFeatureNotImplemented(setMessageModalVisible)
-                }
-              >
-                <Feather name="phone" size={25} color={"#fff"} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  handleFeatureNotImplemented(setMessageModalVisible)
-                }
-              >
-                <Feather
-                  name="video"
-                  size={25}
-                  color={"#fff"}
-                  style={{ transform: [{ scaleY: 1.15 }] }}
-                />
-              </TouchableOpacity>
-            </View>
+            {showComingSoonFeatures && (
+              <View style={[styles.rowContainer, { gap: 20 }]}>
+                <TouchableOpacity
+                  onPress={() =>
+                    handleFeatureNotImplemented(setMessageModalVisible)
+                  }
+                >
+                  <Feather name="phone" size={25} color={"#fff"} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() =>
+                    handleFeatureNotImplemented(setMessageModalVisible)
+                  }
+                >
+                  <Feather
+                    name="video"
+                    size={25}
+                    color={"#fff"}
+                    style={{ transform: [{ scaleY: 1.15 }] }}
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
           <ScrollView
             snapToAlignment="end"
@@ -109,19 +113,21 @@ const Chating = ({ navigation, route }) => {
           </ScrollView>
           <View style={styles.searchWrapper}>
             <View style={styles.rowContainer}>
-              <TouchableOpacity
-                onPress={() =>
-                  handleFeatureNotImplemented(setMessageModalVisible)
-                }
-                style={styles.cameraWrapper}
-              >
-                <Ionicons
-                  name="camera"
-                  size={20}
-                  color={"#fff"}
-                  style={styles.searchIcon}
-                />
-              </TouchableOpacity>
+              {showComingSoonFeatures && (
+                <TouchableOpacity
+                  onPress={() =>
+                    handleFeatureNotImplemented(setMessageModalVisible)
+                  }
+                  style={styles.cameraWrapper}
+                >
+                  <Ionicons
+                    name="camera"
+                    size={20}
+                    color={"#fff"}
+                    style={styles.searchIcon}
+                  />
+                </TouchableOpacity>
+              )}
 
               <TextInput
                 value={textMessage}
@@ -152,7 +158,7 @@ const Chating = ({ navigation, route }) => {
               >
                 <Text style={styles.sendText}>Send</Text>
               </TouchableOpacity>
-            ) : (
+            ) : showComingSoonFeatures ? (
               <View style={styles.rowContainer}>
                 <TouchableOpacity
                   onPress={() =>
@@ -171,7 +177,7 @@ const Chating = ({ navigation, route }) => {
                   <Feather name="mic" size={19} color={"#fff"} />
                 </TouchableOpacity>
               </View>
-            )}
+            ) : null}
           </View>
         </KeyboardAvoidingView>
         <MessageModal

@@ -24,7 +24,11 @@ const screenOptions = {
     bottom: 0,
     right: 0,
     left: 0,
-    elevation: 0,
+    elevation: 12,
+    shadowColor: darkTheme.colors.glowPurple,
+    shadowOpacity: 0.45,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: -4 },
     borderTopWidth: 0.5,
     borderTopColor: darkTheme.colors.outline,
     height: Platform.OS === "android" ? 60 : 85, // <-- "android" in minuscolo

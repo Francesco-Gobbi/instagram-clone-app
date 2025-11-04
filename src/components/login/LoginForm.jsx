@@ -78,21 +78,23 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
   const getFirebaseErrorMessage = (error) => {
     switch (error.code) {
       case 'auth/wrong-password':
-        return "The password is incorrect. Please try again.";
+        return "Password non corretta. Riprova.";
       case 'auth/user-not-found':
-        return "No account found with this email address.";
+        return "Nessun account trovato con questa email.";
       case 'auth/invalid-email':
-        return "The email address is invalid.";
+        return "Indirizzo email non valido.";
       case 'auth/user-disabled':
-        return "Your account is pending approval. Please contact your administrator.";
+        return "Il tuo account è in attesa di approvazione. Contatta l'amministratore.";
       case 'auth/too-many-requests':
-        return "Too many unsuccessful login attempts. Please try again later.";
+        return "Troppi tentativi falliti. Riprova più tardi.";
       case 'auth/network-request-failed':
-        return "Network error. Please check your internet connection.";
+        return "Errore di rete. Verifica la tua connessione internet.";
       case 'auth/invalid-credential':
-        return "Invalid credentials. Please check your email and password.";
+        return "Credenziali non valide. Verifica email e password.";
+      case 'auth/invalid-login-credentials':
+        return "Credenziali di accesso non valide. Verifica email e password.";
       default:
-        return "An error occurred during login. Please try again.";
+        return `Errore durante il login: ${error.message || 'Riprova più tardi.'}`;
     }
   };
 
@@ -100,17 +102,36 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
   const checkUserApprovalStatus = async (userEmail) => {
     try {
       if (!userEmail) {
-        return { exists: false };
+        return { exists: false, status: null };
       }
 
-      const userDocRef = firebase.firestore().collection('users').doc(userEmail);
-      const userDoc = await userDocRef.get();
+      // Try to find user document by email first
+      const userQuery = await firebase.firestore().collection('users')
+        .where('email', '==', userEmail)
+        .limit(1)
+        .get();
+
+      let userDoc;
+      let userDocRef;
+
+      if (!userQuery.empty) {
+        userDoc = userQuery.docs[0];
+        userDocRef = userDoc.ref;
+      } else {
+        // Fallback to direct ID lookup
+        userDocRef = firebase.firestore().collection('users').doc(userEmail);
+        userDoc = await userDocRef.get();
+      }
 
       if (!userDoc.exists) {
-        return { exists: false };
+        console.log('No user document found for email:', userEmail);
+        return { exists: false, status: null };
       }
 
+      console.log('Found user document with status:', userDoc.data()?.status);
+
       const userData = userDoc.data() || {};
+      let status = userData.status || 'pending';
       const approvedAtRaw = userData.approvedAt ?? null;
 
       let approvedAtDate = null;
@@ -129,7 +150,7 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
         approvedAtDate instanceof Date &&
         !Number.isNaN(approvedAtDate.getTime()) &&
         approvedAtDate.getTime() <= Date.now();
-      const status = userData.status ?? null;
+      status = userData.status ?? null;
       const isApproved = status === 'approved' || isApprovedByTimestamp;
 
       return {
@@ -210,10 +231,39 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
     if (isLoggingIn) return;
     setIsLoggingIn(true);
     Keyboard.dismiss();
+    
     try {
-      // Login Firebase
-      const credentials = await firebase.auth().signInWithEmailAndPassword(email, password);
-      // Controllo stato utente basato su approvedAt/status
+      console.log('Starting login process for email:', email);
+      
+      // 1. Login Firebase with proper error handling
+      let credentials;
+      try {
+        // Check if there's any existing user first
+        const currentUser = firebase.auth().currentUser;
+        if (currentUser) {
+          console.log('Found existing Firebase session, signing out first...');
+          await firebase.auth().signOut();
+        }
+
+        console.log('Attempting Firebase authentication...');
+        credentials = await firebase.auth().signInWithEmailAndPassword(email, password);
+      } catch (firebaseError) {
+        console.error('Firebase auth error details:', {
+          code: firebaseError.code,
+          message: firebaseError.message,
+          email: email,
+        });
+        const errorMessage = getFirebaseErrorMessage(firebaseError);
+        handleDataError(errorMessage);
+        return;
+      }
+      
+      if (!credentials?.user?.email) {
+        handleDataError('Login failed: Unable to retrieve user information');
+        return;
+      }
+
+      // 2. Check user status
       const approval = await checkUserApprovalStatus(credentials.user.email);
 
       if (!approval.exists || approval.error) {
@@ -224,11 +274,13 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
 
       if (!approval.isApproved) {
         const targetScreen = approval.status === 'pending' ? 'PendingApproval' : null;
+        const message = approval.status === 'pending'
+          ? "Il tuo account è in attesa di approvazione da parte di un amministratore. Potrai accedere solo dopo l'approvazione."
+          : "Il tuo account non è autorizzato ad accedere all'app. Contatta un amministratore per assistenza.";
         await firebase.auth().signOut();
+        handleDataError(message);
         if (targetScreen) {
           navigation.navigate(targetScreen);
-        } else {
-          handleDataError('Your account status does not allow access. Please contact your administrator.');
         }
         return;
       }
@@ -268,19 +320,48 @@ const LoginForm = React.forwardRef(({ navigation }, ref) => {
       // Salva in Keychain/AsyncStorage tramite il tuo hook; l'effetto in AuthNavigation gestirà il cambio stack
       await saveUserSecurely(userData, password);
     } catch (error) {
-      console.error('Login error:', error);
-      // Pulizia in caso di errore
+      console.error('Login error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack,
+        type: error.constructor.name
+      });
+      
+      // Cleanup: Sign out from Firebase and clear Appwrite session
       try {
-        await firebase.auth().signOut();
-        await appwriteAccount.deleteSession('current').catch(() => {});
-      } catch {}
-      // Mostra messaggio d’errore appropriato
-      if (error.code && error.code >= 400 && error.code < 500) {
-        handleDataError('Error creating storage session. Please try again.');
+        console.log('Starting cleanup process...');
+        const currentUser = firebase.auth().currentUser;
+        if (currentUser) {
+          console.log('Signing out Firebase user:', currentUser.email);
+          await firebase.auth().signOut();
+        }
+
+        console.log('Clearing Appwrite session...');
+        await appwriteAccount.deleteSession('current').catch((e) => {
+          console.log('No active Appwrite session to clear:', e.message);
+        });
+      } catch (cleanupError) {
+        console.error('Cleanup error details:', {
+          code: cleanupError.code,
+          message: cleanupError.message,
+          stack: cleanupError.stack
+        });
+      }
+
+      // Handle specific error cases with more detailed messages
+      if (error.code === 'auth/invalid-credential') {
+        handleDataError('Le credenziali inserite non sono corrette. Verifica che:\n- L\'email sia scritta correttamente\n- La password sia corretta\n- L\'account esista');
       } else if (error.code === 'auth/user-disabled') {
+        console.log('User account is disabled, redirecting to pending approval...');
         navigation.navigate('PendingApproval');
+      } else if (error.code === 'auth/invalid-email') {
+        handleDataError('Il formato dell\'email non è valido. Verifica di averla inserita correttamente.');
+      } else if (error.code === 'auth/user-not-found') {
+        handleDataError('Non esiste un account con questa email. Verifica l\'email o registrati.');
+      } else if (error.code && error.code >= 400 && error.code < 500) {
+        handleDataError('Errore durante l\'accesso. Per favore riprova o contatta il supporto se il problema persiste.');
       } else {
-        handleDataError('An error occurred during login. Please try again.');
+        handleDataError(getFirebaseErrorMessage(error));
       }
     } finally {
       setIsLoggingIn(false);

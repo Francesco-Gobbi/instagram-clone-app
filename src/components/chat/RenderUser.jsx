@@ -55,9 +55,11 @@ const RenderUser = ({ navigation, user, currentUser, handleCamera }) => {
           </View>
         )}
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => handleCamera()}>
-        <Feather name="camera" size={22} color={"#fff"} style={styles.icon} />
-      </TouchableOpacity>
+      {typeof handleCamera === "function" && (
+        <TouchableOpacity onPress={() => handleCamera()}>
+          <Feather name="camera" size={22} color={"#fff"} style={styles.icon} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

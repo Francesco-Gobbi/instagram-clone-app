@@ -1,16 +1,19 @@
 import { StyleSheet, View, Text, TouchableWithoutFeedback } from "react-native";
 import { useState } from "react";
 import { COLORS } from "../../../utils/usePalete";
+import useProfanityFilter from "../../../hooks/useProfanityFilter";
 
 const Caption = ({ post }) => {
   const [showLongCaption, setShowLongCaption] = useState(false);
+  const { filterText } = useProfanityFilter();
+  const filteredCaption = filterText(post.caption);
 
   return (
     <View style={styles.caption}>
-      {post.caption.length <= 0 ? null : post.caption.length < 82 ? (
+      {filteredCaption.length <= 0 ? null : filteredCaption.length < 82 ? (
         <Text style={styles.captionUser}>
           {post.username.toLowerCase() + " "}
-          <Text style={styles.captionText}>{post.caption}</Text>
+          <Text style={styles.captionText}>{filteredCaption}</Text>
         </Text>
       ) : (
         <TouchableWithoutFeedback
@@ -20,10 +23,10 @@ const Caption = ({ post }) => {
             {post.username.toLowerCase() + " "}
 
             {showLongCaption ? (
-              <Text style={styles.captionText}>{post.caption}</Text>
+              <Text style={styles.captionText}>{filteredCaption}</Text>
             ) : (
               <Text style={styles.captionText}>
-                {post.caption.slice(0, 74)}
+                {filteredCaption.slice(0, 74)}
                 <Text style={styles.captionMore}>...more</Text>
               </Text>
             )}

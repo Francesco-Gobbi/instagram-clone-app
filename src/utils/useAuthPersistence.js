@@ -36,7 +36,7 @@ const useAuthPersistence = () => {
         await Keychain.setInternetCredentials(
           KEYCHAIN_SERVICE,
           userData.email,
-          JSON.stringify(dataToSave)
+          password
         );
         console.log('User data saved securely in Keychain for:', userData.email);
       } else {
@@ -54,7 +54,7 @@ const useAuthPersistence = () => {
       let userData = null;
 
       if (isKeychainAvailable) {
-        const credentials = await Keychain.getInternetCredentials(KEYCHAIN_SERVICE);
+        const credentials = await Keychain.getInternetCredentials({ service: KEYCHAIN_SERVICE });
         if (credentials && credentials.password) {
           userData = JSON.parse(credentials.password);
         }
@@ -86,7 +86,7 @@ const useAuthPersistence = () => {
   const clearSecureStorage = useCallback(async () => {
     try {
       if (isKeychainAvailable) {
-        await Keychain.resetInternetCredentials(KEYCHAIN_SERVICE);
+        await Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
         console.log('Keychain cleared');
       } else {
         await AsyncStorage.removeItem(ASYNC_STORAGE_KEY);

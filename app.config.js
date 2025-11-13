@@ -14,7 +14,7 @@ const APPWRITE_KEY = process.env.APPWRITE_KEY;
 const PROXY_SERVER_URL = process.env.PROXY_SERVER_URL;
 const SIGNEDIMAGE_URI = process.env.SIGNEDIMAGE_URI;
 const TERMS_URL = process.env.TERMS_URL;
-const SHOULD_HIDE_COMING_SOON_FEATURES = String(process.env.HIDE_COMING_SOON_FEATURES ?? "").toLowerCase();
+const SHOW_COMING_SOON_FEATURES = process.env.SHOW_COMING_SOON_FEATURES
 
 export default {
     expo: {
@@ -89,7 +89,7 @@ export default {
                 "MEDIA_LIBRARY"
             ],
             termsUrl: TERMS_URL,
-            hideComingSoonFeatures: SHOULD_HIDE_COMING_SOON_FEATURES
+            showComingSoonFeatures: SHOW_COMING_SOON_FEATURES
 
         },
 

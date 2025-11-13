@@ -92,9 +92,9 @@ const MediaLibrary = ({ navigation, route }) => {
     } else if (selectedType === "Add to story") {
       navigation.navigate("NewStory", { selectedImage: payload });
     } 
-    // else if (selectedType === "New Moment") {
-    //   navigation.navigate("NewMoment", { selectedImage: payload });
-    // }
+    else if (selectedType === "New Moment") {
+      navigation.navigate("NewMoment", { selectedImage: payload });
+    }
   };
 
   const {
@@ -329,7 +329,7 @@ const MediaLibrary = ({ navigation, route }) => {
                   STORY
                 </Text>
               </TouchableOpacity>
-              {/* <TouchableOpacity onPress={() => handleTypeSelector("New Moment")}>
+              <TouchableOpacity onPress={() => handleTypeSelector("New Moment")}>
                 <Text
                   style={[
                     styles.selectorButton,
@@ -338,7 +338,7 @@ const MediaLibrary = ({ navigation, route }) => {
                 >
                   MOMENT
                 </Text>
-              </TouchableOpacity> */}
+              </TouchableOpacity>
             </BlurView>
           </Animated.View>
         )}

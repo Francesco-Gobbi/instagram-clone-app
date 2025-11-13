@@ -1,5 +1,5 @@
-import 'react-native-gesture-handler';
 import 'react-native-reanimated';
+import 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet } from 'react-native';
 import AuthNavigation from "./src/navigation/AuthNavigation";

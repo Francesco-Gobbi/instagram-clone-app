@@ -43,7 +43,7 @@ const Chat = ({ navigation }) => {
   const [searching, setSearching] = useState(false);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
   const showComingSoonFeatures =
-    Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
+    Constants.expoConfig?.android?.hideComingSoonFeatures;
 
   useEffect(() => {
     beginSearch();

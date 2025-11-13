@@ -54,7 +54,7 @@ const NewReel = ({ navigation, route }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isVideoReady, setIsVideoReady] = useState(false);
   const showComingSoonFeatures =
-    Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
+    Constants.expoConfig?.android?.hideComingSoonFeatures;
   const videoRef = useRef(null);
 
   const videoSource = useMemo(() => {

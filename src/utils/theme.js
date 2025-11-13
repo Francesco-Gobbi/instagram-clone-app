@@ -77,7 +77,7 @@ export const DARK_COLORS = {
   onSecondaryContainer: '#E8DEF8', // Text on secondary container
 
   // Surface colors
-  surface: '#141218',           // Main surface
+  surface: '#101014',           // Main surface
   surfaceVariant: '#49454F',    // Variant surface
   surfaceContainer: '#211F26',  // Container surface
   surfaceContainerHigh: '#2B2930', // High emphasis container

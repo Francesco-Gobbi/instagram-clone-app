@@ -136,7 +136,7 @@ const MomentItem = memo(
 
     // derive showComingSoonFeatures from expo config android.hideComingSoonFeatures
     const showComingSoonFeatures =
-      Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
+      Constants.expoConfig?.android?.hideComingSoonFeatures;
 
     const handleUserProfile = () => {
       if (currentUser.email === item.owner_email) {
@@ -304,7 +304,7 @@ const Moments = ({ navigation }) => {
   const [muteButtonVisible, setMuteButtonVisible] = useState(false);
   const isFocused = useIsFocused();
   const showComingSoonFeatures =
-    Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
+    Constants.expoConfig?.android?.hideComingSoonFeatures;
 
   const { currentUser } = useUserContext();
   const { videos, loading, refreshMoments } = useFetchMoments();

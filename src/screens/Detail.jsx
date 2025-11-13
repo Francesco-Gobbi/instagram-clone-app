@@ -18,6 +18,7 @@ import BottomSheetComments from "../components/detail/bottomSheets/BottomSheetCo
 import BottomSheetComment from "../components/detail/bottomSheets/BottomSheetComment";
 import useFetchUserPosts from "../hooks/useFetchUserPosts";
 import RenderItem from "../components/detail/RenderItem";
+import { DARK_COLORS } from "../utils/theme";
 
 const Detail = ({ navigation, route }) => {
   const { item } = route.params || {};
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
   container: {
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 44,
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: DARK_COLORS.surface,
   },
   searchHeader: {
     flexDirection: "row",
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
     top: Platform.OS === 'ios' ? 70 : (StatusBar.currentHeight || 0) + 24,
     left: 18,
     zIndex: 6,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: DARK_COLORS.surface,
     borderRadius: 20,
     paddingVertical: 6,
     paddingHorizontal: 10,

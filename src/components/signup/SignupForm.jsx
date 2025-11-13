@@ -112,7 +112,7 @@ const SignUpForm = ({ navigation }) => {
   };
 
   const showComingSoonFeatures =
-    Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
+    Constants.expoConfig?.android?.hideComingSoonFeatures;
 
   useEffect(() => {
     if (!registrationError) {

@@ -12,9 +12,10 @@ import AdminApprovals from "../screens/AdminApprovals";
 import Blank from "./Blank";
 import { darkTheme } from "../utils/theme";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 
 const Tab = createBottomTabNavigator();
-
+const showComingSoonFeatures = Constants.expoConfig?.android?.showComingSoonFeatures;
 const screenOptions = {
   tabBarShowLabel: false,
   tabBarHideOnKeyboard: true,
@@ -174,7 +175,7 @@ const BottomTabs = ({ navigation }) => {
         }}
       />
 
-      {/* <Tab.Screen
+      {showComingSoonFeatures &&   <Tab.Screen
         name="Videos"
         component={Moments}
         options={{
@@ -186,7 +187,7 @@ const BottomTabs = ({ navigation }) => {
             />
           ),
         }}
-      /> */}
+      />}
 
       <Tab.Screen
         name="Account"

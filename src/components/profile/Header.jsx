@@ -16,6 +16,7 @@ import BottomSheetAddNew from "./bottomSheets/BottomSheetAddNew";
 import BottomSheetLogout from "./bottomSheets/BottomSheetLogout";
 import BottomSheetOptions from "./bottomSheets/BottomSheetOptions";
 import useAuthPersistence from "../../utils/useAuthPersistence";
+import { DARK_COLORS } from "../../utils/theme";
 
 const Header = ({ currentUser, navigation }) => {
   const bottomSheetRefAddNew = useRef(null);
@@ -49,12 +50,12 @@ const Header = ({ currentUser, navigation }) => {
         style={styles.usernameContainer}
       >
         <Text style={styles.username}>{currentUser.username}</Text>
-        <MaterialIcons
+        {/* <MaterialIcons
           name="keyboard-arrow-down"
           size={24}
           color={"#fff"}
           style={styles.arrowIcon}
-        />
+        /> */}
       </TouchableOpacity>
 
       <View style={styles.IconsContainer}>
@@ -116,6 +117,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    backgroundColor: DARK_COLORS.surface
   },
   usernameContainer: {
     flexDirection: "row",
@@ -147,7 +149,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     minWidth: 190,
-    backgroundColor: "rgba(30,30,30,0.85)",
+    backgroundColor: DARK_COLORS.surface,
     paddingVertical: 6,
   },
   settingsRow: {

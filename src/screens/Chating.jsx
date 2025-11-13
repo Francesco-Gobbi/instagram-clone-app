@@ -38,7 +38,7 @@ const Chating = ({ navigation, route }) => {
   const scrollViewRef = useRef();
   const [messageModalVisible, setMessageModalVisible] = useState(false);
   const showComingSoonFeatures =
-    Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
+    Constants.expoConfig?.android?.hideComingSoonFeatures;
 
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>

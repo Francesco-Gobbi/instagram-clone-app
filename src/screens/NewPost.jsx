@@ -33,7 +33,7 @@ const NewPost = ({ navigation, route }) => {
   const [focusedBar, setFocusedBar] = useState(false);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
   const showComingSoonFeatures =
-    Constants.expoConfig?.android?.hideComingSoonFeatures !== "true";
+    Constants.expoConfig?.android?.hideComingSoonFeatures;
 
   const handleFocus = () => {
     setFocusedBar(true);

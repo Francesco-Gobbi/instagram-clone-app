@@ -63,7 +63,7 @@ export default {
             appwriteProjectId: APPWRITE_PROJECT_ID,
             appwriteBucketId: APPWRITE_BUCKET_ID,
             appwriteKey: APPWRITE_KEY,
-            appwriteBundleId: IS_DEV ? "com.ShentHub.dev" : "com.ShentHub.shentao",
+            appwriteBundleId: IS_DEV ? "com.shentaohub.dev" : "com.shentaohub",
             proxyServerUrl: PROXY_SERVER_URL,
             signedImageUri: SIGNEDIMAGE_URI,
         },

@@ -25,6 +25,10 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
 import { UserProvider } from "../contexts/UserContext";
 import { StoriesProvider } from "../contexts/StoriesContext";
+import CreateNewScreen from "../components/profile/CreateNewScreen";
+import SettingsScreen from "../components/profile/SettingsScreen";
+import LogoutScreen from "../components/profile/LogoutScreen";
+import DeleteAccountScreen from "../components/profile/DeleteAccoutScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -181,6 +185,26 @@ const SignedInStack = () => {
                   presentation: "transparentModal",
                   animation: "fade",
                 }}
+              />
+              <Stack.Screen
+                name="CreateNew"
+                component={CreateNewScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="Settings"
+                component={SettingsScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="Logout"
+                component={LogoutScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="DeleteAccount"
+                component={DeleteAccountScreen}
+                options={{ headerShown: false }}
               />
             </Stack.Navigator>
           </NavigationContainer>

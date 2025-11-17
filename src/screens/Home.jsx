@@ -53,7 +53,7 @@ const Home = React.forwardRef(({ navigation }, ref) => {
         />
       </Animated.View>
 
-      {posts.length > 0 ? (
+      {posts.length > 12 ? (
         <FlatList
           data={posts}
           keyExtractor={(item, index) => index.toString()}
@@ -72,9 +72,12 @@ const Home = React.forwardRef(({ navigation }, ref) => {
       ) : (
         <View style={{ marginTop: 50 }}>
           <FlatList
-            data={["", "", "", ""]}
             ListHeaderComponent={renderHeaderComponent}
-            renderItem={() => <PostsSkeleton />}
+            renderItem={() => {
+              return (<View style={{ marginTop: 50, alignItems: 'center' }}>
+                <Text>No contexts available for now</Text>
+              </View>)
+            }}
             showsVerticalScrollIndicator={false}
           />
         </View>

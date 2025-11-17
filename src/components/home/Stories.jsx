@@ -53,7 +53,7 @@ const Stories = ({ navigation, currentUser }) => {
 
   return (
     <View>
-      {stories.length > 2 ? (
+      {stories.length > 1 ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={styles.container}>
             <TouchableOpacity
@@ -182,6 +182,18 @@ const Stories = ({ navigation, currentUser }) => {
 export default Stories;
 
 const styles = StyleSheet.create({
+  emptyStateContainer: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  paddingVertical: 40,
+},
+emptyStateText: {
+  fontSize: 20,
+  color: '#999',
+  textAlign: 'center',
+  justifyContent: 'center'
+},
   container: {
     justifyContent: "center",
     alignItems: "center",

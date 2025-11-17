@@ -329,7 +329,7 @@ const MediaLibrary = ({ navigation, route }) => {
                   STORY
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleTypeSelector("New Moment")}>
+              {/* <TouchableOpacity onPress={() => handleTypeSelector("New Moment")}>
                 <Text
                   style={[
                     styles.selectorButton,
@@ -338,7 +338,7 @@ const MediaLibrary = ({ navigation, route }) => {
                 >
                   MOMENT
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </BlurView>
           </Animated.View>
         )}
